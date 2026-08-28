@@ -97,6 +97,7 @@ def test_approved_transfer_reassigns_in_progress_task_to_pending(
         make_template, make_template_version, make_schedule,
     )
     other = make_user(login_id="other-transfer", display_name="Other")
+    make_membership(user=other, company=_company, role=CompanyRole.EMPLOYEE)
     instance = schedule_due_tasks()[0]
     claim_task(str(instance.id), owner)
     started = start_task(str(instance.id), owner)

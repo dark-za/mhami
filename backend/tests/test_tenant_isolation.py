@@ -13,10 +13,9 @@ from __future__ import annotations
 import pytest
 from django.test import Client
 
-from apps.evidence.models import EvidenceItem, TaskIssueReport
-from apps.organizations.models import CompanyMembership, CompanyRole, UserBranchMembership
-from apps.reviews.models import ReviewDecision, ReviewDecisionType
-from apps.tasks.models import TaskInstance, TaskTemplate
+from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.reviews.models import ReviewDecisionType
+from apps.tasks.models import TaskInstance
 
 pytestmark = pytest.mark.django_db
 

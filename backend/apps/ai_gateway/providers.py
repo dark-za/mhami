@@ -75,7 +75,8 @@ def _is_allowed_endpoint(endpoint: str, allowlist: list[str]) -> bool:
             candidate = urlparse(entry)
         except ValueError:
             continue
-        if candidate.hostname and candidate.hostname == target.hostname:
+        candidate_host = candidate.hostname or entry.split("/", 1)[0].split(":", 1)[0]
+        if candidate_host == target.hostname:
             return True
     return False
 

@@ -12,10 +12,9 @@ import pytest
 from django.test import RequestFactory
 
 from apps.audit.models import AuditEvent
-from apps.identity.models import User
 from apps.organizations.models import CompanyMembership, CompanyRole
 from apps.tenancy.auth_backends import CompanyCodeBackend
-from apps.tenancy.models import Company, CompanyStatus
+from apps.tenancy.models import CompanyStatus
 
 pytestmark = pytest.mark.django_db
 

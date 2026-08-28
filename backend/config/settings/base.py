@@ -16,7 +16,7 @@ from pathlib import Path
 from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
-from .env import get_settings
+from .env import get_settings, parse_env_list
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 
@@ -35,7 +35,7 @@ if (
 SECRET_KEY = settings.django_secret_key
 
 DEBUG = settings.django_debug
-ALLOWED_HOSTS = settings.django_allowed_hosts
+ALLOWED_HOSTS = parse_env_list(settings.django_allowed_hosts)
 
 if (
     settings.django_settings_module == "config.settings.prod"
@@ -48,7 +48,7 @@ AUDIT_HMAC_SECRET = settings.audit_hmac_secret or SECRET_KEY
 
 # MFA keys: fall back to a derived dev key if not provided.
 if settings.mfa_encryption_keys:
-    MFA_ENCRYPTION_KEYS = settings.mfa_encryption_keys
+    MFA_ENCRYPTION_KEYS = parse_env_list(settings.mfa_encryption_keys)
 else:
     development_key = hashlib.sha256(f"{SECRET_KEY}:mhami:mfa".encode()).digest()
     MFA_ENCRYPTION_KEYS = [base64.urlsafe_b64encode(development_key).decode("ascii")]

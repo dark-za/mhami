@@ -62,9 +62,8 @@ def _create_role(client: Client) -> dict:
 
 def test_weekly_shift_idor_rejects_cross_company_branch():
     client_a = Client()
-    payload_a = _register_company(client_a, code="idor-a", owner_login="owner-a")
+    _register_company(client_a, code="idor-a", owner_login="owner-a")
     branch_a = _create_branch(client_a, "ba")
-    owner_a_id = payload_a["owner"]["id"]
 
     client_b = Client()
     payload_b = _register_company(client_b, code="idor-b", owner_login="owner-b")

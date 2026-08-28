@@ -8,10 +8,10 @@ the previous one.
 
 from __future__ import annotations
 
-import json
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from apps.identity.models import User
 from apps.platform_core.models import ExitDecision
@@ -122,7 +122,13 @@ def test_phase12_decision_requires_pilot_program_metadata():
     from apps.pilot.models import PilotProgram
 
     owner = User.objects.create_user(login_id="p12-owner", password="Mha!mi-Test-2026#")
-    company = Company.objects.create(name="P12 Co", code="p12co", industry="other", owner=owner)
+    company = Company.objects.create(
+        name="P12 Co",
+        code="p12co",
+        industry="other",
+        owner=owner,
+        trial_ends_at=timezone.now(),
+    )
     from apps.organizations.models import CompanyMembership
     CompanyMembership.objects.create(company=company, user=owner, role=CompanyRole.OWNER)
     program = PilotProgram.objects.create(company=company, status="active")
@@ -160,7 +166,13 @@ def test_phase12_decision_requires_pilot_program_metadata():
 
     # Unsigned program → 400 (build a program with no charter)
     other_owner = User.objects.create_user(login_id="p12-owner-2", password="Mha!mi-Test-2026#")
-    other_company = Company.objects.create(name="Other Co", code="otherco", industry="other", owner=other_owner)
+    other_company = Company.objects.create(
+        name="Other Co",
+        code="otherco",
+        industry="other",
+        owner=other_owner,
+        trial_ends_at=timezone.now(),
+    )
     CompanyMembership.objects.create(company=other_company, user=other_owner, role=CompanyRole.OWNER)
     other_program = PilotProgram.objects.create(company=other_company, status="active")
     response = client.post(

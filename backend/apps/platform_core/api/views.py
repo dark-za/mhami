@@ -80,6 +80,7 @@ class ExitDecisionView(APIView):
     permission_classes = [IsAuthenticated]
     # The decorator enables CSRF cookie issuance so browser clients can
     # attach the token to the POST without a separate bootstrap hop.
+    @extend_schema(request=ExitDecisionCreateSerializer, responses={201: ExitDecisionSerializer})
     @method_decorator(ensure_csrf_cookie)
     def post(self, request, phase: str):
         if not (request.user.is_staff or request.user.is_superuser):
@@ -101,7 +102,6 @@ class ExitDecisionView(APIView):
                     status=400,
                 )
             from apps.pilot.models import PilotCharter, PilotProgram
-            from apps.tenancy.models import Company
             program = PilotProgram.objects.filter(id=pilot_program_id).first()
             if program is None:
                 return Response(

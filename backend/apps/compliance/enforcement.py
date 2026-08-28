@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar, cast
 
 from apps.platform_core.errors import PlatformLegalBlockException
 
@@ -52,7 +52,7 @@ def LegalAcceptanceRequired(
         def wrapper(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
             from apps.organizations.models import CompanyRole
             from apps.tenancy.access import tenant_context
-            from apps.tenancy.models import CompanyMembership
+            from apps.organizations.models import CompanyMembership
 
             request = getattr(self, "request", None)
             tenant_getter = getattr(self, "get_tenant", None)
@@ -92,6 +92,6 @@ def LegalAcceptanceRequired(
                 raise PlatformLegalBlockException(missing_kinds=missing) from exc
             return func(self, *args, **kwargs)
 
-        return wrapper
+        return cast(Callable[_P, _R], wrapper)
 
     return decorator

@@ -14,7 +14,6 @@ import pytest
 
 from apps.ai_gateway.providers import (
     OpenAIProvider,
-    build_provider,
     validate_provider_result,
 )
 

@@ -94,6 +94,19 @@ def charter_payload(company: Company) -> dict[str, object] | None:
     charter = latest_charter(company)
     if charter is None:
         return None
+    return {
+        "id": str(charter.id),
+        "pilot_program": str(charter.pilot_program_id),
+        "decision": charter.decision,
+        "rationale": charter.rationale,
+        "conditions": charter.conditions,
+        "observation_start": charter.observation_start.isoformat() if charter.observation_start else None,
+        "observation_end": charter.observation_end.isoformat() if charter.observation_end else None,
+        "success_measures": list(charter.success_measures or []),
+        "signed_by": str(charter.signed_by_id),
+        "signed_at": charter.signed_at.isoformat() if charter.signed_at else None,
+        "signature_valid": charter.verify_signature(),
+    }
 
 
 @transaction.atomic
@@ -127,19 +140,6 @@ def has_signed_charter(company: Company) -> bool:
     return PilotCharter.objects.filter(
         company=company, decision=PilotCharter.Decision.AUTHORIZE
     ).exists()
-    return {
-        "id": str(charter.id),
-        "pilot_program": str(charter.pilot_program_id),
-        "decision": charter.decision,
-        "rationale": charter.rationale,
-        "conditions": charter.conditions,
-        "observation_start": charter.observation_start.isoformat() if charter.observation_start else None,
-        "observation_end": charter.observation_end.isoformat() if charter.observation_end else None,
-        "success_measures": list(charter.success_measures or []),
-        "signed_by": str(charter.signed_by_id),
-        "signed_at": charter.signed_at.isoformat() if charter.signed_at else None,
-        "signature_valid": charter.verify_signature(),
-    }
 
 
 def latest_charter(company: Company) -> PilotCharter | None:

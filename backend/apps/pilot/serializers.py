@@ -154,6 +154,16 @@ class PilotIssueListSerializer(serializers.Serializer):
 class PilotChangeRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = PilotChangeRequest
+        fields = [
+            "id",
+            "pilot_program",
+            "title",
+            "rationale",
+            "status",
+            "approved_by",
+            "created_by",
+            "created_at",
+        ]
 
 
 class PilotCharterSerializer(serializers.ModelSerializer):

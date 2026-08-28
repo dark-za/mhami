@@ -43,12 +43,12 @@ class InvalidCompanyLifecycleTransition(ValueError):
 
 
 _ALLOWED_LIFECYCLE_TRANSITIONS: dict[str, set[str]] = {
-    CompanyStatus.TRIAL: {CompanyStatus.ACTIVE, CompanyStatus.SUSPENDED, CompanyStatus.READ_ONLY},
-    CompanyStatus.ACTIVE: {CompanyStatus.SUSPENDED, CompanyStatus.READ_ONLY},
-    CompanyStatus.SUSPENDED: {CompanyStatus.ACTIVE, CompanyStatus.READ_ONLY},
-    CompanyStatus.READ_ONLY: {CompanyStatus.ACTIVE, CompanyStatus.PENDING_DELETION},
-    CompanyStatus.PENDING_DELETION: {CompanyStatus.DELETED},
-    CompanyStatus.DELETED: set(),
+    str(CompanyStatus.TRIAL): {str(CompanyStatus.ACTIVE), str(CompanyStatus.SUSPENDED), str(CompanyStatus.READ_ONLY)},
+    str(CompanyStatus.ACTIVE): {str(CompanyStatus.SUSPENDED), str(CompanyStatus.READ_ONLY)},
+    str(CompanyStatus.SUSPENDED): {str(CompanyStatus.ACTIVE), str(CompanyStatus.READ_ONLY)},
+    str(CompanyStatus.READ_ONLY): {str(CompanyStatus.ACTIVE), str(CompanyStatus.PENDING_DELETION)},
+    str(CompanyStatus.PENDING_DELETION): {str(CompanyStatus.DELETED)},
+    str(CompanyStatus.DELETED): set(),
 }
 
 

@@ -260,7 +260,11 @@ def test_user_cannot_resolve_another_company_transfer(
     target_b = make_user(login_id="transfer-target-b", display_name="Target B")
     make_membership(user=target_b, company=company_b, role=CompanyRole.EMPLOYEE)
 
-    instance = schedule_due_tasks()[0]
+    instance = next(
+        instance
+        for instance in schedule_due_tasks()
+        if instance.company_id == company_b.id and instance.branch_id == branch_b.id
+    )
     transfer = request_transfer(str(instance.id), owner_b, target_b, "Shift handoff")
     from django.test import Client
     client = Client()
@@ -276,5 +280,5 @@ def test_user_cannot_resolve_another_company_transfer(
     )
 
     transfer.refresh_from_db()
-    assert response.status_code == 404
+    assert response.status_code == 403
     assert transfer.status == "pending"

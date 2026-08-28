@@ -397,13 +397,15 @@ def _validated_archive(backup_run: BackupRun, artifact: Path) -> tuple[dict[str,
     # directly so the path is handled inline here as well.
     if artifact.suffix == ".enc":
         data = _decrypt_artifact(data)
-    if not backup_run.artifact_sha256:
-        # ``artifact_sha256`` is the SHA-256 of the encrypted bytes for
-        # current artefacts; for legacy plaintext backups fall back to
-        # the on-disk hash so existing restore scripts keep working.
-        on_disk = (backup_storage_root() / backup_run.artifact_name).read_bytes()
+    storage_path = backup_storage_root() / backup_run.artifact_name
+    if backup_run.artifact_sha256:
+        on_disk = storage_path.read_bytes()
         if _sha256(on_disk) != backup_run.artifact_sha256:
             raise ValueError("Backup artifact integrity verification failed.")
+        if artifact != storage_path and storage_path.suffix == ".enc":
+            expected_plaintext = _decrypt_artifact(on_disk)
+            if data != expected_plaintext:
+                raise ValueError("Backup artifact integrity verification failed.")
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             names = archive.namelist()

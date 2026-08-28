@@ -205,7 +205,7 @@ class IssueMessagesView(TenantAPIView):
 class MediaHealthView(TenantAPIView):
     # Public health endpoint; explicitly override the inherited auth/role
     # checks so it can be hit by the monitoring stack.
-    permission_classes: list[type] = []
+    permission_classes = []
     required_roles = ()
 
     @extend_schema(responses=OpenApiResponse(description="Media subsystem health."))

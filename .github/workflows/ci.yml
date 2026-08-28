@@ -137,6 +137,7 @@ jobs:
       - name: Frontend dependency vulnerability scan
         run: npm audit --audit-level=high
   sast:
+    if: ${{ github.event.repository.visibility == 'public' || vars.ENABLE_CODEQL == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read

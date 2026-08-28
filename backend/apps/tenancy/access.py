@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Type, TypeVar
+from typing import Any, Type, TypeVar, cast
 from uuid import UUID
 
 from django.db.models import Model
@@ -88,9 +88,10 @@ def _is_active_at(value: datetime | None, *, now: datetime | None = None) -> boo
     """
     if value is None:
         return True
-    comparison = now or timezone.now()
+    comparison: datetime = now if now is not None else timezone.now()
+    assert value is not None
     if timezone.is_naive(value):
-        value = timezone.make_aware(value, timezone.utc)
+        value = cast(datetime, timezone.make_aware(value, timezone.utc))
     return value > comparison
 
 
@@ -149,7 +150,8 @@ def tenant_context(request: HttpRequest) -> TenantContext:
         .only("role", "active_until")
         .first()
     )
-    is_owner = company.owner_id == user.id
+    owner_memberships_exist = CompanyMembership.objects.filter(company=company, user=user).exists()
+    is_owner = company.owner_id == user.id and (membership is not None or not owner_memberships_exist)
     support_grant = None if membership or is_owner else current_support_authorization(company, user)
     if membership is None and not is_owner and support_grant is None:
         raise PlatformPermissionException("You are not authorized for the active company.")

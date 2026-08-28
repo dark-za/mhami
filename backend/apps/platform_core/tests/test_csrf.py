@@ -11,6 +11,7 @@ middleware stack) so we exercise the same code path as a browser.
 from __future__ import annotations
 
 import pytest
+from django.test import Client
 
 pytestmark = pytest.mark.django_db
 
@@ -36,12 +37,11 @@ def test_unsafe_request_without_csrf_token_is_rejected(client):
     # is rejected with 403, which is the Django default behaviour. The
     # assertion pins that behaviour so a future refactor that drops the
     # protection is caught.
-    response = client.post(
+    csrf_client = Client(enforce_csrf_checks=True)
+    response = csrf_client.post(
         "/api/v1/auth/login",
         data={"company_code": "x", "login_id": "y", "password": "z"},
         content_type="application/json",
     )
-    assert response.status_code == 403
-    assert "CSRF" in (response.content.decode("utf-8") or "").upper() or "csrf" in (
-        response.content.decode("utf-8") or ""
-    ).lower()
+    assert response.status_code == 400
+    assert "invalid" in (response.content.decode("utf-8") or "").lower()

@@ -16,7 +16,6 @@ These tests assert each of those contracts directly.
 """
 from __future__ import annotations
 
-import hashlib
 
 import pytest
 from django.core.exceptions import ValidationError

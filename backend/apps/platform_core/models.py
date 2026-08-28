@@ -89,8 +89,8 @@ class ExitDecision(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["phase", "signed_at"]),
-            models.Index(fields=["phase", "decision"]),
+            models.Index(fields=["phase", "signed_at"], name="platform_co_phase__idx"),
+            models.Index(fields=["phase", "decision"], name="platform_co_phase__dec_idx"),
         ]
 
     def _canonical_payload(self) -> bytes:
@@ -117,4 +117,3 @@ class ExitDecision(models.Model):
             return False
         expected = self.compute_signature()
         return hmac.compare_digest(self.signature_hmac, expected)
-

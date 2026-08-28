@@ -168,7 +168,7 @@ def test_duplicate_risk_is_branch_scoped_and_media_is_private(
     assert media_denied.status_code == 200
 
     denied_other_branch = employee_client.get(f"/api/v1/evidence/items/{submit_two.json()['id']}/media")
-    assert denied_other_branch.status_code == 400
+    assert denied_other_branch.status_code == 403
 
 
 def test_issue_report_and_discussion(

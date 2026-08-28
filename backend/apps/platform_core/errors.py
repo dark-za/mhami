@@ -66,7 +66,7 @@ def platform_exception_handler(exc: Exception, context: dict[str, object]) -> Re
         message = str(exc.detail)
     if isinstance(exc, ValidationError):
         code = "CORE-VALIDATION-001"
-        message = "One or more fields are invalid."
+        message = str(exc.detail)
     response.data = format_error_payload(code, message)
     return response
 
@@ -108,7 +108,7 @@ def platform_service_call(view_method: _F) -> _F:
     def wrapper(self: Any, request: Any, *args: Any, **kwargs: Any) -> Any:
         try:
             return view_method(self, request, *args, **kwargs)
-        except (PlatformAPIException, PlatformPermissionException):
+        except (PlatformAPIException, PlatformPermissionException, ValidationError):
             raise
         except _SERVICE_ERRORS as exc:
             raise PlatformAPIException(str(exc)) from exc

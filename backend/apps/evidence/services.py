@@ -313,7 +313,7 @@ def submit_evidence(
             # ``privacy_decision`` field.
             server_face_detection = _server_detect_face(image)
             server_face_detected = bool(server_face_detection.get("detected"))
-            normalized = _normalize_image(image, server_face_detected=server_face_detected)
+            normalized = _normalize_image(image, server_face_detected)
             private_name = _private_name()
             private_path = _subdir("private") / private_name
             normalized.save(private_path, format="WEBP", quality=90)
@@ -327,6 +327,12 @@ def submit_evidence(
         elif upload is not None:
             raise ValueError("Non-image evidence cannot include file uploads.")
 
+        confidence_value = server_face_detection.get("confidence", 0)
+        face_detector_confidence = (
+            int(confidence_value)
+            if isinstance(confidence_value, (int, float, str))
+            else 0
+        )
         item = EvidenceItem.objects.create(
             company=session.company,
             branch=session.branch,
@@ -351,7 +357,7 @@ def submit_evidence(
             face_detected=face_detected,
             privacy_decision=privacy_decision,
             face_detector_version=FACE_DETECTOR_VERSION,
-            face_detector_confidence=int(server_face_detection.get("confidence", 0) or 0),
+            face_detector_confidence=face_detector_confidence,
             face_detector_raw_score=server_face_detection,
             privacy_metadata={"client_face_flag": bool(face_detected)},
             challenge_response=challenge_response,

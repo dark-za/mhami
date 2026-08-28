@@ -21,7 +21,6 @@ from apps.tenancy.access import (
     validate_company_reference,
     validate_company_reference_or_none,
 )
-from apps.tenancy.models import Company
 
 pytestmark = pytest.mark.django_db
 

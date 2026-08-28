@@ -45,9 +45,10 @@ class TenantAPIView(APIView):
     # authentication". The check fires lazily inside ``get_tenant`` so it does
     # not affect views that opt out of the contract (e.g. internal-only
     # endpoints that already have their own guard). The element type is
-    # ``str`` because ``TextChoices`` subclasses ``str`` and mypy correctly
-    # accepts the enum members as ``str`` here.
-    required_roles: ClassVar[tuple[str, ...]] = ()
+    # Runtime role constants come from Django ``TextChoices``. Mypy sees those
+    # members as their declaration tuples without django-stubs, so normalize
+    # them when enforcing access instead of pushing casts into every view.
+    required_roles: ClassVar[tuple[Any, ...]] = ()
 
     def get_tenant(self) -> TenantContext:
         """Return the cached :class:`TenantContext` for the current request.
@@ -63,7 +64,7 @@ class TenantAPIView(APIView):
             return cached
         context = tenant_context(request)
         if self.required_roles:
-            context.require_roles(*self.required_roles)
+            context.require_roles(*(str(role) for role in self.required_roles))
         request._cached_tenant = context
         return context
 

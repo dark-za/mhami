@@ -18,6 +18,8 @@ def _context(
     make_company,
     make_membership,
     make_branch,
+    make_job_role,
+    make_branch_membership,
     make_template,
     make_template_version,
     make_schedule,
@@ -29,6 +31,8 @@ def _context(
     make_membership(user=owner, company=company, role=CompanyRole.OWNER)
     make_membership(user=monitor, company=company, role=CompanyRole.MONITOR)
     branch = make_branch(company=company, code="main", name="Main")
+    role = make_job_role(company=company, name="Monitor", code="monitor")
+    make_branch_membership(company=company, user=monitor, branch=branch, job_role=role)
     template = make_template(company=company, branch=branch, assigned_user=owner)
     make_template_version(template=template)
     make_schedule(company=company, branch=branch, template=template, scheduled_time=time(9, 0))
@@ -38,10 +42,11 @@ def _context(
 
 def test_export_request_and_download(
     make_user, make_company, make_membership, make_branch,
-    make_template, make_template_version, make_schedule, force_login_company,
+    make_template, make_template_version, make_schedule, make_job_role, make_branch_membership, force_login_company,
 ):
     owner, _monitor, company, branch = _context(
         make_user, make_company, make_membership, make_branch,
+        make_job_role, make_branch_membership,
         make_template, make_template_version, make_schedule,
     )
     client = force_login_company(owner, company)
@@ -60,10 +65,11 @@ def test_export_request_and_download(
 
 def test_monitor_cannot_export_unassigned_branch(
     make_user, make_company, make_membership, make_branch,
-    make_template, make_template_version, make_schedule, force_login_company,
+    make_template, make_template_version, make_schedule, make_job_role, make_branch_membership, force_login_company,
 ):
     _owner, monitor, company, _branch = _context(
         make_user, make_company, make_membership, make_branch,
+        make_job_role, make_branch_membership,
         make_template, make_template_version, make_schedule,
     )
     other_branch = make_branch(company=company, code="other", name="Other")
@@ -79,10 +85,11 @@ def test_monitor_cannot_export_unassigned_branch(
 
 def test_monitor_can_request_export_for_assigned_branch(
     make_user, make_company, make_membership, make_branch,
-    make_template, make_template_version, make_schedule, force_login_company,
+    make_template, make_template_version, make_schedule, make_job_role, make_branch_membership, force_login_company,
 ):
     _owner, monitor, company, branch = _context(
         make_user, make_company, make_membership, make_branch,
+        make_job_role, make_branch_membership,
         make_template, make_template_version, make_schedule,
     )
     client = force_login_company(monitor, company)

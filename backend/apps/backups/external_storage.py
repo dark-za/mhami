@@ -44,7 +44,6 @@ import json
 import os
 import re
 import secrets
-import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -304,8 +303,9 @@ def _upload_s3(
     # Object Lock; if the operator chose a KMS key the extra arg is
     # expected to be a fully-qualified ARN. SSE-S3 (AES256) does not
     # require it.
-    if sse.startswith("aws:kms") and getattr(settings, "BACKUP_EXTERNAL_KMS_KEY_ID", ""):
-        extra_args["SSEKMSKeyId"] = settings.BACKUP_EXTERNAL_KMS_KEY_ID
+    kms_key_id = str(getattr(settings, "BACKUP_EXTERNAL_KMS_KEY_ID", "") or "")
+    if sse.startswith("aws:kms") and kms_key_id:
+        extra_args["SSEKMSKeyId"] = kms_key_id
     fd, tmp_path = tempfile.mkstemp(prefix="mhami-external-", suffix=".bin")
     try:
         with os.fdopen(fd, "wb") as fh:
@@ -348,10 +348,4 @@ def verify_remote(remote_uri: str, expected_sha256: str) -> None:
             f"Remote metadata digest {head_digest!r} != local {expected_sha256!r}."
         )
     obj = client.get_object(Bucket=parsed.netloc, Key=parsed.path.lstrip("/"), Range=f"bytes=0-{REMOTE_CHECK_BYTES - 1}")
-    sample = obj["Body"].read(REMOTE_CHECK_BYTES)
-    if _sha256(sample) != _sha256(payload[:REMOTE_CHECK_BYTES]) if False else False:  # noqa: E501 - disabled: we never upload the plaintext head
-        # The head object only confirms the *ciphertext* metadata. The
-        # full-payload SHA-256 was already recorded in the object's
-        # ``mhami-sha256`` metadata header, which we trust to match the
-        # local value the caller passes in.
-        raise ExternalStorageIntegrityError("Remote head sample digest mismatch.")
+    obj["Body"].read(REMOTE_CHECK_BYTES)

@@ -95,7 +95,7 @@ def verify_dsr_email(request: DSRRequest, *, token: str, actor_id: str = "email"
     request.verified_at = timezone.now()
     request.verification_token_hash = ""
     request.save(update_fields=["verified_at", "verification_token_hash", "updated_at"])
-    return _transition_dsr(request, target=DSRRequestStatus.VERIFIED, actor_id=actor_id, notes="Email verified.")
+    return _transition_dsr(request, target=str(DSRRequestStatus.VERIFIED), actor_id=actor_id, notes="Email verified.")
 
 
 # ---------------------------------------------------------------------------
@@ -200,11 +200,11 @@ def list_published_activities() -> list[ProcessingActivity]:
 
 
 _ALLOWED_DSR_TRANSITIONS: dict[str, set[str]] = {
-    DSRRequestStatus.PENDING: {DSRRequestStatus.VERIFIED, DSRRequestStatus.REJECTED},
-    DSRRequestStatus.VERIFIED: {DSRRequestStatus.IN_PROGRESS, DSRRequestStatus.REJECTED},
-    DSRRequestStatus.IN_PROGRESS: {DSRRequestStatus.COMPLETED, DSRRequestStatus.REJECTED},
-    DSRRequestStatus.COMPLETED: set(),
-    DSRRequestStatus.REJECTED: set(),
+    str(DSRRequestStatus.PENDING): {str(DSRRequestStatus.VERIFIED), str(DSRRequestStatus.REJECTED)},
+    str(DSRRequestStatus.VERIFIED): {str(DSRRequestStatus.IN_PROGRESS), str(DSRRequestStatus.REJECTED)},
+    str(DSRRequestStatus.IN_PROGRESS): {str(DSRRequestStatus.COMPLETED), str(DSRRequestStatus.REJECTED)},
+    str(DSRRequestStatus.COMPLETED): set(),
+    str(DSRRequestStatus.REJECTED): set(),
 }
 
 
@@ -272,7 +272,7 @@ def verify_dsr_identity(
     """
     return _transition_dsr(
         request,
-        target=DSRRequestStatus.VERIFIED,
+        target=str(DSRRequestStatus.VERIFIED),
         actor_id=actor_id,
         notes=notes,
     )
@@ -288,7 +288,7 @@ def start_dsr_work(
     """Move a verified :class:`DSRRequest` into :attr:`IN_PROGRESS`."""
     return _transition_dsr(
         request,
-        target=DSRRequestStatus.IN_PROGRESS,
+        target=str(DSRRequestStatus.IN_PROGRESS),
         actor_id=actor_id,
         notes=notes,
     )
@@ -310,7 +310,7 @@ def complete_dsr_request(
     request.decided_by = decided_by
     return _transition_dsr(
         request,
-        target=DSRRequestStatus.COMPLETED,
+        target=str(DSRRequestStatus.COMPLETED),
         actor_id=actor_id,
         notes=notes,
         update={"decided_at": timezone.now()},
@@ -331,7 +331,7 @@ def reject_dsr_request(
     request.decided_by = decided_by
     return _transition_dsr(
         request,
-        target=DSRRequestStatus.REJECTED,
+        target=str(DSRRequestStatus.REJECTED),
         actor_id=actor_id,
         notes=reason,
         update={"decided_at": timezone.now(), "decision_notes": reason},

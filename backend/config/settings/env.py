@@ -19,9 +19,10 @@ environment variables happens once through Pydantic.
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,7 +40,7 @@ class PlatformSettings(BaseSettings):
     django_settings_module: str = "config.settings.dev"
     django_secret_key: str = "change-me"
     django_debug: bool = False
-    django_allowed_hosts: list[str] = Field(default_factory=list)
+    django_allowed_hosts: str = ""
 
     # Audit / signing
     audit_hmac_secret: str = ""
@@ -57,7 +58,7 @@ class PlatformSettings(BaseSettings):
     celery_result_backend: str = "redis://redis:6379/1"
 
     # Secrets
-    mfa_encryption_keys: list[str] = Field(default_factory=list)
+    mfa_encryption_keys: str = ""
     metrics_token: str = ""
     backup_external_uri: str = ""
 
@@ -70,22 +71,6 @@ class PlatformSettings(BaseSettings):
     celery_log_level: str = "INFO"
     celery_worker_concurrency: int = 2
     frontend_port: int = 8080
-
-    @field_validator("django_allowed_hosts", mode="before")
-    @classmethod
-    def split_hosts(cls, value: object) -> object:
-        """Accept ``"a,b,c"`` strings as well as list-shaped env values."""
-        if isinstance(value, str):
-            return [host.strip() for host in value.split(",") if host.strip()]
-        return value
-
-    @field_validator("mfa_encryption_keys", mode="before")
-    @classmethod
-    def split_keys(cls, value: object) -> object:
-        """Accept comma-separated key lists for ``MFA_ENCRYPTION_KEYS``."""
-        if isinstance(value, str):
-            return [key.strip() for key in value.split(",") if key.strip()]
-        return value
 
     @field_validator("django_debug", mode="before")
     @classmethod
@@ -108,4 +93,17 @@ def get_settings() -> PlatformSettings:
     return PlatformSettings()
 
 
-__all__ = ["PlatformSettings", "get_settings"]
+def parse_env_list(value: str) -> list[str]:
+    """Accept JSON arrays and comma-separated strings for list-shaped env vars."""
+    stripped = value.strip()
+    if not stripped:
+        return []
+    if stripped.startswith("["):
+        parsed = json.loads(stripped)
+        if not isinstance(parsed, list):
+            raise ValueError("Expected a JSON list.")
+        return [str(item).strip() for item in parsed if str(item).strip()]
+    return [item.strip() for item in stripped.split(",") if item.strip()]
+
+
+__all__ = ["PlatformSettings", "get_settings", "parse_env_list"]

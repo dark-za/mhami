@@ -6,7 +6,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.test")
 django.setup()
 
 # 1) Test that quick_manifest factory works with minimal args
-from apps.platform_core.registry import quick_manifest, ModuleManifest, get_registry
+from apps.platform_core.registry import ModuleManifest, get_registry, quick_manifest  # noqa: E402
 
 m = quick_manifest(slug="test_module")
 assert isinstance(m, ModuleManifest)

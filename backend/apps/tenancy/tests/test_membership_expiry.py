@@ -12,7 +12,6 @@ from datetime import timedelta
 import pytest
 from django.test import Client
 from django.utils import timezone
-from rest_framework import status
 
 from apps.organizations.models import CompanyMembership, CompanyRole
 from apps.tenancy.access import active_membership_q, tenant_context

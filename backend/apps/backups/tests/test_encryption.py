@@ -7,8 +7,6 @@ zip. Round-tripping the bytes through ``_encrypt_artifact`` and
 
 from __future__ import annotations
 
-import io
-import zipfile
 
 import pytest
 from cryptography.fernet import Fernet

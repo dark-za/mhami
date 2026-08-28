@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.identity.models import User
+from apps.audit.services import record_audit_event
 from apps.organizations.models import (
     Branch,
     CompanyMembership,
@@ -215,11 +216,15 @@ class Command(BaseCommand):
         program.success_measures = [
             "Employees complete Chrome-only tasks",
             "Monitors resolve exceptions without engineering intervention",
+            "Owners see weekly branch and quality trends",
+        ]
+        program.weekly_metrics_goal = {"branches": branches_count, "employees": branches_count * employees_per_branch}
+        program.save()
+
         charter_signed = False
         if options["charter"]:
             from apps.pilot.services import sign_charter
-            from datetime import timedelta
-            from apps.audit.services import record_audit_event
+
             observation_start = timezone.now().date()
             observation_end = observation_start + timedelta(days=options["trial_days"])
             charter = sign_charter(
@@ -250,17 +255,7 @@ class Command(BaseCommand):
                 f"Pilot seeded: company='{code}' ({name}), {branches_count} branches, "
                 f"{len(monitors)} monitors, {len(employees)} employees, "
                 f"owner='{code}-owner' / monitors / employees password='{password}', "
-                f"templates={len(REFERENCE_TEMPLATES)}, charter_signed={charter_signed
-        ]
-        program.weekly_metrics_goal = {"branches": branches_count, "employees": branches_count * employees_per_branch}
-        program.save()
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Pilot seeded: company='{code}' ({name}), {branches_count} branches, "
-                f"{len(monitors)} monitors, {len(employees)} employees, "
-                f"owner='{code}-owner' / monitors / employees password='{password}', "
-                f"templates={len(REFERENCE_TEMPLATES)}."
+                f"templates={len(REFERENCE_TEMPLATES)}, charter_signed={charter_signed}."
             )
         )
 

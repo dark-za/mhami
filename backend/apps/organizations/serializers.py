@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.platform_core.errors import PlatformPermissionException
 
-from .models import Branch, CompanyMembership, JobRole, UserBranchMembership, WeeklyShift
+from .models import Branch, CompanyMembership, CompanyRole, JobRole, UserBranchMembership, WeeklyShift
 
 
 class BranchCreateSerializer(serializers.Serializer):
@@ -99,20 +99,21 @@ class WeeklyShiftCreateSerializer(serializers.Serializer):
                 "The selected user is not an active member of this company."
             )
 
-        branch_membership = (
-            UserBranchMembership.objects.filter(
-                company=self._company,
-                user_id=user_id,
-                branch_id=branch_id,
-                active=True,
+        if membership.role != CompanyRole.OWNER:
+            branch_membership = (
+                UserBranchMembership.objects.filter(
+                    company=self._company,
+                    user_id=user_id,
+                    branch_id=branch_id,
+                    active=True,
+                )
+                .only("id")
+                .first()
             )
-            .only("id")
-            .first()
-        )
-        if branch_membership is None:
-            raise PlatformPermissionException(
-                "The selected user does not have an active branch assignment for this branch."
-            )
+            if branch_membership is None:
+                raise PlatformPermissionException(
+                    "The selected user does not have an active branch assignment for this branch."
+                )
 
         # Reject obvious duplicate shifts in the same company+user+weekday.
         if (

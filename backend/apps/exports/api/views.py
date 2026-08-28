@@ -15,7 +15,7 @@ from ..serializers import (
     ExportRequestCreateSerializer,
     ExportRequestSerializer,
 )
-from ..services import export_download_response, prepare_export_request
+from ..services import complete_export_request, export_download_response, prepare_export_request
 
 
 class ExportPolicyView(TenantAPIView):
@@ -69,6 +69,7 @@ class ExportRequestView(TenantAPIView):
                 start_date=validated.get("start_date"),
                 end_date=validated.get("end_date"),
             )
+            export = complete_export_request(str(export.id))
         except ValueError as exc:
             raise PlatformAPIException(str(exc)) from exc
         return Response(ExportRequestSerializer(export).data, status=201)
@@ -79,6 +80,6 @@ class ExportDownloadView(TenantAPIView):
     required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
     @extend_schema(responses={200: OpenApiResponse(description="Export artifact stream.")})
-    def get(self, request, request_id):
+    def get(self, request, token):
         company = self.get_tenant().company
-        return export_download_response(company, request.user, request_id)
+        return export_download_response(company, request.user, token)

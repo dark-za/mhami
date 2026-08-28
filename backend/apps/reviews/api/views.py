@@ -3,7 +3,7 @@ from __future__ import annotations
 from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
-from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.organizations.models import CompanyRole
 from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem, TaskIssueReport
 from apps.platform_core.errors import platform_service_call, PlatformAPIException
@@ -41,10 +41,8 @@ class ReviewQueueView(TenantAPIView):
 
 
 class ReviewPolicyView(TenantAPIView):
-    # H-02: only OWNERs may mutate the review policy. The class-level check
-    # replaces the per-method membership lookup so the policy is enforced
-    # before any business logic runs (defense in depth).
-    required_roles = (CompanyRole.OWNER,)
+    # H-02: all company roles may read the review policy; only OWNERs mutate it.
+    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR, CompanyRole.EMPLOYEE)
 
     @extend_schema(responses=ReviewPolicySerializer)
 
@@ -57,7 +55,9 @@ class ReviewPolicyView(TenantAPIView):
 
     @platform_service_call
     def patch(self, request):
-        company = self.get_tenant().company
+        context = self.get_tenant()
+        context.require_roles(str(CompanyRole.OWNER))
+        company = context.company
         policy = policy_for_company(company)
         serializer = ReviewPolicyUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
