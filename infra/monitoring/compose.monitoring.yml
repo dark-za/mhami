@@ -1,0 +1,97 @@
+# INFRA-04: optional monitoring stack.
+#
+# Bring up with:
+#   docker compose -f compose.yml -f compose.prod.yml \
+#                  -f infra/monitoring/compose.monitoring.yml --profile monitoring up -d
+#
+# The Prometheus container needs the metrics token. Mount it as a file
+# at /etc/prometheus/metrics_token and the scrape config will read it.
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    user: "65534:65534"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 100
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts:/etc/prometheus/alerts:ro
+      - ./prometheus_data:/prometheus
+      - ./prometheus/metrics_token:/etc/prometheus/metrics_token:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - alertmanager
+    profiles: [monitoring]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    user: "65534:65534"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 100
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager_data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    profiles: [monitoring]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    user: "472:472"
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 100
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    profiles: [monitoring]
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    user: "65534:65534"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    pids_limit: 50
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+    volumes:
+      - ./prometheus/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    profiles: [monitoring]
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:

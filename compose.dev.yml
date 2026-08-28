@@ -1,0 +1,38 @@
+# Local development override. Hot-reload is preserved; base hardening
+# (cap_drop, security_opt, mem_limit, pids_limit) is intentionally kept so
+# the same compose file is exercised in CI. Read-only is disabled because
+# runserver and the Vite dev server need write access to project sources.
+services:
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  api:
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec python manage.py runserver 0.0.0.0:8000"]
+    ports:
+      - "8000:8000"
+    # Dev only: relax the read-only filesystem so runserver can write
+    # bytecode / migration state, and allow the bind-mount to be writable.
+    read_only: false
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      DJANGO_DEBUG: "true"
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+
+  frontend:
+    build:
+      target: development
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    environment:
+      VITE_API_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    read_only: false
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend-node-modules:/app/frontend/node_modules

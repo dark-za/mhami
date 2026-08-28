@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      POSTGRES_DB: platform
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ci-test-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api,testserver
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Start Postgres
+        run: |
+          docker run -d --name ci-postgres \
+            -e POSTGRES_DB=platform -e POSTGRES_USER=platform -e POSTGRES_PASSWORD=platform \
+            -p 5432:5432 postgres:17.11
+          until docker exec ci-postgres pg_isready -U platform -d platform >/dev/null 2>&1; do sleep 2; done
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt pip-audit
+      - name: Compile backend
+        run: python -m compileall .
+      - name: Verify no default secrets in compose
+        # C-02: enforce that the literal placeholder values
+        # ("change-me", "replace-with-...") are not silently consumed as
+        # production defaults. Allowed only in .env.example and *.dev.yml.
+        run: |
+          set -euo pipefail
+          if grep -RnE "change-me|replace-with-a-long|replace-with-approved" \
+              --include="*.yml" --include="*.yaml" \
+              compose.yml compose.prod.yml infra/ 2>/dev/null; then
+            echo "Default/placeholder secret value found in production compose files." >&2
+            exit 1
+          fi
+          if ! grep -q "AUDIT_HMAC_SECRET" compose.yml \
+              || ! grep -q "AUDIT_HMAC_SECRET" compose.prod.yml; then
+            echo "AUDIT_HMAC_SECRET missing from compose files." >&2
+            exit 1
+          fi
+      - name: Backend lint
+        run: ruff check .
+      - name: Backend type check
+        run: mypy .
+      - name: Check migration state
+        run: python manage.py makemigrations --check --dry-run
+      - name: Validate OpenAPI schema
+        run: python manage.py spectacular --validate
+      - name: Django system checks
+        run: python manage.py check
+      - name: Validate production security settings
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_SECRET_KEY: Q7v9pL2xN8mR4tY6uI1oP3aS5dF7gH9jK2lZ4xC6vB8nM1qW3eR5tY7uI9oP2aS4
+          DJANGO_ALLOWED_HOSTS: example.com
+          AUDIT_HMAC_SECRET: ci-audit-hmac-secret-for-production-settings-validation
+          MFA_ENCRYPTION_KEYS: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+          METRICS_TOKEN: ci-test-metrics-token-for-production-settings-validation
+          BACKUP_EXTERNAL_URI: s3://ci-test-backup-bucket/backups
+        run: python manage.py check --deploy
+      - name: Run backend tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: pytest --cov=apps --cov-report=xml --cov-fail-under=70
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: Backend dependency vulnerability scan
+        run: pip-audit -r requirements.txt
+      - name: Build backend image for scanning
+        working-directory: .
+        run: docker build -t mhami-backend:ci ./backend
+      - name: Generate backend image SBOM
+        uses: anchore/sbom-action@v0.24.0
+        with:
+          image: mhami-backend:ci
+          artifact-name: mhami-backend-sbom.spdx.json
+          output-file: ./mhami-backend-sbom.spdx.json
+      - name: Scan backend image with Grype
+        uses: anchore/scan-action@v6
+        with:
+          image: mhami-backend:ci
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+      - name: Scan repository with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Typecheck frontend
+        run: npm run typecheck
+      - name: Build frontend
+        run: npm run build
+      - name: Test frontend
+        run: npm run test
+      - name: Frontend dependency vulnerability scan
+        run: npm audit --audit-level=high
+  sast:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python,javascript
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v3

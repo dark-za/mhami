@@ -1,0 +1,64 @@
+name: zap-full
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  zap-full:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: platform
+          POSTGRES_USER: platform
+          POSTGRES_PASSWORD: platform
+        ports: ["5432:5432"]
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: ci-zap-full-secret
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: platform
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install backend
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Migrate
+        working-directory: backend
+        run: python manage.py migrate --noinput
+      - name: Start backend
+        working-directory: backend
+        run: |
+          python manage.py runserver 0.0.0.0:8000 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/api/health > /dev/null 2>&1; then
+              echo "Backend up"
+              break
+            fi
+            sleep 2
+          done
+      - name: ZAP full scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: http://localhost:8000
+          rules_file_name: .zap/rules.tsv
+          cmd_options: "-I"
+      - name: Upload ZAP full report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-full-report
+          path: report_html.html

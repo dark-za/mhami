@@ -1,0 +1,53 @@
+{
+  "title": "Platform Database Overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "tags": ["mhami", "db", "platform"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Active connections",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "pg_stat_activity_count{job=\"platform-postgres\"}" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Transactions / sec",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"platform-postgres\"}[1m])" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Tuple reads vs. writes",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "rate(pg_stat_database_tup_fetched{job=\"platform-postgres\"}[1m])", "legendFormat": "fetched" },
+        { "expr": "rate(pg_stat_database_tup_inserted{job=\"platform-postgres\"}[1m])", "legendFormat": "inserted" },
+        { "expr": "rate(pg_stat_database_tup_updated{job=\"platform-postgres\"}[1m])", "legendFormat": "updated" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Replication lag (s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "pg_replication_lag_seconds{job=\"platform-postgres\"}" }
+      ]
+    }
+  ]
+}

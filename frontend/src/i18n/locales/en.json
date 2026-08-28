@@ -1,0 +1,83 @@
+{
+  "common": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "language": "Language",
+    "calendar": "Calendar"
+  },
+  "auth": {
+    "company_code": "Company code",
+    "login_id": "Login ID",
+    "password": "Password",
+    "mfa_code": "MFA code",
+    "login_title": "Sign in to the workspace",
+    "login_subtitle": "Use the credentials issued by your platform administrator.",
+    "login_failed": "Login failed. Please verify the credentials and try again."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "operations": "Operations",
+    "tasks": "Tasks",
+    "evidence": "Evidence",
+    "people": "People",
+    "reviews": "Reviews",
+    "admin": "Admin"
+  },
+  "shell": {
+    "access_restricted": "Access restricted",
+    "no_access": "You do not have access to this page",
+    "access_explainer": "This page is reserved for the following roles:",
+    "fallback_active": "Bootstrap fallback active",
+    "live_connected": "Live bootstrap connected",
+    "snapshot_active": "Demo snapshot active"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "completed": "Completed",
+    "overdue": "Overdue",
+    "in_progress": "In progress",
+    "empty": "No tasks are assigned to you yet.",
+    "open_task": "Open task"
+  },
+  "evidence": {
+    "title": "Evidence",
+    "capture": "Capture evidence",
+    "retake": "Retake",
+    "upload": "Upload",
+    "empty": "No evidence has been attached to this task yet."
+  },
+  "reviews": {
+    "title": "Reviews",
+    "queue": "Review queue",
+    "approve": "Approve",
+    "reject": "Reject",
+    "empty": "The review queue is empty."
+  },
+  "people": {
+    "title": "People",
+    "roster": "Roster",
+    "branch": "Branch"
+  },
+  "admin": {
+    "title": "Admin",
+    "ai_control": "AI control"
+  },
+  "operations": {
+    "title": "Operations",
+    "exports": "Exports",
+    "backups": "Backups"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection."
+  }
+}

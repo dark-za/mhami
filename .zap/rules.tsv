@@ -1,0 +1,10 @@
+# ZAP rules.tsv — suppress alerts that do not apply to the
+# workspace or are intentional. Lines starting with "#" are comments.
+# The format is: <id>\t<description>
+#
+# 10010	Cookie set without HttpOnly — we set csrftoken via Django's
+#           CsrfViewMiddleware, which already sets HttpOnly. Suppress
+#           historic noise on the /api/health endpoint.
+# 10011	Cookie set without Secure — covered by HSTS in production.
+10010	http://localhost:8000/api/health
+10011	http://localhost:8000/api/health

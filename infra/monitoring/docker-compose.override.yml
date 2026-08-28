@@ -1,0 +1,45 @@
+# INFRA-04: monitoring stack. Bring up with
+#   docker compose -f infra/monitoring/docker-compose.override.yml up -d
+# once the metrics token is placed at
+#   infra/monitoring/secrets/metrics_token
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus-data:/prometheus
+    secrets:
+      - metrics_token
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - alertmanager-data:/alertmanager
+    ports:
+      - "9093:9093"
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+
+secrets:
+  metrics_token:
+    file: ./secrets/metrics_token

@@ -1,0 +1,47 @@
+/** Role-based route table used by the workspace shell. */
+
+import type { Role } from "../design-system/tokens";
+
+export type WorkspaceRoute =
+  | "/"
+  | "/dashboard"
+  | "/operations"
+  | "/tasks"
+  | "/evidence"
+  | "/people"
+  | "/reviews"
+  | "/admin";
+
+export const routePermissions: Record<Exclude<WorkspaceRoute, "/">, Role[]> = {
+  "/dashboard": ["platform_admin", "owner", "monitor", "employee"],
+  "/operations": ["platform_admin", "owner", "monitor", "employee"],
+  "/tasks": ["platform_admin", "owner", "monitor", "employee"],
+  "/evidence": ["platform_admin", "owner", "monitor", "employee"],
+  "/people": ["platform_admin", "owner", "monitor"],
+  "/reviews": ["platform_admin", "owner", "monitor"],
+  "/admin": ["platform_admin", "owner"],
+};
+
+export function getWorkspaceRoute(pathname: string): WorkspaceRoute {
+  if (pathname === "/" || pathname === "") {
+    return "/";
+  }
+  if (pathname in routePermissions) {
+    return pathname as WorkspaceRoute;
+  }
+  return "/";
+}
+
+export function routeTitle(locale: "ar" | "en", route: WorkspaceRoute): string {
+  const titles: Record<WorkspaceRoute, { ar: string; en: string }> = {
+    "/": { ar: "الملخص", en: "Summary" },
+    "/dashboard": { ar: "لوحة القيادة", en: "Dashboard" },
+    "/operations": { ar: "العمليات", en: "Operations" },
+    "/tasks": { ar: "المهام", en: "Tasks" },
+    "/evidence": { ar: "الأدلة", en: "Evidence" },
+    "/people": { ar: "الأفراد", en: "People" },
+    "/reviews": { ar: "المراجعات", en: "Reviews" },
+    "/admin": { ar: "الإدارة", en: "Admin" },
+  };
+  return locale === "ar" ? titles[route].ar : titles[route].en;
+}

@@ -1,0 +1,61 @@
+{
+  "title": "Platform Business KPIs",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["mhami", "business", "platform"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Active companies",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "platform_companies_total{job=\"platform-api\",status=\"active\"}" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Reviews pending",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "platform_reviews_pending{job=\"platform-api\"}" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "AI requests in last 24h",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "increase(platform_ai_requests_total{job=\"platform-api\"}[24h])" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Backups successful (24h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        { "expr": "increase(platform_backup_runs_total{job=\"platform-api\",status=\"completed\"}[24h])" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Audit chain integrity",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "platform_audit_chain_verified{job=\"platform-api\"}" }
+      ]
+    }
+  ]
+}

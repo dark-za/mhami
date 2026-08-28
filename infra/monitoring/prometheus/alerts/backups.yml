@@ -1,0 +1,55 @@
+# INFRA-04: Backup freshness + external upload alerts.
+#
+# The platform's own metric ``platform_backup_last_success_timestamp_seconds``
+# is emitted by ``/api/v1/metrics``; the external-upload equivalent is
+# recorded under ``platform_backup_external_last_success_timestamp_seconds``
+# so a remote-side outage cannot mask a local-side outage.
+
+groups:
+  - name: platform-backups
+    rules:
+      - alert: PlatformBackupStale
+        expr: |
+          time() - platform_backup_last_success_timestamp_seconds{job="platform-api"} > 93600
+        for: 15m
+        labels:
+          severity: critical
+          service: backups
+        annotations:
+          summary: Local backup is outside the RPO window
+          description: "No local backup has succeeded within 26 hours."
+
+      - alert: PlatformBackupFailure
+        expr: |
+          platform_backup_last_failure_timestamp_seconds{job="platform-api"}
+            > platform_backup_last_success_timestamp_seconds{job="platform-api"}
+        for: 15m
+        labels:
+          severity: critical
+          service: backups
+        annotations:
+          summary: Latest backup attempt failed
+          description: "The most recent backup attempt is newer than the last success."
+
+      - alert: PlatformBackupExternalStale
+        expr: |
+          time() - platform_backup_external_last_success_timestamp_seconds{job="platform-api"} > 129600
+        for: 30m
+        labels:
+          severity: warning
+          service: backups
+        annotations:
+          summary: External backup mirror is outside the RPO window
+          description: "No external upload has succeeded within 36 hours."
+
+      - alert: PlatformBackupExternalFailure
+        expr: |
+          platform_backup_external_last_failure_timestamp_seconds{job="platform-api"}
+            > platform_backup_external_last_success_timestamp_seconds{job="platform-api"}
+        for: 30m
+        labels:
+          severity: warning
+          service: backups
+        annotations:
+          summary: Latest external backup upload failed
+          description: "The most recent external upload attempt is newer than the last success."

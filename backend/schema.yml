@@ -1,0 +1,5436 @@
+openapi: 3.0.3
+info:
+  title: Modular Operations Platform API
+  version: 0.1.0
+  description: Foundation API contract for the modular operations platform.
+paths:
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/ai/analysis:
+    post:
+      operationId: api_v1_ai_analysis_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisRunCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisRunCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisRunCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIAnalysisRun'
+          description: ''
+  /api/v1/ai/criteria:
+    get:
+      operationId: api_v1_ai_criteria_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Company AI analysis criteria summary.
+    post:
+      operationId: api_v1_ai_criteria_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisCriterionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisCriterionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AIAnalysisCriterionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIAnalysisCriterion'
+          description: ''
+  /api/v1/ai/provider:
+    get:
+      operationId: api_v1_ai_provider_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIProviderConfig'
+          description: ''
+    patch:
+      operationId: api_v1_ai_provider_partial_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAIProviderConfigUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAIProviderConfigUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAIProviderConfigUpdate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIProviderConfig'
+          description: ''
+  /api/v1/ai/shadow:
+    get:
+      operationId: api_v1_ai_shadow_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: AI shadow-mode agreement and error summary.
+  /api/v1/auth/company/acceptances:
+    post:
+      operationId: api_v1_auth_company_acceptances_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptanceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AcceptanceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AcceptanceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Recorded legal acceptance id.
+  /api/v1/auth/company/branch-memberships:
+    post:
+      operationId: api_v1_auth_company_branch_memberships_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchMembershipCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BranchMembershipCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BranchMembershipCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Created branch membership.
+  /api/v1/auth/company/members:
+    get:
+      operationId: api_v1_auth_company_members_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of company memberships.
+  /api/v1/auth/company/support:
+    post:
+      operationId: api_v1_auth_company_support_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportAuthorization'
+          description: ''
+    delete:
+      operationId: api_v1_auth_company_support_destroy
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/company/users:
+    post:
+      operationId: api_v1_auth_company_users_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Created company user.
+  /api/v1/auth/login:
+    post:
+      operationId: api_v1_auth_login_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+          description: ''
+  /api/v1/auth/logout:
+    post:
+      operationId: api_v1_auth_logout_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Current user, active company, and memberships.
+  /api/v1/auth/mfa/enroll:
+    post:
+      operationId: api_v1_auth_mfa_enroll_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaEnrollRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MfaEnrollRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MfaEnrollRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaEnrollmentCreate'
+          description: ''
+  /api/v1/auth/mfa/verify:
+    post:
+      operationId: api_v1_auth_mfa_verify_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MfaVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MfaVerify'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaEnrollment'
+          description: ''
+  /api/v1/auth/register:
+    post:
+      operationId: api_v1_auth_register_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+  /api/v1/backups/download/{backup_run_id}:
+    get:
+      operationId: api_v1_backups_download_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: backup_run_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Backup archive download.
+  /api/v1/backups/policy:
+    get:
+      operationId: api_v1_backups_policy_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Backup policy for the active company.
+    put:
+      operationId: api_v1_backups_policy_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupPolicy'
+          description: ''
+  /api/v1/backups/restore:
+    post:
+      operationId: api_v1_backups_restore_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RestoreCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RestoreCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Restore run created.
+  /api/v1/backups/runs:
+    post:
+      operationId: api_v1_backups_runs_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BackupCreate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupRun'
+          description: ''
+  /api/v1/backups/runs/list:
+    get:
+      operationId: api_v1_backups_runs_list_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of backup runs for the active company.
+  /api/v1/bootstrap:
+    get:
+      operationId: api_v1_bootstrap_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bootstrap'
+          description: ''
+  /api/v1/connectors/enrollment:
+    get:
+      operationId: api_v1_connectors_enrollment_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Current tenant connector enrollment.
+    post:
+      operationId: api_v1_connectors_enrollment_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorEnroll'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorEnroll'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorEnroll'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantConnectorEnrollment'
+          description: ''
+  /api/v1/connectors/health:
+    get:
+      operationId: api_v1_connectors_health_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Tenant connector health status.
+  /api/v1/connectors/heartbeat:
+    post:
+      operationId: api_v1_connectors_heartbeat_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorHeartbeat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConnectorHeartbeat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConnectorHeartbeat'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantConnectorEnrollment'
+          description: ''
+  /api/v1/connectors/revoke:
+    post:
+      operationId: api_v1_connectors_revoke_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorRevoke'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorRevoke'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TenantConnectorRevoke'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantConnectorEnrollment'
+          description: ''
+  /api/v1/evidence/capture-sessions:
+    post:
+      operationId: api_v1_evidence_capture_sessions_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureSessionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaptureSessionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaptureSessionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaptureSession'
+          description: ''
+  /api/v1/evidence/health/media:
+    get:
+      operationId: api_v1_evidence_health_media_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Media subsystem health.
+  /api/v1/evidence/issues:
+    post:
+      operationId: api_v1_evidence_issues_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskIssueCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskIssueCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskIssueCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskIssueReport'
+          description: ''
+  /api/v1/evidence/issues/{issue_id}/messages:
+    get:
+      operationId: api_v1_evidence_issues_messages_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: issue_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Discussion messages for an issue.
+    post:
+      operationId: api_v1_evidence_issues_messages_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: issue_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDiscussionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskDiscussionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskDiscussionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDiscussionMessage'
+          description: ''
+  /api/v1/evidence/items/{evidence_id}/media:
+    get:
+      operationId: api_v1_evidence_items_media_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: evidence_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Private media file for an evidence item.
+  /api/v1/evidence/submit:
+    post:
+      operationId: api_v1_evidence_submit_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EvidenceSubmit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EvidenceSubmit'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceItem'
+          description: ''
+  /api/v1/evidence/tasks/{task_instance_id}:
+    get:
+      operationId: api_v1_evidence_tasks_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: task_instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Evidence, issues, messages, and capture sessions for a task
+            instance.
+  /api/v1/exports/download/{token}:
+    get:
+      operationId: api_v1_exports_download_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Export artifact stream.
+  /api/v1/exports/policy:
+    get:
+      operationId: api_v1_exports_policy_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Export policy for the active company.
+  /api/v1/exports/requests:
+    post:
+      operationId: api_v1_exports_requests_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequestCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportRequestCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportRequestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportRequest'
+          description: ''
+  /api/v1/exports/requests/list:
+    get:
+      operationId: api_v1_exports_requests_list_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of export requests for the active company.
+  /api/v1/notifications/:
+    get:
+      operationId: notifications_list
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of the current user's notifications.
+  /api/v1/notifications/{notification_id}/read:
+    post:
+      operationId: notifications_mark_read
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: notification_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/read:
+    post:
+      operationId: notifications_mark_read_batch
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationMarkRead'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NotificationMarkRead'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NotificationMarkRead'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Count of notifications marked as read.
+  /api/v1/organizations/branches:
+    get:
+      operationId: api_v1_organizations_branches_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of company branches.
+    post:
+      operationId: api_v1_organizations_branches_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BranchCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BranchCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+          description: ''
+  /api/v1/organizations/job-roles:
+    get:
+      operationId: api_v1_organizations_job_roles_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of job roles.
+    post:
+      operationId: api_v1_organizations_job_roles_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoleCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRole'
+          description: ''
+  /api/v1/organizations/memberships:
+    get:
+      operationId: api_v1_organizations_memberships_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of company memberships.
+  /api/v1/organizations/weekly-shifts:
+    get:
+      operationId: api_v1_organizations_weekly_shifts_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of weekly shifts for the active company.
+    post:
+      operationId: api_v1_organizations_weekly_shifts_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeeklyShiftCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WeeklyShiftCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WeeklyShiftCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyShift'
+          description: ''
+  /api/v1/pilot/change-requests:
+    get:
+      operationId: api_v1_pilot_change_requests_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotChangeRequestList'
+          description: ''
+    post:
+      operationId: api_v1_pilot_change_requests_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PilotChangeRequestCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PilotChangeRequestCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PilotChangeRequestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotChangeRequest'
+          description: ''
+  /api/v1/pilot/change-requests/{change_id}:
+    patch:
+      operationId: api_v1_pilot_change_requests_partial_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: change_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotChangeRequestUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotChangeRequestUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotChangeRequestUpdate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotChangeRequest'
+          description: ''
+  /api/v1/pilot/dashboard:
+    get:
+      operationId: api_v1_pilot_dashboard_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotDashboard'
+          description: ''
+  /api/v1/pilot/issues:
+    get:
+      operationId: api_v1_pilot_issues_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotIssueList'
+          description: ''
+    post:
+      operationId: api_v1_pilot_issues_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PilotIssueCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PilotIssueCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PilotIssueCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotIssue'
+          description: ''
+  /api/v1/pilot/issues/{issue_id}:
+    patch:
+      operationId: api_v1_pilot_issues_partial_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: issue_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotIssueUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotIssueUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotIssueUpdate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotIssue'
+          description: ''
+  /api/v1/pilot/program:
+    get:
+      operationId: api_v1_pilot_program_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotProgram'
+          description: ''
+    patch:
+      operationId: api_v1_pilot_program_partial_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotProgramUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotProgramUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPilotProgramUpdate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotProgram'
+          description: ''
+  /api/v1/pilot/weekly-reports:
+    get:
+      operationId: api_v1_pilot_weekly_reports_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotWeeklyReportList'
+          description: ''
+    post:
+      operationId: api_v1_pilot_weekly_reports_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PilotWeeklyReportCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PilotWeeklyReportCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PilotWeeklyReportCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotWeeklyReport'
+          description: ''
+  /api/v1/reviews/dashboard:
+    get:
+      operationId: api_v1_reviews_dashboard_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Review dashboard summary.
+  /api/v1/reviews/decisions:
+    post:
+      operationId: api_v1_reviews_decisions_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewDecisionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewDecisionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReviewDecisionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDecision'
+          description: ''
+  /api/v1/reviews/policy:
+    get:
+      operationId: api_v1_reviews_policy_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewPolicy'
+          description: ''
+    patch:
+      operationId: api_v1_reviews_policy_partial_update
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewPolicyUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewPolicyUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewPolicyUpdate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewPolicy'
+          description: ''
+  /api/v1/reviews/queue:
+    get:
+      operationId: api_v1_reviews_queue_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: Review queue items.
+  /api/v1/tasks/instances:
+    get:
+      operationId: api_v1_tasks_instances_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of task instances.
+  /api/v1/tasks/instances/{instance_id}/cancel:
+    post:
+      operationId: api_v1_tasks_instances_cancel_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstance'
+          description: ''
+  /api/v1/tasks/instances/{instance_id}/claim:
+    post:
+      operationId: api_v1_tasks_instances_claim_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstance'
+          description: ''
+  /api/v1/tasks/instances/{instance_id}/complete:
+    post:
+      operationId: api_v1_tasks_instances_complete_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstance'
+          description: ''
+  /api/v1/tasks/instances/{instance_id}/start:
+    post:
+      operationId: api_v1_tasks_instances_start_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstance'
+          description: ''
+  /api/v1/tasks/instances/{instance_id}/transfers:
+    post:
+      operationId: api_v1_tasks_instances_transfers_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: instance_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTransferRequest'
+          description: ''
+  /api/v1/tasks/scheduler/run:
+    post:
+      operationId: api_v1_tasks_scheduler_run_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Created task instances from due schedules.
+  /api/v1/tasks/schedules:
+    get:
+      operationId: api_v1_tasks_schedules_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of task schedules.
+    post:
+      operationId: api_v1_tasks_schedules_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskScheduleCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskScheduleCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskScheduleCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskSchedule'
+          description: ''
+  /api/v1/tasks/templates:
+    get:
+      operationId: api_v1_tasks_templates_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of task templates.
+    post:
+      operationId: api_v1_tasks_templates_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTemplate'
+          description: ''
+  /api/v1/tasks/transfers:
+    get:
+      operationId: api_v1_tasks_transfers_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: List of task transfer requests.
+  /api/v1/tasks/transfers/{transfer_id}/resolve:
+    post:
+      operationId: api_v1_tasks_transfers_resolve_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: transfer_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTransition'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTransferRequest'
+          description: ''
+components:
+  schemas:
+    AIAnalysisCriterion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        version_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        title:
+          type: string
+          maxLength: 255
+        criteria_json: {}
+        reference_media_names: {}
+        shadow_mode:
+          type: boolean
+        auto_pass_enabled:
+          type: boolean
+        auto_pass_risk_threshold:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        active:
+          type: boolean
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - created_by
+      - id
+      - title
+      - version_number
+    AIAnalysisCriterionCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        criteria_json: {}
+        reference_media_names:
+          type: array
+          items:
+            type: string
+        shadow_mode:
+          type: boolean
+          default: true
+        auto_pass_enabled:
+          type: boolean
+          default: false
+        auto_pass_risk_threshold:
+          type: integer
+          maximum: 100
+          minimum: 1
+      required:
+      - title
+    AIAnalysisRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        evidence_item:
+          type: string
+          format: uuid
+          nullable: true
+        provider_name:
+          type: string
+          maxLength: 64
+        model_name:
+          type: string
+          maxLength: 128
+        prompt_version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        status:
+          $ref: '#/components/schemas/AIAnalysisRunStatusEnum'
+        shadow_mode:
+          type: boolean
+        auto_pass_eligible:
+          type: boolean
+        auto_pass_activated:
+          type: boolean
+        risk_level:
+          type: string
+          maxLength: 32
+        provider_payload: {}
+        provider_result: {}
+        human_decision:
+          type: string
+          maxLength: 32
+        agreement_with_human:
+          type: boolean
+          nullable: true
+        review_decision:
+          type: string
+          format: uuid
+          nullable: true
+        error_message:
+          type: string
+          maxLength: 255
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch
+      - company
+      - created_at
+      - created_by
+      - id
+      - provider_name
+    AIAnalysisRunCreate:
+      type: object
+      properties:
+        evidence_item_id:
+          type: string
+          format: uuid
+        criterion_id:
+          type: string
+          format: uuid
+      required:
+      - evidence_item_id
+    AIAnalysisRunStatusEnum:
+      enum:
+      - completed
+      - needs_review
+      - failed
+      type: string
+      description: |-
+        * `completed` - Completed
+        * `needs_review` - Needs Review
+        * `failed` - Failed
+    AIProviderConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        provider_name:
+          type: string
+          maxLength: 64
+        endpoint_url:
+          type: string
+          maxLength: 255
+        model_name:
+          type: string
+          maxLength: 128
+        credential_reference:
+          type: string
+          maxLength: 255
+        monthly_token_limit:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        monthly_cost_limit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        enabled:
+          type: boolean
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - updated_at
+    AcceptanceCreate:
+      type: object
+      properties:
+        document_type:
+          $ref: '#/components/schemas/DocumentTypeEnum'
+        document_version:
+          type: string
+          maxLength: 64
+      required:
+      - document_type
+      - document_version
+    AssignmentModeEnum:
+      enum:
+      - named_user
+      - role_pool
+      - monitor_distributed
+      type: string
+      description: |-
+        * `named_user` - Named User
+        * `role_pool` - Role Pool
+        * `monitor_distributed` - Monitor Distributed
+    AuthSession:
+      type: object
+      properties:
+        user:
+          type: object
+          additionalProperties: {}
+        company:
+          type: object
+          additionalProperties: {}
+      required:
+      - company
+      - user
+    BackupCreate:
+      type: object
+      properties:
+        include_private_media:
+          type: boolean
+          default: true
+        include_configuration:
+          type: boolean
+          default: true
+        include_tenant_state:
+          type: boolean
+          default: true
+    BackupPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        destination_name:
+          type: string
+          maxLength: 255
+        encrypted:
+          type: boolean
+        schedule_cron:
+          type: string
+          maxLength: 64
+        rpo_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        rto_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        includes_private_media:
+          type: boolean
+        includes_configuration:
+          type: boolean
+        includes_tenant_state:
+          type: boolean
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - updated_at
+    BackupRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        requested_by:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/BackupRunStatusEnum'
+        artifact_name:
+          type: string
+          maxLength: 255
+        artifact_sha256:
+          type: string
+          maxLength: 64
+        manifest_sha256:
+          type: string
+          maxLength: 64
+        manifest: {}
+        error_message:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        restored_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - company
+      - id
+      - requested_by
+      - started_at
+    BackupRunStatusEnum:
+      enum:
+      - requested
+      - completed
+      - failed
+      - restored
+      type: string
+      description: |-
+        * `requested` - Requested
+        * `completed` - Completed
+        * `failed` - Failed
+        * `restored` - Restored
+    Bootstrap:
+      type: object
+      properties:
+        current_user:
+          $ref: '#/components/schemas/BootstrapCurrentUser'
+        company:
+          allOf:
+          - $ref: '#/components/schemas/BootstrapCompany'
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        branches:
+          type: array
+          items:
+            $ref: '#/components/schemas/BootstrapBranch'
+        enabled_modules:
+          type: array
+          items:
+            type: string
+        feature_flags:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        app_version:
+          type: string
+      required:
+      - app_version
+      - branches
+      - company
+      - current_user
+      - enabled_modules
+      - feature_flags
+      - permissions
+    BootstrapBranch:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        timezone:
+          type: string
+        operational_day_cutoff:
+          type: string
+        active:
+          type: boolean
+      required:
+      - active
+      - code
+      - id
+      - name
+      - operational_day_cutoff
+      - timezone
+    BootstrapCompany:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        industry:
+          type: string
+          nullable: true
+      required:
+      - code
+      - id
+      - industry
+      - name
+      - status
+    BootstrapCurrentUser:
+      type: object
+      properties:
+        is_authenticated:
+          type: boolean
+        id:
+          type: string
+          nullable: true
+        login_id:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+          nullable: true
+      required:
+      - display_name
+      - id
+      - is_authenticated
+      - login_id
+    Branch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 64
+        timezone:
+          type: string
+          maxLength: 64
+        operational_day_cutoff:
+          type: string
+          format: time
+        active:
+          type: boolean
+      required:
+      - code
+      - id
+      - name
+      - operational_day_cutoff
+    BranchCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 64
+        timezone:
+          type: string
+          maxLength: 64
+        operational_day_cutoff:
+          type: string
+          format: time
+      required:
+      - code
+      - name
+      - operational_day_cutoff
+      - timezone
+    BranchMembershipCreate:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+        job_role_id:
+          type: string
+          format: uuid
+        membership_type:
+          type: string
+          default: primary
+          maxLength: 32
+      required:
+      - branch_id
+      - job_role_id
+      - user_id
+    CaptureSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        task_instance:
+          type: string
+          format: uuid
+        template_version:
+          type: string
+          format: uuid
+        created_by:
+          type: string
+          format: uuid
+        evidence_type:
+          $ref: '#/components/schemas/EvidenceTypeEnum'
+        token:
+          type: string
+          maxLength: 128
+        challenge_text:
+          type: string
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/CaptureSessionStatusEnum'
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - branch
+      - company
+      - created_by
+      - evidence_type
+      - expires_at
+      - id
+      - task_instance
+      - template_version
+      - token
+    CaptureSessionCreate:
+      type: object
+      properties:
+        task_instance_id:
+          type: string
+          format: uuid
+        evidence_type:
+          $ref: '#/components/schemas/EvidenceTypeEnum'
+        challenge_answer:
+          type: string
+      required:
+      - evidence_type
+      - task_instance_id
+    CaptureSessionStatusEnum:
+      enum:
+      - active
+      - used
+      - expired
+      - revoked
+      type: string
+      description: |-
+        * `active` - Active
+        * `used` - Used
+        * `expired` - Expired
+        * `revoked` - Revoked
+    ConnectorHeartbeat:
+      type: object
+      properties:
+        enrollment_id:
+          type: string
+          format: uuid
+        connector_version:
+          type: string
+          maxLength: 64
+        provider_status:
+          $ref: '#/components/schemas/ProviderStatusEnum'
+      required:
+      - connector_version
+      - enrollment_id
+      - provider_status
+    DecisionTypeEnum:
+      enum:
+      - approve
+      - approve_despite_alert
+      - retry_same_task
+      - mark_missed
+      - create_corrective_task
+      - cancel
+      - override_restriction
+      type: string
+      description: |-
+        * `approve` - Approve
+        * `approve_despite_alert` - Approve Despite Alert
+        * `retry_same_task` - Retry Same Task
+        * `mark_missed` - Mark Missed
+        * `create_corrective_task` - Create Corrective Task
+        * `cancel` - Cancel
+        * `override_restriction` - Override Restriction
+    DocumentTypeEnum:
+      enum:
+      - terms
+      - privacy
+      - ai_transfer
+      - employee_privacy
+      type: string
+      description: |-
+        * `terms` - Terms of Use
+        * `privacy` - Privacy Notice
+        * `ai_transfer` - AI Transfer Notice
+        * `employee_privacy` - Employee Privacy Acknowledgement
+    EmployeeScoreVisibilityEnum:
+      enum:
+      - hidden
+      - summary
+      - detailed
+      type: string
+      description: |-
+        * `hidden` - hidden
+        * `summary` - summary
+        * `detailed` - detailed
+    EvidenceItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        task_instance:
+          type: string
+          format: uuid
+        capture_session:
+          type: string
+          format: uuid
+        submitted_by:
+          type: string
+          format: uuid
+        evidence_type:
+          $ref: '#/components/schemas/EvidenceTypeEnum'
+        status:
+          $ref: '#/components/schemas/EvidenceItemStatusEnum'
+        sequence_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          default: 1
+        parent_submission:
+          type: string
+          format: uuid
+          nullable: true
+        note_text:
+          type: string
+        number_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        confirmation_value:
+          type: boolean
+          nullable: true
+        quarantine_name:
+          type: string
+          maxLength: 255
+        private_media_name:
+          type: string
+          maxLength: 255
+        blurred_media_name:
+          type: string
+          maxLength: 255
+        media_mime_type:
+          type: string
+          maxLength: 120
+        media_size_bytes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        media_width:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        media_height:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        raw_hash:
+          type: string
+          maxLength: 64
+        derivative_hash:
+          type: string
+          maxLength: 64
+        duplicate_risk_score:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        face_detected:
+          type: boolean
+        challenge_response:
+          type: string
+          maxLength: 255
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch
+      - capture_session
+      - company
+      - created_at
+      - evidence_type
+      - id
+      - submitted_by
+      - task_instance
+    EvidenceItemStatusEnum:
+      enum:
+      - submitted
+      - needs_review
+      - rejected
+      type: string
+      description: |-
+        * `submitted` - Submitted
+        * `needs_review` - Needs Review
+        * `rejected` - Rejected
+    EvidenceSubmit:
+      type: object
+      properties:
+        capture_token:
+          type: string
+        note_text:
+          type: string
+        number_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        confirmation_value:
+          type: boolean
+        face_detected:
+          type: boolean
+          default: false
+        challenge_response:
+          type: string
+      required:
+      - capture_token
+    EvidenceTypeEnum:
+      enum:
+      - image
+      - number
+      - note
+      - confirmation
+      type: string
+      description: |-
+        * `image` - Image
+        * `number` - Number
+        * `note` - Note
+        * `confirmation` - Confirmation
+    ExportRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        requested_by:
+          type: string
+          format: uuid
+        export_type:
+          $ref: '#/components/schemas/ExportTypeEnum'
+        branch_ids: {}
+        categories: {}
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ExportRequestStatusEnum'
+        download_token:
+          type: string
+          maxLength: 128
+        file_name:
+          type: string
+          maxLength: 255
+        expires_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        downloaded_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - download_token
+      - expires_at
+      - export_type
+      - id
+      - requested_by
+      - updated_at
+    ExportRequestCreate:
+      type: object
+      properties:
+        export_type:
+          $ref: '#/components/schemas/ExportTypeEnum'
+        branch_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        categories:
+          type: array
+          items:
+            type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - export_type
+    ExportRequestStatusEnum:
+      enum:
+      - queued
+      - completed
+      - failed
+      - expired
+      type: string
+      description: |-
+        * `queued` - Queued
+        * `completed` - Completed
+        * `failed` - Failed
+        * `expired` - Expired
+    ExportTypeEnum:
+      enum:
+      - csv
+      - zip
+      - pdf
+      type: string
+      description: |-
+        * `csv` - CSV
+        * `zip` - ZIP
+        * `pdf` - PDF
+    HealthStatusEnum:
+      enum:
+      - healthy
+      - degraded
+      - offline
+      type: string
+      description: |-
+        * `healthy` - Healthy
+        * `degraded` - Degraded
+        * `offline` - Offline
+    IndustryEnum:
+      enum:
+      - restaurants_cafes
+      - retail
+      - logistics
+      - other
+      type: string
+      description: |-
+        * `restaurants_cafes` - Restaurants and Cafes
+        * `retail` - Retail
+        * `logistics` - Logistics
+        * `other` - Other
+    JobRole:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 64
+        active:
+          type: boolean
+      required:
+      - code
+      - id
+      - name
+    Login:
+      type: object
+      properties:
+        company_code:
+          type: string
+          maxLength: 64
+        login_id:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+        mfa_code:
+          type: string
+      required:
+      - company_code
+      - login_id
+      - password
+    MemberCreate:
+      type: object
+      properties:
+        login_id:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 12
+        display_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - login_id
+      - password
+      - role
+    MethodTypeEnum:
+      enum:
+      - totp
+      - passkey
+      type: string
+      description: |-
+        * `totp` - TOTP
+        * `passkey` - Passkey
+    MfaEnrollRequest:
+      type: object
+      properties:
+        method_type:
+          $ref: '#/components/schemas/MethodTypeEnum'
+        label:
+          type: string
+          maxLength: 120
+      required:
+      - method_type
+    MfaEnrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        method_type:
+          $ref: '#/components/schemas/MethodTypeEnum'
+        label:
+          type: string
+          maxLength: 120
+        credential_id:
+          type: string
+          maxLength: 255
+        public_key:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        active:
+          type: boolean
+      required:
+      - id
+      - method_type
+      - verified_at
+    MfaEnrollmentCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        method_type:
+          $ref: '#/components/schemas/MethodTypeEnum'
+        label:
+          type: string
+          maxLength: 120
+        credential_id:
+          type: string
+          maxLength: 255
+        public_key:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        active:
+          type: boolean
+        secret:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - method_type
+      - secret
+      - verified_at
+    MfaVerify:
+      type: object
+      properties:
+        enrollment_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          maxLength: 16
+      required:
+      - code
+      - enrollment_id
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        user:
+          type: string
+          format: uuid
+        type:
+          type: string
+          maxLength: 120
+        title:
+          type: string
+          maxLength: 255
+        body:
+          type: string
+        severity:
+          $ref: '#/components/schemas/SeverityEnum'
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - title
+      - type
+      - updated_at
+      - user
+    NotificationMarkRead:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        all:
+          type: boolean
+          default: false
+    PatchedAIProviderConfigUpdate:
+      type: object
+      properties:
+        provider_name:
+          type: string
+        endpoint_url:
+          type: string
+        model_name:
+          type: string
+        credential_reference:
+          type: string
+        monthly_token_limit:
+          type: integer
+          minimum: 1
+        monthly_cost_limit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        enabled:
+          type: boolean
+    PatchedPilotChangeRequestUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        rationale:
+          type: string
+    PatchedPilotIssueUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        details:
+          type: string
+    PatchedPilotProgramUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        branch_count_target:
+          type: integer
+          minimum: 1
+        employee_count_target:
+          type: integer
+          minimum: 1
+        chrome_device_count:
+          type: integer
+          minimum: 0
+        ai_provider_name:
+          type: string
+        connector_owner:
+          type: string
+        test_environment:
+          type: string
+        success_measures:
+          type: array
+          items:
+            type: string
+        escalation_contacts:
+          type: array
+          items:
+            type: string
+        operating_checklist:
+          type: array
+          items:
+            type: string
+        weekly_metrics_goal: {}
+        notes:
+          type: string
+    PatchedReviewPolicyUpdate:
+      type: object
+      properties:
+        employee_score_visibility:
+          $ref: '#/components/schemas/EmployeeScoreVisibilityEnum'
+        historical_report_restatement:
+          type: boolean
+        monitor_approval_required:
+          type: boolean
+        sensitive_task_claim_restricted:
+          type: boolean
+        extra_evidence_required:
+          type: boolean
+        owner_alerts_enabled:
+          type: boolean
+        approved_task_weight_cap:
+          type: integer
+          minimum: 1
+    PilotChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        pilot_program:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        rationale:
+          type: string
+        status:
+          type: string
+          maxLength: 32
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - pilot_program
+      - title
+    PilotChangeRequestCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        rationale:
+          type: string
+      required:
+      - title
+    PilotChangeRequestList:
+      type: object
+      properties:
+        change_requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/PilotChangeRequest'
+      required:
+      - change_requests
+    PilotDashboard:
+      type: object
+      properties:
+        program:
+          $ref: '#/components/schemas/PilotDashboardProgram'
+        summary:
+          $ref: '#/components/schemas/PilotDashboardSummary'
+        counts:
+          $ref: '#/components/schemas/PilotDashboardCounts'
+        program_id:
+          type: string
+          format: uuid
+      required:
+      - counts
+      - program
+      - program_id
+      - summary
+    PilotDashboardCounts:
+      type: object
+      properties:
+        issues:
+          type: integer
+        change_requests:
+          type: integer
+        reports:
+          type: integer
+      required:
+      - change_requests
+      - issues
+      - reports
+    PilotDashboardProgram:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company:
+          type: string
+          format: uuid
+        status:
+          type: string
+        branch_count_target:
+          type: integer
+        employee_count_target:
+          type: integer
+        chrome_device_count:
+          type: integer
+        ai_provider_name:
+          type: string
+        connector_owner:
+          type: string
+        test_environment:
+          type: string
+        success_measures:
+          type: array
+          items:
+            type: string
+        escalation_contacts:
+          type: array
+          items:
+            type: string
+        operating_checklist:
+          type: array
+          items:
+            type: string
+        weekly_metrics_goal: {}
+        notes:
+          type: string
+      required:
+      - ai_provider_name
+      - branch_count_target
+      - chrome_device_count
+      - company
+      - connector_owner
+      - employee_count_target
+      - escalation_contacts
+      - id
+      - notes
+      - operating_checklist
+      - status
+      - success_measures
+      - test_environment
+      - weekly_metrics_goal
+    PilotDashboardSummary:
+      type: object
+      properties:
+        evidence_items_week:
+          type: integer
+        image_evidence_week:
+          type: integer
+        face_blurred_week:
+          type: integer
+        ai_runs_week:
+          type: integer
+        ai_agreement_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        backup_completed:
+          type: boolean
+        connector_status:
+          type: string
+        connector_health:
+          type: string
+        exports_completed:
+          type: integer
+        reviews_created:
+          type: integer
+      required:
+      - ai_agreement_rate
+      - ai_runs_week
+      - backup_completed
+      - connector_health
+      - connector_status
+      - evidence_items_week
+      - exports_completed
+      - face_blurred_week
+      - image_evidence_week
+      - reviews_created
+    PilotIssue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        pilot_program:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        severity:
+          type: string
+          maxLength: 32
+        status:
+          type: string
+          maxLength: 32
+        details:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - pilot_program
+      - title
+    PilotIssueCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        severity:
+          type: string
+          default: medium
+        details:
+          type: string
+      required:
+      - title
+    PilotIssueList:
+      type: object
+      properties:
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/PilotIssue'
+      required:
+      - issues
+    PilotProgram:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        status:
+          type: string
+          maxLength: 32
+        branch_count_target:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        employee_count_target:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        chrome_device_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        ai_provider_name:
+          type: string
+          maxLength: 64
+        connector_owner:
+          type: string
+          maxLength: 255
+        test_environment:
+          type: string
+          maxLength: 255
+        success_measures: {}
+        escalation_contacts: {}
+        operating_checklist: {}
+        weekly_metrics_goal: {}
+        notes:
+          type: string
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - updated_at
+    PilotWeeklyReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        pilot_program:
+          type: string
+          format: uuid
+        week_ending:
+          type: string
+          format: date
+        metrics: {}
+        ai_agreement_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        error_analysis:
+          type: string
+        capacity_findings:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - pilot_program
+      - week_ending
+    PilotWeeklyReportCreate:
+      type: object
+      properties:
+        week_ending:
+          type: string
+          format: date
+        metrics: {}
+        ai_agreement_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        error_analysis:
+          type: string
+        capacity_findings:
+          type: string
+      required:
+      - week_ending
+    PilotWeeklyReportList:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/PilotWeeklyReport'
+      required:
+      - reports
+    ProviderStatusEnum:
+      enum:
+      - healthy
+      - degraded
+      - offline
+      type: string
+      description: |-
+        * `healthy` - Healthy
+        * `degraded` - Degraded
+        * `offline` - Offline
+    RecurrenceTypeEnum:
+      enum:
+      - daily_fixed
+      - weekly_fixed
+      - shift_relative
+      type: string
+      description: |-
+        * `daily_fixed` - Daily Fixed
+        * `weekly_fixed` - Weekly Fixed
+        * `shift_relative` - Shift Relative
+    Register:
+      type: object
+      properties:
+        company_name:
+          type: string
+          maxLength: 255
+        company_code:
+          type: string
+          maxLength: 64
+        industry:
+          $ref: '#/components/schemas/IndustryEnum'
+        owner_login_id:
+          type: string
+          maxLength: 150
+        owner_password:
+          type: string
+          writeOnly: true
+          minLength: 12
+        owner_display_name:
+          type: string
+          maxLength: 150
+        contact_email:
+          type: string
+          format: email
+        contact_phone:
+          type: string
+      required:
+      - company_code
+      - company_name
+      - industry
+      - owner_login_id
+      - owner_password
+    RegisterResponse:
+      type: object
+      properties:
+        company:
+          type: object
+          additionalProperties: {}
+        owner:
+          type: object
+          additionalProperties: {}
+      required:
+      - company
+      - owner
+    RestoreCreate:
+      type: object
+      properties:
+        backup_run_id:
+          type: string
+          format: uuid
+        target_name:
+          type: string
+          pattern: ^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$
+        confirmation:
+          type: string
+          maxLength: 128
+      required:
+      - backup_run_id
+      - confirmation
+      - target_name
+    ReviewDecision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        decided_by:
+          type: string
+          format: uuid
+        decision_type:
+          $ref: '#/components/schemas/DecisionTypeEnum'
+        reason:
+          type: string
+          maxLength: 255
+        task_instance:
+          type: string
+          format: uuid
+          nullable: true
+        evidence_item:
+          type: string
+          format: uuid
+          nullable: true
+        issue_report:
+          type: string
+          format: uuid
+          nullable: true
+        generated_task_instance:
+          type: string
+          format: uuid
+          nullable: true
+        restriction_name:
+          type: string
+          maxLength: 128
+        original_status:
+          type: string
+          maxLength: 32
+        resulting_status:
+          type: string
+          maxLength: 32
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch
+      - company
+      - created_at
+      - decided_by
+      - decision_type
+      - id
+    ReviewDecisionCreate:
+      type: object
+      properties:
+        decision_type:
+          $ref: '#/components/schemas/DecisionTypeEnum'
+        reason:
+          type: string
+        task_instance_id:
+          type: string
+          format: uuid
+        evidence_item_id:
+          type: string
+          format: uuid
+        issue_report_id:
+          type: string
+          format: uuid
+        restriction_name:
+          type: string
+      required:
+      - decision_type
+    ReviewPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        employee_score_visibility:
+          type: string
+          maxLength: 32
+        historical_report_restatement:
+          type: boolean
+        monitor_approval_required:
+          type: boolean
+        sensitive_task_claim_restricted:
+          type: boolean
+        extra_evidence_required:
+          type: boolean
+        owner_alerts_enabled:
+          type: boolean
+        approved_task_weight_cap:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - updated_at
+    RiskLevelEnum:
+      enum:
+      - low
+      - medium
+      - high
+      type: string
+      description: |-
+        * `low` - Low
+        * `medium` - Medium
+        * `high` - High
+    RoleCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 64
+      required:
+      - code
+      - name
+    RoleEnum:
+      enum:
+      - owner
+      - monitor
+      - employee
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `monitor` - Quality Monitor
+        * `employee` - Employee
+    SeverityEnum:
+      enum:
+      - info
+      - success
+      - warning
+      - danger
+      type: string
+      description: |-
+        * `info` - Info
+        * `success` - Success
+        * `warning` - Warning
+        * `danger` - Danger
+    SupportAuthorization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        support_user:
+          type: string
+          format: uuid
+        granted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        reason:
+          type: string
+          maxLength: 255
+        active:
+          type: boolean
+      required:
+      - expires_at
+      - granted_at
+      - id
+      - reason
+      - support_user
+    TaskDiscussionCreate:
+      type: object
+      properties:
+        task_instance_id:
+          type: string
+          format: uuid
+        issue_report_id:
+          type: string
+          format: uuid
+        reply_to_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+      required:
+      - message
+      - task_instance_id
+    TaskDiscussionMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        task_instance:
+          type: string
+          format: uuid
+        issue_report:
+          type: string
+          format: uuid
+          nullable: true
+        reply_to:
+          type: string
+          format: uuid
+          nullable: true
+        author:
+          type: string
+          format: uuid
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - branch
+      - company
+      - created_at
+      - id
+      - message
+      - task_instance
+    TaskInstance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        template:
+          type: string
+          format: uuid
+        template_version:
+          type: string
+          format: uuid
+        schedule:
+          type: string
+          format: uuid
+          nullable: true
+        scheduled_for:
+          type: string
+          format: date-time
+        due_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/TaskInstanceStatusEnum'
+        assigned_user:
+          type: string
+          format: uuid
+          nullable: true
+        claimed_by:
+          type: string
+          format: uuid
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        overdue_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_reason:
+          type: string
+          maxLength: 255
+      required:
+      - branch
+      - company
+      - due_at
+      - id
+      - scheduled_for
+      - template
+      - template_version
+    TaskInstanceStatusEnum:
+      enum:
+      - pending
+      - claimed
+      - in_progress
+      - completed
+      - cancelled
+      - overdue
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `claimed` - Claimed
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+        * `overdue` - Overdue
+    TaskIssueCreate:
+      type: object
+      properties:
+        task_instance_id:
+          type: string
+          format: uuid
+        note:
+          type: string
+      required:
+      - note
+      - task_instance_id
+    TaskIssueReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+        task_instance:
+          type: string
+          format: uuid
+        submitted_by:
+          type: string
+          format: uuid
+        note:
+          type: string
+        photo_name:
+          type: string
+          maxLength: 255
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        resolution_note:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch
+      - company
+      - created_at
+      - id
+      - note
+      - submitted_by
+      - task_instance
+    TaskSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+          nullable: true
+        template:
+          type: string
+          format: uuid
+        recurrence_type:
+          $ref: '#/components/schemas/RecurrenceTypeEnum'
+        scheduled_time:
+          type: string
+          format: time
+          nullable: true
+        weekday:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        shift_offset_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        active:
+          type: boolean
+        last_generated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - company
+      - id
+      - recurrence_type
+      - template
+    TaskScheduleCreate:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+          nullable: true
+        template_id:
+          type: string
+          format: uuid
+        recurrence_type:
+          $ref: '#/components/schemas/RecurrenceTypeEnum'
+        scheduled_time:
+          type: string
+          format: time
+          nullable: true
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+          nullable: true
+        shift_offset_minutes:
+          type: integer
+          default: 0
+      required:
+      - company_id
+      - recurrence_type
+      - template_id
+    TaskTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          format: uuid
+          nullable: true
+        slug:
+          type: string
+          maxLength: 96
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        assignment_mode:
+          $ref: '#/components/schemas/AssignmentModeEnum'
+        assigned_user:
+          type: string
+          format: uuid
+          nullable: true
+        assigned_role_code:
+          type: string
+          maxLength: 64
+        risk_level:
+          $ref: '#/components/schemas/RiskLevelEnum'
+        task_weight:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        active:
+          type: boolean
+      required:
+      - assignment_mode
+      - company
+      - id
+      - name
+      - slug
+    TaskTemplateCreate:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+          maxLength: 96
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        assignment_mode:
+          $ref: '#/components/schemas/AssignmentModeEnum'
+        assigned_user_id:
+          type: string
+          format: uuid
+        assigned_role_code:
+          type: string
+          maxLength: 64
+        risk_level:
+          $ref: '#/components/schemas/RiskLevelEnum'
+        task_weight:
+          type: integer
+          minimum: 1
+      required:
+      - assignment_mode
+      - company_id
+      - name
+      - slug
+    TaskTransferRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        task_instance:
+          type: string
+          format: uuid
+        requested_by:
+          type: string
+          format: uuid
+        requested_to:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/TaskTransferRequestStatusEnum'
+        reason:
+          type: string
+          maxLength: 255
+        decided_by:
+          type: string
+          format: uuid
+          nullable: true
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+      - requested_by
+      - requested_to
+      - task_instance
+    TaskTransferRequestStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `approved` - Approved
+        * `rejected` - Rejected
+    TaskTransition:
+      type: object
+      properties:
+        reason:
+          type: string
+        requested_to_id:
+          type: string
+          format: uuid
+        approved:
+          type: boolean
+    TenantConnectorEnroll:
+      type: object
+      properties:
+        connector_version:
+          type: string
+        shared_secret_fingerprint:
+          type: string
+          pattern: ^[0-9a-fA-F]{64}$
+        health_ttl_seconds:
+          type: integer
+          maximum: 86400
+          minimum: 30
+      required:
+      - connector_version
+      - shared_secret_fingerprint
+    TenantConnectorEnrollment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        connector_version:
+          type: string
+          maxLength: 64
+        compatibility_window:
+          type: string
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/TenantConnectorEnrollmentStatusEnum'
+        health_status:
+          $ref: '#/components/schemas/HealthStatusEnum'
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        health_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        health_ttl_seconds:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - connector_version
+      - created_at
+      - created_by
+      - id
+      - updated_at
+    TenantConnectorEnrollmentStatusEnum:
+      enum:
+      - pending
+      - active
+      - revoked
+      - outdated
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `active` - Active
+        * `revoked` - Revoked
+        * `outdated` - Outdated
+    TenantConnectorRevoke:
+      type: object
+      properties:
+        reason:
+          type: string
+    WeeklyShift:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        branch:
+          type: string
+          format: uuid
+        user:
+          type: string
+          format: uuid
+        weekday:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        active:
+          type: boolean
+      required:
+      - branch
+      - end_time
+      - id
+      - start_time
+      - user
+      - weekday
+    WeeklyShiftCreate:
+      type: object
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - branch_id
+      - end_time
+      - start_time
+      - user_id
+      - weekday
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

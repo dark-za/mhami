@@ -1,0 +1,132 @@
+# Alerting rules for the modular operations platform (Prometheus / Alertmanager).
+#
+# The API exposes a token-protected Prometheus-compatible /api/v1/metrics endpoint
+# for the operational signals that cannot be represented by an HTTP probe.
+# Scrape it as job="platform-api" and pass X-Metrics-Token.
+#
+# What the platform actually exposes today:
+#   http://api:8000/api/health/live          -> {"status": "ok"}
+#   http://api:8000/api/health/ready         -> {"status": "ok", "database": "ok", "redis": "ok"}
+#   http://api:8000/api/v1/health/modules    -> per-module health report
+#   http://api:8000/api/v1/status            -> module health + metrics report
+#                                               (ai / connector / exports / backups counts)
+#   http://api:8000/api/v1/metrics            -> Prometheus text metrics
+#
+# /api/health/ready returns HTTP 200 even when "degraded" (it reports
+# database/redis state in the JSON body), so the blackbox probes below remain
+# useful even when the application metrics endpoint is unavailable.
+
+groups:
+  - name: platform-health
+    rules:
+      - alert: PlatformApiLiveness
+        expr: probe_success{job="platform", target="http://api:8000/api/health/live"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: Platform API liveness probe failing
+          description: The API liveness probe ({{ $labels.target }}) has not returned HTTP 200 for 2 minutes.
+
+      - alert: PlatformPostgresDown
+        expr: probe_success{job="platform", target="tcp://db:5432"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: db
+        annotations:
+          summary: Platform PostgreSQL is unreachable
+          description: PostgreSQL ({{ $labels.target }}) has not accepted a TCP connection for 2 minutes.
+
+      - alert: PlatformRedisDown
+        expr: probe_success{job="platform", target="tcp://redis:6379"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: Platform Redis is unreachable
+          description: Redis ({{ $labels.target }}) has not accepted a TCP connection for 2 minutes.
+
+      - alert: PlatformDatabaseHealthDegraded
+        expr: platform_database_up{job="platform-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: db
+        annotations:
+          summary: Platform database health check failed
+          description: The API cannot establish a database connection.
+
+      - alert: PlatformRedisHealthDegraded
+        expr: platform_redis_up{job="platform-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: Platform Redis health check failed
+          description: The API cannot reach the Redis broker.
+
+      - alert: PlatformCeleryWorkersUnavailable
+        expr: platform_celery_workers{job="platform-api"} < 1
+        for: 5m
+        labels:
+          severity: critical
+          service: celery
+        annotations:
+          summary: No Celery workers are responding
+          description: Celery has not reported a healthy worker for 5 minutes.
+
+      - alert: PlatformCeleryQueueBacklog
+        expr: platform_celery_queue_depth{job="platform-api"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: Celery queue backlog is growing
+          description: Queue {{ $labels.queue }} has exceeded 100 pending tasks for 10 minutes.
+
+      - alert: PlatformMediaDiskSpaceLow
+        expr: |
+          platform_media_disk_size_bytes{job="platform-api"} > 0
+          and (
+            platform_media_disk_free_bytes{job="platform-api"}
+            / platform_media_disk_size_bytes{job="platform-api"}
+          ) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+          service: media
+        annotations:
+          summary: Media disk space is low
+          description: Less than 15% of the media volume is available.
+
+      - alert: PlatformBackupStale
+        expr: |
+          platform_backup_last_success_timestamp_seconds{job="platform-api"} == 0
+          or (
+            time() - platform_backup_last_success_timestamp_seconds{job="platform-api"} > 93600
+          )
+        for: 15m
+        labels:
+          severity: critical
+          service: backups
+        annotations:
+          summary: Platform backup is outside the RPO
+          description: No successful backup has completed within 26 hours.
+
+      - alert: PlatformBackupFailure
+        expr: |
+          platform_backup_last_failure_timestamp_seconds{job="platform-api"} > 0
+          and platform_backup_last_failure_timestamp_seconds{job="platform-api"}
+            > platform_backup_last_success_timestamp_seconds{job="platform-api"}
+        for: 15m
+        labels:
+          severity: critical
+          service: backups
+        annotations:
+          summary: Latest platform backup failed
+          description: The most recent backup attempt is newer than the last successful backup.

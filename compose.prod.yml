@@ -1,0 +1,238 @@
+# ---- Production override -------------------------------------------------
+# Builds on top of ``compose.yml`` for prod deploys. Reuses the same
+# service definitions via the ``x-backend-defaults`` anchor and adds the
+# missing worker/beat services, while re-applying production-only overrides
+# (prod settings module, read-only filesystem, secrets, certbot/LE, etc.).
+#
+# NOTE: Compose does not allow referencing ``x-*`` anchors across files,
+# so the same ``x-backend-defaults`` block is redeclared here. Keep the
+# two definitions in sync with ``compose.yml``.
+
+x-backend-defaults: &backend_defaults
+  build:
+    context: ./backend
+  user: "1000:1000"
+  cap_drop:
+    - ALL
+  cap_add:
+    - NET_BIND_SERVICE
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 100
+  mem_limit: 512m
+  cpus: 1.0
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  healthcheck:
+    test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health/live"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+
+# Production-only environment variables shared by api, worker, beat.
+x-backend-prod-env: &backend_prod_env
+  DJANGO_SETTINGS_MODULE: config.settings.prod
+  DJANGO_DEBUG: "false"
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Set DJANGO_ALLOWED_HOSTS in .env}
+  MFA_ENCRYPTION_KEYS: ${MFA_ENCRYPTION_KEYS:?Set MFA_ENCRYPTION_KEYS in .env}
+  # C-02 / INFRA-01: AUDIT_HMAC_SECRET is mandatory in production. Failing
+  # fast here is what prevents the ImproperlyConfigured error at runtime
+  # and keeps the audit chain's HMAC defense line non-bypassable.
+  AUDIT_HMAC_SECRET: ${AUDIT_HMAC_SECRET:?Set AUDIT_HMAC_SECRET in .env}
+
+# Production-only runtime hardening: read-only root filesystem, bounded
+# tmpfs, restart policy, and the writable media volume that Django needs.
+x-backend-restart: &backend_restart
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp:size=50M,mode=1777
+  volumes:
+    - media-data:/app/media
+
+services:
+  db:
+    restart: unless-stopped
+    # INFRA-01: production database keeps a read-only root filesystem and
+    # forces Postgres to write its data into the volume only.
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M,mode=1777
+      - /run/postgresql:size=8M,mode=0755,uid=999,gid=999
+
+  redis:
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=32M,mode=1777
+
+  api:
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3}"]
+    environment:
+      <<: *backend_prod_env
+      METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+    <<: *backend_restart
+
+  worker:
+    <<: *backend_defaults
+    command:
+      [
+        "celery",
+        "-A",
+        "config.celery",
+        "worker",
+        "--loglevel=${CELERY_LOG_LEVEL:-INFO}",
+        "--concurrency=${CELERY_WORKER_CONCURRENCY:-2}",
+        "--queues=default,media,ai",
+        "--hostname=worker@%h",
+      ]
+    environment:
+      <<: *backend_prod_env
+      POSTGRES_DB: ${POSTGRES_DB:-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+    depends_on:
+      api:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    <<: *backend_restart
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config.celery inspect ping --timeout=5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  beat:
+    <<: *backend_defaults
+    command:
+      [
+        "celery",
+        "-A",
+        "config.celery",
+        "beat",
+        "--loglevel=${CELERY_LOG_LEVEL:-INFO}",
+        "--schedule=/tmp/celerybeat-schedule",
+      ]
+    environment:
+      <<: *backend_prod_env
+      POSTGRES_DB: ${POSTGRES_DB:-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+    depends_on:
+      api:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    <<: *backend_restart
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/celerybeat-schedule"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+      - certbot-webroot:/var/www/certbot
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ---- INFRA-05: Let's Encrypt certbot --------------------------------
+  # Webroot issuance + renewal; the ``certbot-renew`` sidecar takes over
+  # the daily renew loop once issuance has succeeded.
+  certbot:
+    image: certbot/certbot
+    user: "0:0"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 100
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot certonly \
+            --webroot \
+            --webroot-path=/var/www/certbot \
+            --email $${LETSENCRYPT_EMAIL:?Set LETSENCRYPT_EMAIL in .env} \
+            --agree-tos \
+            --no-eff-email \
+            -d $${LETSENCRYPT_DOMAIN:?Set LETSENCRYPT_DOMAIN in .env}
+          sleep 12h
+        done
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    depends_on:
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+    profiles:
+      - certbot
+
+  certbot-renew:
+    image: certbot/certbot
+    user: "0:0"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    pids_limit: 50
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        while :; do
+          certbot renew --webroot --webroot-path=/var/www/certbot
+          sleep 24h
+        done
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    depends_on:
+      certbot:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    profiles:
+      - certbot
+
+volumes:
+  certs:
+  certbot-webroot:

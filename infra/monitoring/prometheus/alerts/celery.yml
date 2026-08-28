@@ -1,0 +1,37 @@
+# INFRA-04: Celery queue and worker alerts.
+
+groups:
+  - name: platform-celery
+    rules:
+      - alert: PlatformCeleryWorkersDown
+        expr: platform_celery_workers{job="platform-api"} < 1
+        for: 5m
+        labels:
+          severity: critical
+          service: celery
+        annotations:
+          summary: No Celery workers responding
+          description: "No worker has reported a healthy ping for 5 minutes."
+
+      - alert: PlatformCeleryQueueBacklog
+        expr: platform_celery_queue_depth{job="platform-api"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: Celery queue backlog growing
+          description: "Queue {{ $labels.queue }} has more than 100 pending tasks for 10 minutes."
+
+      - alert: PlatformCeleryTaskFailureRateHigh
+        expr: |
+          rate(celery_task_failed_total{job="platform-celery-exporter"}[5m])
+            /
+          rate(celery_task_total{job="platform-celery-exporter"}[5m]) > 0.1
+        for: 15m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: Celery task failure rate above 10%
+          description: "More than 10% of tasks failed in the last 15 minutes."

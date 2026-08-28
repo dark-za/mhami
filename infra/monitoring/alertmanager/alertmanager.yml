@@ -1,0 +1,53 @@
+# Alertmanager routing for the platform.
+#
+# INFRA-04: route by severity. ``critical`` alerts page on-call via
+# PagerDuty (or any equivalent webhook the operator has set up).
+# ``warning`` alerts are batched into a daily Slack digest. Both
+# destinations must be configured at deploy time via environment
+# variables; the receivers below are placeholders and will not fire
+# until they are.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity = "critical"
+      receiver: pagerduty-critical
+      group_wait: 10s
+      repeat_interval: 1h
+    - matchers:
+        - severity = "warning"
+      receiver: slack-warnings
+      group_wait: 1m
+      repeat_interval: 6h
+
+receivers:
+  - name: default
+    webhook_configs:
+      - url: http://localhost:5001/alertmanager
+        send_resolved: true
+
+  - name: pagerduty-critical
+    pagerduty_configs:
+      - service_key: ${PAGERDUTY_SERVICE_KEY}
+        send_resolved: true
+
+  - name: slack-warnings
+    slack_configs:
+      - api_url: ${SLACK_WEBHOOK_URL}
+        channel: "#platform-alerts"
+        send_resolved: true
+
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: [service, alertname]
