@@ -44,6 +44,7 @@ jobs:
         # production defaults. Allowed only in .env.example and *.dev.yml.
         run: |
           set -euo pipefail
+          cd ..
           if grep -RnE "change-me|replace-with-a-long|replace-with-approved" \
               --include="*.yml" --include="*.yaml" \
               compose.yml compose.prod.yml infra/ 2>/dev/null; then
