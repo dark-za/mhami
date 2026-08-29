@@ -50,6 +50,7 @@ x-backend-prod-env: &backend_prod_env
   # fast here is what prevents the ImproperlyConfigured error at runtime
   # and keeps the audit chain's HMAC defense line non-bypassable.
   AUDIT_HMAC_SECRET: ${AUDIT_HMAC_SECRET:?Set AUDIT_HMAC_SECRET in .env}
+  MCP_INTERNAL_HMAC_SECRET: ${MCP_INTERNAL_HMAC_SECRET:?Set MCP_INTERNAL_HMAC_SECRET in .env}
 
 # Production-only runtime hardening: read-only root filesystem, bounded
 # tmpfs, restart policy, and the writable media volume that Django needs.

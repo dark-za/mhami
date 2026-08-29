@@ -58,6 +58,11 @@ jobs:
             echo "AUDIT_HMAC_SECRET missing from compose files." >&2
             exit 1
           fi
+          if ! grep -q "MCP_INTERNAL_HMAC_SECRET" compose.yml \
+              || ! grep -q "MCP_INTERNAL_HMAC_SECRET" compose.prod.yml; then
+            echo "MCP_INTERNAL_HMAC_SECRET missing from compose files." >&2
+            exit 1
+          fi
       - name: Backend lint
         run: ruff check .
       - name: Backend type check
@@ -74,6 +79,7 @@ jobs:
           DJANGO_SECRET_KEY: Q7v9pL2xN8mR4tY6uI1oP3aS5dF7gH9jK2lZ4xC6vB8nM1qW3eR5tY7uI9oP2aS4
           DJANGO_ALLOWED_HOSTS: example.com
           AUDIT_HMAC_SECRET: ci-audit-hmac-secret-for-production-settings-validation
+          MCP_INTERNAL_HMAC_SECRET: ci-mcp-hmac-secret-for-production-settings-validation
           MFA_ENCRYPTION_KEYS: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
           METRICS_TOKEN: ci-test-metrics-token-for-production-settings-validation
           BACKUP_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=

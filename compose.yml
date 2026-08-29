@@ -38,6 +38,7 @@ x-backend-defaults: &backend_defaults
     # prod override below enforces the same variable with the fail-fast
     # syntax to ensure the value is non-empty when DJANGO_DEBUG=false.
     AUDIT_HMAC_SECRET: ${AUDIT_HMAC_SECRET:?Set AUDIT_HMAC_SECRET in .env}
+    MCP_INTERNAL_HMAC_SECRET: ${MCP_INTERNAL_HMAC_SECRET:?Set MCP_INTERNAL_HMAC_SECRET in .env}
     POSTGRES_DB: ${POSTGRES_DB:-platform}
     POSTGRES_USER: ${POSTGRES_USER:-platform}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
