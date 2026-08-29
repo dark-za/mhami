@@ -11,6 +11,7 @@ from rest_framework.exceptions import ParseError
 from apps.tasks.models import TaskInstance
 from apps.tasks.serializers import TaskInstanceSerializer, TaskTransferRequestSerializer
 from apps.tasks.services import request_transfer
+from apps.tenancy.access import is_active_company_user
 
 from .models import AgentActionStatus, AgentGrant
 from .services import record_agent_action
@@ -83,7 +84,7 @@ def _tasks_transfer_request(grant: AgentGrant, arguments: Mapping[str, object]) 
     if instance is None:
         raise PermissionDenied("Task is outside the MCP grant company.")
     requested_to = get_user_model().objects.filter(id=requested_to_id).first()
-    if requested_to is None:
+    if requested_to is None or not is_active_company_user(grant.company, requested_to):
         raise PermissionDenied("Transfer target does not exist in this company.")
     transfer = request_transfer(str(instance.id), grant.user, requested_to, reason)
     return {"transfer": TaskTransferRequestSerializer(transfer).data}

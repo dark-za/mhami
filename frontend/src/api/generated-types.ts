@@ -3162,6 +3162,7 @@ export interface components {
             company: components["schemas"]["BootstrapCompany"] | null;
             permissions: string[];
             branches: components["schemas"]["BootstrapBranch"][];
+            branch_scope: components["schemas"]["BootstrapBranch"][];
             enabled_modules: string[];
             feature_flags: {
                 [key: string]: unknown;
@@ -3188,6 +3189,7 @@ export interface components {
             id: string | null;
             login_id: string | null;
             display_name: string | null;
+            role?: string | null;
         };
         Branch: {
             /** Format: uuid */

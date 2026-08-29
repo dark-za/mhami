@@ -8,9 +8,9 @@ from django.db import models
 from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem
 from apps.identity.models import User
-from apps.organizations.models import CompanyMembership, CompanyRole, UserBranchMembership
 from apps.platform_core.service_base import audited_service
 from apps.reviews.models import ReviewDecision, ReviewDecisionType
+from apps.tenancy.access import accessible_company_branch_ids
 from apps.tenancy.models import Company
 
 from .models import AIAnalysisCriterion, AIAnalysisRun, AIAnalysisStatus, AIProviderConfig
@@ -18,10 +18,7 @@ from .providers import FakeProvider, OpenAIProvider, build_provider, validate_pr
 
 
 def accessible_branch_ids(company: Company, user: User) -> list[str]:
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership and membership.role == CompanyRole.OWNER:
-        return [str(branch_id) for branch_id in company.branches.values_list("id", flat=True)]
-    return [str(branch_id) for branch_id in UserBranchMembership.objects.filter(company=company, user=user, active=True).values_list("branch_id", flat=True)]
+    return accessible_company_branch_ids(company, user)
 
 
 def provider_config_for_company(company: Company) -> AIProviderConfig:

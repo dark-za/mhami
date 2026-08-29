@@ -51,7 +51,7 @@ def LegalAcceptanceRequired(
         @wraps(func)
         def wrapper(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
             from apps.organizations.models import CompanyRole
-            from apps.tenancy.access import tenant_context
+            from apps.tenancy.access import active_membership_q, tenant_context
             from apps.organizations.models import CompanyMembership
 
             request = getattr(self, "request", None)
@@ -73,7 +73,10 @@ def LegalAcceptanceRequired(
                 # enforced even before the tenant context is fully wired.
                 membership = (
                     CompanyMembership.objects.filter(
-                        user=request.user, active=True, role=CompanyRole.OWNER
+                        active_membership_q(),
+                        user=request.user,
+                        active=True,
+                        role=CompanyRole.OWNER,
                     )
                     .select_related("company")
                     .order_by("-active_from")

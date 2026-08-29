@@ -3,10 +3,10 @@ from __future__ import annotations
 from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
-from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.organizations.models import CompanyRole
 from apps.platform_core.errors import PlatformAPIException
 from apps.platform_core.mixins import TenantAPIView
-from apps.tenancy.access import validate_company_reference, validate_company_reference_or_none
+from apps.tenancy.access import has_company_role, validate_company_reference, validate_company_reference_or_none
 
 from ..models import AIAnalysisCriterion
 from ..serializers import (
@@ -22,8 +22,7 @@ from ..services import create_criterion, provider_config_for_company, run_analys
 
 
 def _owner_or_400(company, user):
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership is None or membership.role != CompanyRole.OWNER:
+    if not has_company_role(company, user, str(CompanyRole.OWNER)):
         raise PlatformAPIException("Owner access required.")
 
 
@@ -66,8 +65,7 @@ class CriteriaView(TenantAPIView):
     @extend_schema(request=AIAnalysisCriterionCreateSerializer, responses={201: AIAnalysisCriterionSerializer})
     def post(self, request):
         company = self.get_tenant().company
-        membership = CompanyMembership.objects.filter(company=company, user=request.user, active=True).only("role").first()
-        if membership is None or membership.role not in {CompanyRole.OWNER, CompanyRole.MONITOR}:
+        if not has_company_role(company, request.user, str(CompanyRole.OWNER), str(CompanyRole.MONITOR)):
             raise PlatformAPIException("Monitor or owner access required.")
         serializer = AIAnalysisCriterionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

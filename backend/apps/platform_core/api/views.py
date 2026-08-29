@@ -4,6 +4,7 @@ from typing import Any
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -64,9 +65,10 @@ def metrics_view(request):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class BootstrapView(APIView):
     # C-04: bootstrap is the documented entry point for clients to obtain
-    # a csrftoken cookie. It must be reachable without authentication and
-    # without an existing CSRF token, so both gates are disabled.
-    authentication_classes: list[type[Any]] = []
+    # a csrftoken cookie. It must be reachable without authentication, but
+    # authenticated sessions are still read so the frontend can hydrate
+    # role/permission display hints from the server.
+    authentication_classes = [SessionAuthentication]
     permission_classes: list[type[Any]] = []
 
     @extend_schema(responses=BootstrapSerializer)

@@ -245,14 +245,16 @@ def request_transfer(instance_id: str, requested_by: User, requested_to: User, r
     if instance.company_id is None:
         raise ValueError("Task instance is missing a company scope.")
     requester_company_ids = set(
-        requested_by.company_memberships.filter(active_membership_q()).values_list("company_id", flat=True)
+        requested_by.company_memberships.filter(active=True).filter(active_membership_q()).values_list("company_id", flat=True)
     )
     if instance.company.owner_id == requested_by.id:
         requester_company_ids.add(instance.company_id)
     if instance.company_id not in requester_company_ids:
         raise ValueError("Task instance is outside the requester's company.")
     if requested_to.id != instance.assigned_user_id and not instance.company.memberships.filter(
-        active_membership_q(), user=requested_to
+        active=True, user=requested_to
+    ).filter(
+        active_membership_q()
     ).exists() and instance.company.owner_id != requested_to.id:
         raise ValueError("Transfer target is outside the task instance's company.")
     transfer = TaskTransferRequest.objects.create(
@@ -288,8 +290,9 @@ def resolve_transfer(transfer_id: str, decided_by: User, approved: bool) -> Task
     # service layer must also reject decisions from outside the company
     # so future callers cannot bypass the view filter.
     decided_is_member = company.owner_id == decided_by.id or company.memberships.filter(
-        active_membership_q(), user=decided_by
-    ).exists()
+        active=True,
+        user=decided_by,
+    ).filter(active_membership_q()).exists()
     if not decided_is_member and decided_by.id != transfer.requested_to_id:
         raise ValueError("Only company members can resolve this transfer.")
     transfer.status = TaskTransferStatus.APPROVED if approved else TaskTransferStatus.REJECTED

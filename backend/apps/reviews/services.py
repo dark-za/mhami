@@ -8,22 +8,16 @@ from django.utils import timezone
 from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem, EvidenceStatus, TaskIssueReport
 from apps.identity.models import User
-from apps.organizations.models import CompanyMembership, CompanyRole, UserBranchMembership
 from apps.tasks.models import TaskInstance, TaskStatus
 from apps.tasks.services import cancel_task
+from apps.tenancy.access import accessible_company_branch_ids
 from apps.tenancy.models import Company
 
 from .models import ReviewDecision, ReviewDecisionType, ReviewPolicySetting
 
 
 def accessible_branch_ids(company: Company, user: User) -> list[str]:
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership and membership.role == CompanyRole.OWNER:
-        return [str(branch_id) for branch_id in company.branches.values_list("id", flat=True)]
-    return [
-        str(branch_id)
-        for branch_id in UserBranchMembership.objects.filter(company=company, user=user, active=True).values_list("branch_id", flat=True)
-    ]
+    return accessible_company_branch_ids(company, user)
 
 
 def policy_for_company(company: Company) -> ReviewPolicySetting:

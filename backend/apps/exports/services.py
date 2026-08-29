@@ -17,10 +17,10 @@ from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem
 from apps.identity.models import User
 from apps.notifications.services import emit_for_outbox_event
-from apps.organizations.models import CompanyMembership, CompanyRole, UserBranchMembership
 from apps.platform_core.outbox import emit_audit_and_outbox, quick_event
 from apps.tasks.models import TaskInstance
-from apps.tenancy.models import Company, SupportAuthorization
+from apps.tenancy.access import accessible_company_branch_ids
+from apps.tenancy.models import Company
 
 from .models import ExportBoundaryPolicy, ExportRequest, ExportStatus, ExportType
 
@@ -32,12 +32,7 @@ def export_storage_root() -> Path:
 
 
 def accessible_branch_ids(company: Company, user: User) -> list[str]:
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership and membership.role == CompanyRole.OWNER:
-        return [str(branch_id) for branch_id in company.branches.values_list("id", flat=True)]
-    if SupportAuthorization.objects.filter(company=company, support_user=user, active=True).exists():
-        return [str(branch_id) for branch_id in company.branches.values_list("id", flat=True)]
-    return [str(branch_id) for branch_id in UserBranchMembership.objects.filter(company=company, user=user, active=True).values_list("branch_id", flat=True)]
+    return accessible_company_branch_ids(company, user, include_support=True)
 
 
 def export_policy_for_company(company: Company) -> ExportBoundaryPolicy:

@@ -8,6 +8,7 @@ from apps.identity.models import MfaEnrollment, MfaMethodType, User
 from .models import Company, CompanyStatus
 from .services import current_support_authorization
 from apps.organizations.models import CompanyMembership
+from .access import active_membership_q
 
 
 def _record_failed_login(*, request, company_code: str, login_id: str, reason: str) -> None:
@@ -51,7 +52,13 @@ class CompanyCodeBackend(BaseBackend):
         if not user.check_password(password):
             _record_failed_login(request=request, company_code=company_code, login_id=login_id, reason="bad_password")
             return None
-        if CompanyMembership.objects.filter(company=company, user=user, active=True).exists() or company.owner_id == user.id:
+        active_membership_exists = CompanyMembership.objects.filter(
+            company=company,
+            user=user,
+            active=True,
+        ).filter(active_membership_q()).exists()
+        owner_has_memberships = CompanyMembership.objects.filter(company=company, user=user).exists()
+        if active_membership_exists or (company.owner_id == user.id and not owner_has_memberships):
             return user
         if current_support_authorization(company, user) is None:
             _record_failed_login(request=request, company_code=company_code, login_id=login_id, reason="not_authorized_for_company")

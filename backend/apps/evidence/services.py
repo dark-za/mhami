@@ -26,9 +26,10 @@ from django.utils import timezone
 
 from apps.audit.services import record_audit_event
 from apps.identity.models import User
-from apps.organizations.models import Branch, CompanyMembership, CompanyRole, UserBranchMembership
+from apps.organizations.models import Branch, CompanyRole
 from apps.platform_core.service_base import audited_service
 from apps.tasks.models import TaskInstance
+from apps.tenancy.access import accessible_company_branch_ids, has_company_role
 from apps.tenancy.models import Company
 
 from .models import (
@@ -92,10 +93,7 @@ def _detect_mime(data: bytes, file_name: str) -> str:
 
 
 def _branch_accessible_branch_ids(company: Company, user: User) -> set[str]:
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).first()
-    if membership and membership.role in {CompanyRole.OWNER, CompanyRole.MONITOR}:
-        return set(str(branch_id) for branch_id in company.branches.values_list("id", flat=True))
-    return set(str(branch_id) for branch_id in UserBranchMembership.objects.filter(company=company, user=user, active=True).values_list("branch_id", flat=True))
+    return set(accessible_company_branch_ids(company, user))
 
 
 def assert_capture_access(company: Company, branch: Branch, user: User) -> None:
@@ -445,10 +443,10 @@ def create_discussion_message(task_instance: TaskInstance, user: User, message: 
 def can_access_media(user: User, evidence: EvidenceItem) -> bool:
     if evidence.submitted_by_id == user.id:
         return True
-    membership = CompanyMembership.objects.filter(company=evidence.company, user=user, active=True).first()
-    if membership and membership.role in {CompanyRole.OWNER, CompanyRole.MONITOR}:
+    if has_company_role(evidence.company, user, str(CompanyRole.OWNER), str(CompanyRole.MONITOR)):
         return True
-    return UserBranchMembership.objects.filter(company=evidence.company, user=user, branch=evidence.branch, active=True).exists()
+    branch_id = getattr(evidence, "branch_id", None) or getattr(getattr(evidence, "branch", None), "id", None)
+    return str(branch_id) in accessible_company_branch_ids(evidence.company, user)
 
 
 def media_file_response(evidence: EvidenceItem) -> FileResponse:

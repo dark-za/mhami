@@ -196,9 +196,12 @@ def user_company(user: User) -> Company | None:
         The user's active :class:`Company` or ``None`` if the user has no
         active membership.
     """
+    from apps.tenancy.access import active_membership_q
+
     membership = (
         CompanyMembership.objects.select_related("company")
         .filter(user=user, active=True)
+        .filter(active_membership_q())
         .order_by("-active_from")
         .first()
     )
@@ -212,9 +215,9 @@ def is_owner(user: User, company: Company) -> bool:
     active OWNER memberships. Use this for read-side authorization only;
     mutations should go through :func:`apps.platform_core.mixins.TenantAPIView.get_tenant`.
     """
-    return company.owner_id == user.id or CompanyMembership.objects.filter(
-        company=company, user=user, role=CompanyRole.OWNER, active=True
-    ).exists()
+    from apps.tenancy.access import has_company_role
+
+    return has_company_role(company, user, str(CompanyRole.OWNER))
 
 
 def ensure_company_operational(company: Company) -> None:

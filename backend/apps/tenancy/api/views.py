@@ -19,7 +19,7 @@ from apps.organizations.models import Branch, CompanyMembership, CompanyRole, Jo
 from apps.platform_core.errors import PlatformAPIException, platform_service_call
 from apps.platform_core.mixins import TenantAPIView
 
-from ..access import require_company_user
+from ..access import active_membership_q, require_company_user
 from ..auth_backends import CompanyCodeBackend
 from ..models import Company, LegalAcceptance, SupportAuthorization
 from ..serializers import (
@@ -255,6 +255,7 @@ class MeView(TenantAPIView):
             company = self.get_tenant().company
         memberships = (
             CompanyMembership.objects.filter(company=company, user=request.user, active=True)
+            .filter(active_membership_q())
             if company is not None
             else CompanyMembership.objects.none()
         )

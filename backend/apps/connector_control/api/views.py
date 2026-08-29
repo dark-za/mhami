@@ -6,9 +6,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
-from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.organizations.models import CompanyRole
 from apps.platform_core.errors import platform_service_call, PlatformAPIException, PlatformPermissionException
 from apps.platform_core.mixins import TenantAPIView
+from apps.tenancy.access import has_company_role
 
 from ..models import TenantConnectorEnrollment
 from ..serializers import (
@@ -22,8 +23,7 @@ from ..services import current_connector_health, enroll_connector, observe_conne
 
 
 def _owner_or_400(company, user):
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership is None or membership.role != CompanyRole.OWNER:
+    if not has_company_role(company, user, str(CompanyRole.OWNER)):
         raise PlatformAPIException("Owner access required.")
 
 

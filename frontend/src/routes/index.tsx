@@ -39,7 +39,7 @@ interface GuardedRouteProps {
   roles: Role[];
   children: ReactNode;
   resource: string;
-  activeRole: Role;
+  activeRole: Role | null;
 }
 
 function Guarded({ roles, activeRole, resource, children }: GuardedRouteProps) {
@@ -51,7 +51,7 @@ function Guarded({ roles, activeRole, resource, children }: GuardedRouteProps) {
 }
 
 export function AppRoutes(props: AppRoutesProps) {
-  const activeRole = useActiveRole();
+  const activeRole = useActiveRole(props.bootstrap);
 
   return (
     <Suspense fallback={<RouteLoadingScreen />}>
@@ -119,7 +119,7 @@ export function AppRoutes(props: AppRoutesProps) {
         <Route
           path="/operations"
           element={
-            <Guarded roles={ALL_AUTHENTICATED_ROLES} activeRole={activeRole} resource="Operations">
+            <Guarded roles={MONITOR_AND_ABOVE} activeRole={activeRole} resource="Operations">
               <ExportsPage />
             </Guarded>
           }
@@ -127,7 +127,7 @@ export function AppRoutes(props: AppRoutesProps) {
         <Route
           path="/dashboard"
           element={
-            <Guarded roles={ALL_AUTHENTICATED_ROLES} activeRole={activeRole} resource="Dashboard">
+            <Guarded roles={MONITOR_AND_ABOVE} activeRole={activeRole} resource="Dashboard">
               <PilotPage />
             </Guarded>
           }

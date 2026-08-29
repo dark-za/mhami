@@ -79,9 +79,13 @@ class JobRoleSerializer(serializers.ModelSerializer):
 
 
 class CompanyMembershipSerializer(serializers.ModelSerializer):
+    user_id = serializers.UUIDField(source="user.id", read_only=True)
+    login_id = serializers.CharField(source="user.login_id", read_only=True)
+    display_name = serializers.CharField(source="user.display_name", read_only=True)
+
     class Meta:
         model = CompanyMembership
-        fields = ["user", "role", "active", "active_from", "active_until"]
+        fields = ["user", "user_id", "login_id", "display_name", "role", "active", "active_from", "active_until"]
 
 
 class LegalAcceptanceSerializer(serializers.ModelSerializer):

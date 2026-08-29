@@ -190,3 +190,61 @@ def test_mcp_transfer_tool_executes_and_replays_same_idempotency_key(
     assert replay.status_code == 200
     assert replay.json()["result"]["replayed"] is True
     assert replay.json()["result"]["result"] == response.json()["result"]["result"]
+
+
+@override_settings(MCP_INTERNAL_HMAC_SECRET=MCP_SECRET)
+@pytest.mark.django_db
+def test_mcp_transfer_rejects_target_outside_grant_company(
+    client,
+    make_branch,
+    make_company,
+    make_membership,
+    make_template,
+    make_template_version,
+    make_user,
+    mcp_grant: AgentGrant,
+) -> None:
+    external = make_user()
+    external_company = make_company(owner=external)
+    make_membership(user=external, company=external_company, role=CompanyRole.EMPLOYEE)
+    branch = make_branch(company=mcp_grant.company)
+    template = make_template(
+        company=mcp_grant.company,
+        branch=branch,
+        assignment_mode=TaskAssignmentMode.NAMED_USER,
+        assigned_user=mcp_grant.user,
+    )
+    version = make_template_version(template=template)
+    instance = TaskInstance.objects.create(
+        company=mcp_grant.company,
+        branch=branch,
+        template=template,
+        template_version=version,
+        scheduled_for=timezone.now(),
+        due_at=timezone.now() + timedelta(hours=1),
+        assigned_user=mcp_grant.user,
+    )
+    payload = {
+        "jsonrpc": "2.0",
+        "id": "call-external",
+        "method": "tools/call",
+        "params": {
+            "name": "tasks.transfer.request",
+            "idempotency_key": "idem-external-target",
+            "arguments": {
+                "task_id": str(instance.id),
+                "requested_to_id": str(external.id),
+                "reason": "external handoff",
+            },
+        },
+    }
+    body = _body(payload)
+
+    response = client.post(
+        "/api/v1/agent/mcp",
+        data=body,
+        content_type="application/json",
+        **_signed_headers(mcp_grant, body, nonce="transfer-external"),
+    )
+
+    assert response.status_code == 403

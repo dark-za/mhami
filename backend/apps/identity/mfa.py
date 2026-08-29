@@ -10,6 +10,8 @@ from __future__ import annotations
 from apps.identity.models import MfaEnrollment, MfaMethodType, User
 from apps.organizations.models import CompanyMembership, CompanyRole
 from apps.tenancy.models import Company
+from django.db.models import Q
+from django.utils import timezone
 
 
 def has_verified_mfa(user: User) -> bool:
@@ -40,6 +42,7 @@ def user_requires_mfa(user: User, company: Company | None = None) -> bool:
     if company.owner_id == getattr(user, "id", None):
         return True
     return CompanyMembership.objects.filter(
+        Q(active_until__isnull=True) | Q(active_until__gt=timezone.now()),
         company=company,
         user=user,
         active=True,

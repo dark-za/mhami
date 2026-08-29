@@ -9,17 +9,38 @@ import { describe, expect, test, beforeEach } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { AppRoutes } from "./index";
+import { createFallbackState, type BootstrapState } from "../api/bootstrap";
+import { bootstrapSnapshot, type Role } from "../design-system/tokens";
 
 beforeEach(() => {
   window.localStorage.removeItem("mhami.activeRole");
 });
 
-async function renderAt(path: string) {
+function liveBootstrap(role: Role): BootstrapState {
+  return {
+    ...createFallbackState(bootstrapSnapshot),
+    snapshot: {
+      ...bootstrapSnapshot,
+      currentUser: {
+        ...bootstrapSnapshot.currentUser,
+        id: "user-live",
+        loginId: `${role}-user`,
+        displayName: `${role} user`,
+        authenticated: true,
+        role,
+      },
+      enabledModules: ["dashboard", "operations", "tasks", "evidence", "people", "reviews", "admin", "agent_access"],
+    },
+    source: "live",
+  };
+}
+
+async function renderAt(path: string, bootstrap?: BootstrapState) {
   let result: ReturnType<typeof render> | null = null;
   await act(async () => {
     result = render(
       <MemoryRouter initialEntries={[path]}>
-        <AppRoutes />
+        <AppRoutes bootstrap={bootstrap} />
       </MemoryRouter>,
     );
     // Allow lazy chunks to resolve.
@@ -55,6 +76,21 @@ describe("FE-01 route table", () => {
   test("employee is denied access to /admin", async () => {
     window.localStorage.setItem("mhami.activeRole", "employee");
     await renderAt("/admin");
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+    });
+  });
+
+  test("fallback bootstrap does not grant privileged route access", async () => {
+    await renderAt("/admin", createFallbackState(bootstrapSnapshot));
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+    });
+  });
+
+  test("live employee bootstrap cannot access owner routes even if localStorage says owner", async () => {
+    window.localStorage.setItem("mhami.activeRole", "owner");
+    await renderAt("/agent-access", liveBootstrap("employee"));
     await waitFor(() => {
       expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
     });

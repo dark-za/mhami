@@ -8,12 +8,85 @@ from apps.identity.models import User
 from .models import OutboxEvent
 from .registry import get_registry
 
+ROLE_PERMISSIONS: dict[str, list[str]] = {
+    "owner": [
+        "users.manage",
+        "branches.manage",
+        "job_roles.manage",
+        "branch_memberships.manage",
+        "tasks.create",
+        "tasks.execute",
+        "tasks.transfer",
+        "reviews.manage",
+        "reviews.policy.manage",
+        "exports.manage",
+        "ai.manage",
+        "connectors.manage",
+        "mcp.manage",
+        "backups.manage",
+        "pilot.manage",
+    ],
+    "monitor": [
+        "tasks.create",
+        "tasks.execute",
+        "tasks.transfer",
+        "reviews.manage",
+        "exports.request",
+        "pilot.manage",
+        "mcp.logs.read",
+    ],
+    "employee": [
+        "tasks.execute",
+        "tasks.transfer",
+        "evidence.submit",
+        "notifications.read",
+    ],
+}
+
+WORKSPACE_MODULES = {
+    "dashboard",
+    "operations",
+    "tasks",
+    "evidence",
+    "people",
+    "reviews",
+    "admin",
+    "agent_access",
+}
+
+
+def _workspace_modules(module_slugs: set[str]) -> list[str]:
+    modules: list[str] = ["dashboard"]
+    if "tasks" in module_slugs:
+        modules.append("tasks")
+    if "evidence" in module_slugs:
+        modules.append("evidence")
+    if {"organizations", "tenancy"} & module_slugs:
+        modules.append("people")
+    if "reviews" in module_slugs:
+        modules.append("reviews")
+    if {"exports", "pilot", "backups"} & module_slugs:
+        modules.append("operations")
+    if {"ai_gateway", "connector_control"} & module_slugs:
+        modules.append("admin")
+    if "agent_access" in module_slugs:
+        modules.append("agent_access")
+    return [module for module in modules if module in WORKSPACE_MODULES]
+
+
+def permissions_for_role(role: str | None) -> list[str]:
+    """Return display permissions derived from the fixed company role."""
+    return ROLE_PERMISSIONS.get(str(role or ""), [])
+
 
 def bootstrap_payload(user: object | None = None) -> dict[str, object]:
     registry = get_registry()
+    module_slugs = {module.slug for module in registry.manifests}
     current_user: dict[str, object] = {"is_authenticated": False}
     company_payload: dict[str, object] | None = None
     branches: list[dict[str, object]] = []
+    branch_scope: list[dict[str, object]] = []
+    permissions: list[str] = []
     if user is not None:
         is_authenticated = bool(getattr(user, "is_authenticated", False))
         current_user = {
@@ -21,12 +94,17 @@ def bootstrap_payload(user: object | None = None) -> dict[str, object]:
             "id": str(getattr(user, "id", "")) if is_authenticated else None,
             "login_id": getattr(user, "login_id", None) if is_authenticated else None,
             "display_name": getattr(user, "display_name", None) if is_authenticated else None,
+            "role": None,
         }
         if is_authenticated and isinstance(user, User):
             from apps.tenancy.services import user_company
+            from apps.tenancy.access import accessible_company_branch_ids, company_role_for_user
 
             company = user_company(user)
             if company is not None:
+                role = company_role_for_user(company, user)
+                current_user["role"] = role
+                permissions = permissions_for_role(role)
                 company_payload = {
                     "id": str(company.id),
                     "name": company.name,
@@ -47,12 +125,15 @@ def bootstrap_payload(user: object | None = None) -> dict[str, object]:
                     }
                     for branch in Branch.objects.filter(company=company, active=True)
                 ]
+                scoped_ids = set(accessible_company_branch_ids(company, user))
+                branch_scope = [branch for branch in branches if branch["id"] in scoped_ids]
     return {
         "current_user": current_user,
         "company": company_payload,
-        "permissions": [],
+        "permissions": permissions,
         "branches": branches,
-        "enabled_modules": [module.slug for module in registry.manifests],
+        "branch_scope": branch_scope,
+        "enabled_modules": _workspace_modules(module_slugs),
         "feature_flags": [],
         "app_version": "0.1.0",
     }

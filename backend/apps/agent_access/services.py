@@ -3,36 +3,28 @@ from __future__ import annotations
 from collections.abc import Mapping
 from uuid import UUID
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
 from apps.audit.services import record_audit_event
-from apps.organizations.models import CompanyMembership, CompanyRole
 from apps.platform_core.request_id import get_request_id
+from apps.tenancy.access import has_company_role, is_active_company_user
 from apps.tenancy.models import Company
 
 from .models import AgentActionLog, AgentGrant, AgentGrantStatus, arguments_hash, validate_agent_scopes
 
 
 def ensure_owner_can_manage_agent_access(*, user_id: object, company: Company) -> None:
-    is_owner = CompanyMembership.objects.filter(
-        company=company,
-        user_id=user_id,
-        role=CompanyRole.OWNER,
-        active=True,
-    ).exists()
-    if not is_owner:
+    user = get_user_model().objects.filter(id=user_id).first()
+    if user is None or not has_company_role(company, user, "owner"):
         raise PermissionDenied("Only an active company owner can manage MCP agent access.")
 
 
 def ensure_grant_user_belongs_to_company(*, user_id: object, company: Company) -> None:
-    is_member = company.owner_id == user_id or CompanyMembership.objects.filter(
-        company=company,
-        user_id=user_id,
-        active=True,
-    ).exists()
-    if not is_member:
+    user = get_user_model().objects.filter(id=user_id).first()
+    if user is None or not is_active_company_user(company, user):
         raise PermissionDenied("MCP grant user must belong to the active company.")
 
 

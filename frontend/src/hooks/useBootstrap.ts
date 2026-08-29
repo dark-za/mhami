@@ -25,6 +25,7 @@ function mergeBootstrap(state: BootstrapState, response: BootstrapApiResponse): 
         loginId: response.current_user.login_id ?? state.snapshot.currentUser.loginId,
         displayName: response.current_user.display_name ?? state.snapshot.currentUser.displayName,
         authenticated: response.current_user.is_authenticated,
+        role: (response.current_user.role as BootstrapState["snapshot"]["currentUser"]["role"]) ?? null,
       },
       company: response.company
         ? {
@@ -38,8 +39,13 @@ function mergeBootstrap(state: BootstrapState, response: BootstrapApiResponse): 
       enabledModules: response.enabled_modules as typeof state.snapshot.enabledModules,
     },
     branches: response.branches,
+    branchScope: response.branch_scope ?? [],
     source: "live",
   };
+}
+
+function isBootstrapResponse(value: unknown): value is BootstrapApiResponse {
+  return Boolean(value && typeof value === "object" && "current_user" in value);
 }
 
 export function useBootstrap() {
@@ -50,7 +56,7 @@ export function useBootstrap() {
   useEffect(() => {
     let active = true;
 
-    void fetchBootstrap()
+    const load = () => fetchBootstrap()
       .then((response) => {
         if (!active) {
           return;
@@ -70,8 +76,24 @@ export function useBootstrap() {
         }
       });
 
+    void load();
+
+    const hydrateFromEvent = (event: Event) => {
+      const detail = event instanceof CustomEvent ? event.detail : null;
+      if (isBootstrapResponse(detail)) {
+        setState((current) => mergeBootstrap(current, detail));
+        setError(null);
+        setLoading(false);
+      } else {
+        setLoading(true);
+        void load();
+      }
+    };
+    window.addEventListener("mhami.bootstrap.refreshed", hydrateFromEvent);
+
     return () => {
       active = false;
+      window.removeEventListener("mhami.bootstrap.refreshed", hydrateFromEvent);
     };
   }, []);
 

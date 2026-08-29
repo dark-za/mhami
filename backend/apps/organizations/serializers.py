@@ -3,6 +3,7 @@ from __future__ import annotations
 from rest_framework import serializers
 
 from apps.platform_core.errors import PlatformPermissionException
+from apps.tenancy.access import active_membership_q
 
 from .models import Branch, CompanyMembership, CompanyRole, JobRole, UserBranchMembership, WeeklyShift
 
@@ -89,6 +90,7 @@ class WeeklyShiftCreateSerializer(serializers.Serializer):
 
         membership = (
             CompanyMembership.objects.filter(
+                active_membership_q(),
                 company=self._company, user_id=user_id, active=True
             )
             .only("id", "active")
@@ -102,6 +104,7 @@ class WeeklyShiftCreateSerializer(serializers.Serializer):
         if membership.role != CompanyRole.OWNER:
             branch_membership = (
                 UserBranchMembership.objects.filter(
+                    active_membership_q(),
                     company=self._company,
                     user_id=user_id,
                     branch_id=branch_id,

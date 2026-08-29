@@ -23,10 +23,11 @@ from apps.audit.models import AuditEvent
 from apps.evidence.models import EvidenceItem
 from apps.identity.models import User
 from apps.notifications.services import emit_for_outbox_event
-from apps.organizations.models import Branch, CompanyMembership, CompanyRole
+from apps.organizations.models import Branch, CompanyRole
 from apps.platform_core.models import FeatureFlag, ModuleHealthSnapshot, PlatformSetting
 from apps.platform_core.outbox import emit_audit_and_outbox, quick_event
 from apps.tasks.models import TaskInstance
+from apps.tenancy.access import has_company_role
 from apps.tenancy.models import Company
 
 from .models import BackupPolicy, BackupRun, BackupStatus, RestoreRun
@@ -268,7 +269,7 @@ def prepare_backup_run(
     include_configuration: bool = True,
     include_tenant_state: bool = True,
 ) -> BackupRun:
-    if not CompanyMembership.objects.filter(company=company, user=user, active=True, role=CompanyRole.OWNER).exists():
+    if not has_company_role(company, user, str(CompanyRole.OWNER)):
         raise ValueError("Owner access required.")
     return BackupRun.objects.create(
         company=company,
@@ -528,7 +529,7 @@ def restore_backup_run(
     target_name: str,
     confirmation: str,
 ) -> RestoreRun:
-    if not CompanyMembership.objects.filter(company=company, user=user, active=True, role=CompanyRole.OWNER).exists():
+    if not has_company_role(company, user, str(CompanyRole.OWNER)):
         raise ValueError("Owner access required.")
     backup_run = BackupRun.objects.get(id=backup_run_id, company=company)
     if confirmation != f"RESTORE {backup_run.id}":

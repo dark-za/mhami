@@ -14,8 +14,8 @@ export type WorkspaceRoute =
   | "/agent-access";
 
 export const routePermissions: Record<Exclude<WorkspaceRoute, "/">, Role[]> = {
-  "/dashboard": ["platform_admin", "owner", "monitor", "employee"],
-  "/operations": ["platform_admin", "owner", "monitor", "employee"],
+  "/dashboard": ["platform_admin", "owner", "monitor"],
+  "/operations": ["platform_admin", "owner", "monitor"],
   "/tasks": ["platform_admin", "owner", "monitor", "employee"],
   "/evidence": ["platform_admin", "owner", "monitor", "employee"],
   "/people": ["platform_admin", "owner", "monitor"],
@@ -47,4 +47,17 @@ export function routeTitle(locale: "ar" | "en", route: WorkspaceRoute): string {
     "/agent-access": { ar: "وصول MCP", en: "MCP Access" },
   };
   return locale === "ar" ? titles[route].ar : titles[route].en;
+}
+
+export function defaultRouteForRole(role: Role | null | undefined): WorkspaceRoute | "/login" {
+  if (role === "owner" || role === "platform_admin") {
+    return "/people";
+  }
+  if (role === "monitor") {
+    return "/reviews";
+  }
+  if (role === "employee") {
+    return "/tasks";
+  }
+  return "/login";
 }

@@ -8,8 +8,11 @@ user, bad password, no membership).
 """
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 from django.test import RequestFactory
+from django.utils import timezone
 
 from apps.audit.models import AuditEvent
 from apps.organizations.models import CompanyMembership, CompanyRole
@@ -99,6 +102,28 @@ def test_not_authorized_for_company_recorded_as_failure(make_user, make_company)
         login_id=user.login_id,
         password="TestPass123!",
     )
+    assert result is None
+    assert _login_failed_events("not_authorized_for_company")
+
+
+def test_expired_membership_cannot_authenticate(make_user, make_company):
+    user = make_user(login_id="expired-member", password="TestPass123!")
+    company = make_company(code="expired-login")
+    CompanyMembership.objects.create(
+        company=company,
+        user=user,
+        role=CompanyRole.MONITOR,
+        active_until=timezone.now() - timedelta(seconds=1),
+    )
+    backend = CompanyCodeBackend()
+
+    result = backend.authenticate(
+        request=_request(),
+        company_code=company.code,
+        login_id=user.login_id,
+        password="TestPass123!",
+    )
+
     assert result is None
     assert _login_failed_events("not_authorized_for_company")
 

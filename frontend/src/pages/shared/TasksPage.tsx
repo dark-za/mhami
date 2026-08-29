@@ -45,6 +45,7 @@ export function TasksPage({
   const [taskActionLoading, setTaskActionLoading] = useState<string | null>(null);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [transferForm, setTransferForm] = useState({ taskId: "", requestedToId: "", reason: "" });
+  const canManageTasks = bootstrap?.snapshot.currentUser.role === "owner" || bootstrap?.snapshot.currentUser.role === "monitor";
 
   async function refreshTasks() {
     setTasksLoading(true);
@@ -243,7 +244,7 @@ export function TasksPage({
               {instance.assigned_user ?? "unassigned"} · {instance.branch ?? "no branch"}
             </small>
             <div className="inline-actions">
-              {(["claim", "start", "complete", "cancel"] as const).map((action) => (
+              {(["claim", "start", "complete"] as const).map((action) => (
                 <button
                   key={action}
                   className="ghost-button"
@@ -254,6 +255,16 @@ export function TasksPage({
                   {action}
                 </button>
               ))}
+              {canManageTasks ? (
+                <button
+                  className="ghost-button"
+                  type="button"
+                  disabled={Boolean(taskActionLoading)}
+                  onClick={() => void runTaskAction(instance.id, "cancel")}
+                >
+                  cancel
+                </button>
+              ) : null}
               <button
                 className="ghost-button"
                 type="button"

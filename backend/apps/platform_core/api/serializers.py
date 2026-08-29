@@ -10,6 +10,7 @@ class BootstrapCurrentUserSerializer(serializers.Serializer):
     id = serializers.CharField(allow_null=True)
     login_id = serializers.CharField(allow_null=True)
     display_name = serializers.CharField(allow_null=True)
+    role = serializers.CharField(allow_null=True, required=False)
 
 
 class BootstrapCompanySerializer(serializers.Serializer):
@@ -34,6 +35,7 @@ class BootstrapSerializer(serializers.Serializer):
     company = BootstrapCompanySerializer(allow_null=True)
     permissions = serializers.ListField(child=serializers.CharField())
     branches = BootstrapBranchSerializer(many=True)
+    branch_scope = BootstrapBranchSerializer(many=True)
     enabled_modules = serializers.ListField(child=serializers.CharField())
     feature_flags = serializers.ListField(child=serializers.DictField())
     app_version = serializers.CharField()

@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 
 import { api, ApiError } from "../../api/client";
 import { fetchBootstrap } from "../../api/bootstrap";
+import { defaultRouteForRole } from "../../domain/routing";
+import type { Role } from "../../design-system/tokens";
 import { Panel } from "../../shell/ui";
 
 export function LoginPage() {
@@ -35,8 +37,11 @@ export function LoginPage() {
         },
       });
       // Touch bootstrap so the shell hydrates with the new session.
-      await fetchBootstrap().catch(() => undefined);
-      navigate("/", { replace: true });
+      const bootstrap = await fetchBootstrap().catch(() => undefined);
+      if (bootstrap) {
+        window.dispatchEvent(new CustomEvent("mhami.bootstrap.refreshed", { detail: bootstrap }));
+      }
+      navigate(defaultRouteForRole(bootstrap?.current_user.role as Role | null | undefined), { replace: true });
     } catch (err) {
       const message = err instanceof ApiError ? err.message : t("auth.login_failed");
       setError(message);

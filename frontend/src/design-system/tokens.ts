@@ -34,7 +34,7 @@ export type BootstrapSnapshot = {
     id: string;
     displayName: string;
     loginId: string;
-    role: Role;
+    role: Role | null;
     authenticated: boolean;
   };
   company: {
@@ -61,8 +61,8 @@ export const roleLabels: Record<Role, { ar: string; en: string }> = {
 };
 
 export const navItems: NavItem[] = [
-  { module: "dashboard", href: "/dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "operations", href: "/operations", labelAr: "العمليات", labelEn: "Operations", roles: ["platform_admin", "owner", "monitor", "employee"] },
+  { module: "dashboard", href: "/dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["platform_admin", "owner", "monitor"] },
+  { module: "operations", href: "/operations", labelAr: "العمليات", labelEn: "Operations", roles: ["platform_admin", "owner", "monitor"] },
   { module: "tasks", href: "/tasks", labelAr: "المهام", labelEn: "Tasks", roles: ["platform_admin", "owner", "monitor", "employee"] },
   { module: "evidence", href: "/evidence", labelAr: "الأدلة", labelEn: "Evidence", roles: ["platform_admin", "owner", "monitor", "employee"] },
   { module: "people", href: "/people", labelAr: "الأفراد", labelEn: "People", roles: ["platform_admin", "owner", "monitor"] },
@@ -109,7 +109,7 @@ export const bootstrapSnapshot: BootstrapSnapshot = {
     id: "user-001",
     displayName: "Amina Hassan",
     loginId: "amina",
-    role: "owner",
+    role: null,
     authenticated: false,
   },
   company: {
@@ -128,7 +128,10 @@ export const bootstrapSnapshot: BootstrapSnapshot = {
   enabledModules: [],
 };
 
-export function getVisibleNavItems(role: Role, enabledModules: NavModule[]): NavItem[] {
+export function getVisibleNavItems(role: Role | null, enabledModules: NavModule[]): NavItem[] {
+  if (!role) {
+    return [];
+  }
   return navItems.filter((item) => item.roles.includes(role) && enabledModules.includes(item.module));
 }
 

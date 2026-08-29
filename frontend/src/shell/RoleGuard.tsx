@@ -11,13 +11,13 @@ import { Panel } from "./ui";
 
 export interface RoleGuardProps {
   roles: Role[];
-  activeRole: Role;
+  activeRole: Role | null;
   children: ReactNode;
   resource?: string;
 }
 
 export function RoleGuard({ roles, activeRole, children, resource }: RoleGuardProps) {
-  if (roles.includes(activeRole)) {
+  if (activeRole && roles.includes(activeRole)) {
     return <>{children}</>;
   }
   return (

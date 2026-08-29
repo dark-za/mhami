@@ -65,9 +65,9 @@ export function AppShell(props: AppShellProps) {
     notificationsError,
   } = props;
 
-  const role = useActiveRole();
+  const role = useActiveRole(bootstrap);
   const setRole = (next: Role) => {
-    if (typeof window === "undefined") {
+    if (!IS_DEVELOPMENT || typeof window === "undefined") {
       return;
     }
     try {
@@ -149,6 +149,7 @@ export function AppShell(props: AppShellProps) {
             displayName:
               bootstrapResponse.current_user.display_name ?? current.snapshot.currentUser.displayName,
             authenticated: bootstrapResponse.current_user.is_authenticated,
+            role: (bootstrapResponse.current_user.role as Role | null | undefined) ?? null,
           },
           company: bootstrapResponse.company
             ? {
@@ -162,6 +163,7 @@ export function AppShell(props: AppShellProps) {
           enabledModules: bootstrapResponse.enabled_modules as typeof current.snapshot.enabledModules,
         },
         branches: bootstrapResponse.branches,
+        branchScope: bootstrapResponse.branch_scope ?? [],
         source: "live",
       }));
       setAuthMessage("Session is live and bootstrap data has been refreshed.");
@@ -215,7 +217,7 @@ export function AppShell(props: AppShellProps) {
             ? locale === "ar"
               ? "نجهز بيانات الشركة والصلاحيات."
               : "Company and permission data are being prepared."
-            : bootstrap.source === "live"
+            : bootstrap.source === "live" && bootstrap.snapshot.currentUser.authenticated
             ? locale === "ar"
               ? "البيانات المعروضة من الجلسة الحالية."
               : "Displayed data reflects the current session."
@@ -234,7 +236,7 @@ export function AppShell(props: AppShellProps) {
           </p>
         </div>
         <div className="header-actions">
-          <Badge tone="info">{roleLabels[role][locale]}</Badge>
+          <Badge tone="info">{role ? roleLabels[role][locale] : locale === "ar" ? "غير مسجل" : "Signed out"}</Badge>
           <Badge tone="neutral">{languageLabel}</Badge>
           <Badge tone="neutral">{calendarLabel}</Badge>
           <Badge tone="neutral">{routeSummary}</Badge>

@@ -3,9 +3,10 @@ from __future__ import annotations
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 
-from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.organizations.models import CompanyRole
 from apps.platform_core.errors import PlatformPermissionException
 from apps.platform_core.mixins import TenantAPIView
+from apps.tenancy.access import has_company_role
 
 from ..serializers import (
     PilotChangeRequestListSerializer,
@@ -41,8 +42,7 @@ from ..services import (
 
 
 def _owner_or_monitor(company, user):
-    membership = CompanyMembership.objects.filter(company=company, user=user, active=True).only("role").first()
-    if membership is None or membership.role not in {CompanyRole.OWNER, CompanyRole.MONITOR}:
+    if not has_company_role(company, user, str(CompanyRole.OWNER), str(CompanyRole.MONITOR)):
         raise PlatformPermissionException("Owner or monitor access required.")
 
 
@@ -189,8 +189,7 @@ class PilotCharterView(TenantAPIView):
     def post(self, request):
         company = self.get_tenant().company
         # PILOT-01: only the platform owner signs the charter.
-        membership = CompanyMembership.objects.filter(company=company, user=request.user, active=True).only("role").first()
-        if membership is None or membership.role != CompanyRole.OWNER:
+        if not has_company_role(company, request.user, str(CompanyRole.OWNER)):
             raise PlatformPermissionException("Only the company owner can sign the pilot charter.")
         serializer = PilotCharterCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

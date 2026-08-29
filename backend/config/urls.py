@@ -1,8 +1,22 @@
 from __future__ import annotations
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.permissions import AllowAny, IsAdminUser
+
+
+class ProtectedSpectacularAPIView(SpectacularAPIView):
+    def get_permissions(self):
+        permission_classes = [IsAdminUser] if settings.API_DOCS_REQUIRE_STAFF else [AllowAny]
+        return [permission() for permission in permission_classes]
+
+
+class ProtectedSpectacularSwaggerView(SpectacularSwaggerView):
+    def get_permissions(self):
+        permission_classes = [IsAdminUser] if settings.API_DOCS_REQUIRE_STAFF else [AllowAny]
+        return [permission() for permission in permission_classes]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -22,6 +36,6 @@ urlpatterns = [
     path("api/v1/notifications/", include("apps.notifications.api.urls")),
     path("api/v1/pilot/", include("apps.pilot.api.urls")),
     path("api/v1/compliance/", include("apps.compliance.api.urls")),
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/schema/", ProtectedSpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", ProtectedSpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

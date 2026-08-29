@@ -106,6 +106,65 @@ def active_membership_q() -> Q:
     return Q(active_until__isnull=True) | Q(active_until__gt=timezone.now())
 
 
+def active_company_membership(company: Company, user) -> CompanyMembership | None:
+    """Return the user's currently-active company membership, if any."""
+    if user is None or not getattr(user, "is_authenticated", False) or not getattr(user, "is_active", True):
+        return None
+    return (
+        CompanyMembership.objects.filter(company=company, user=user, active=True)
+        .filter(active_membership_q())
+        .only("role", "active_until")
+        .first()
+    )
+
+
+def company_role_for_user(company: Company, user) -> str | None:
+    """Return the effective active role for ``user`` in ``company``.
+
+    The owner foreign key is accepted only when no explicit membership
+    record exists for that owner. Once a membership row exists, its
+    ``active`` and ``active_until`` fields are authoritative.
+    """
+    membership = active_company_membership(company, user)
+    if membership is not None:
+        return str(membership.role)
+    if user is not None and company.owner_id == getattr(user, "id", None):
+        owner_memberships_exist = CompanyMembership.objects.filter(company=company, user=user).exists()
+        if not owner_memberships_exist:
+            return str(CompanyRole.OWNER)
+    return None
+
+
+def has_company_role(company: Company, user, *roles: str) -> bool:
+    """Return whether ``user`` currently has one of ``roles`` in ``company``."""
+    return company_role_for_user(company, user) in {str(role) for role in roles}
+
+
+def accessible_company_branch_ids(company: Company, user, *, include_support: bool = False) -> list[str]:
+    """Return branch IDs the user may access using active membership semantics."""
+    role = company_role_for_user(company, user)
+    if role == CompanyRole.OWNER:
+        return [str(branch_id) for branch_id in company.branches.filter(active=True).values_list("id", flat=True)]
+    if include_support and current_support_authorization(company, user) is not None:
+        return [str(branch_id) for branch_id in company.branches.filter(active=True).values_list("id", flat=True)]
+    return [
+        str(branch_id)
+        for branch_id in UserBranchMembership.objects.filter(
+            company=company,
+            user=user,
+            active=True,
+            branch__active=True,
+        )
+        .filter(active_membership_q())
+        .values_list("branch_id", flat=True)
+    ]
+
+
+def is_active_company_user(company: Company, user) -> bool:
+    """Return whether ``user`` is currently allowed to act inside ``company``."""
+    return company_role_for_user(company, user) is not None
+
+
 @dataclass(frozen=True)
 class TenantContext:
     company: Company
@@ -140,16 +199,7 @@ def tenant_context(request: HttpRequest) -> TenantContext:
         raise PlatformPermissionException("The active company is unavailable.")
 
     now = timezone.now()
-    membership = (
-        CompanyMembership.objects.filter(
-            company=company,
-            user=user,
-            active=True,
-        )
-        .filter(active_membership_q())
-        .only("role", "active_until")
-        .first()
-    )
+    membership = active_company_membership(company, user)
     owner_memberships_exist = CompanyMembership.objects.filter(company=company, user=user).exists()
     is_owner = company.owner_id == user.id and (membership is not None or not owner_memberships_exist)
     support_grant = None if membership or is_owner else current_support_authorization(company, user)
@@ -161,7 +211,7 @@ def tenant_context(request: HttpRequest) -> TenantContext:
         support_grant = None
 
     role = str(CompanyRole.OWNER) if is_owner else membership.role if membership else None
-    if role in {CompanyRole.OWNER, CompanyRole.MONITOR} or support_grant is not None:
+    if role == CompanyRole.OWNER or support_grant is not None:
         branch_ids = frozenset(company.branches.filter(active=True).values_list("id", flat=True))
     else:
         branch_ids = frozenset(
@@ -184,7 +234,10 @@ def tenant_context(request: HttpRequest) -> TenantContext:
 
 
 def require_company_user(context: TenantContext, user_id: UUID) -> None:
-    if context.company.owner_id == user_id:
+    if context.company.owner_id == user_id and not CompanyMembership.objects.filter(
+        company=context.company,
+        user_id=user_id,
+    ).exists():
         return
     if not CompanyMembership.objects.filter(
         company=context.company,

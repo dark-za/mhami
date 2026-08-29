@@ -5,6 +5,7 @@ import type { BootstrapApiResponse } from "./contract";
 export type BootstrapState = {
   snapshot: BootstrapSnapshot;
   branches: BootstrapApiResponse["branches"];
+  branchScope: BootstrapApiResponse["branch_scope"];
   source: "live" | "fallback";
 };
 
@@ -12,6 +13,7 @@ export function createFallbackState(snapshot: BootstrapSnapshot): BootstrapState
   return {
     snapshot,
     branches: [],
+    branchScope: [],
     source: "fallback",
   };
 }
