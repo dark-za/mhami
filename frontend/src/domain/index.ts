@@ -5,6 +5,7 @@ into individual files so re-organising the layout is cheap.
 */
 
 export * from "./ai";
+export * from "./agentAccess";
 export * from "./connectors";
 export * from "./evidence";
 export * from "./exports";

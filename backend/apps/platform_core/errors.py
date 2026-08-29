@@ -5,6 +5,7 @@ from collections.abc import Callable, Mapping
 from functools import wraps
 from typing import Any, TypeVar
 
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
@@ -110,6 +111,8 @@ def platform_service_call(view_method: _F) -> _F:
             return view_method(self, request, *args, **kwargs)
         except (PlatformAPIException, PlatformPermissionException, ValidationError):
             raise
+        except DjangoPermissionDenied as exc:
+            raise PlatformPermissionException(str(exc)) from exc
         except _SERVICE_ERRORS as exc:
             raise PlatformAPIException(str(exc)) from exc
         except Exception as exc:

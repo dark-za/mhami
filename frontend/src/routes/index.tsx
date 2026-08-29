@@ -19,6 +19,7 @@ const EvidencePage = lazy(() => import("../pages/evidence/EvidencePage"));
 const ReviewsPage = lazy(() => import("../pages/reviews/ReviewsPage"));
 const PeoplePage = lazy(() => import("../pages/people/PeoplePage"));
 const AIControlPage = lazy(() => import("../pages/admin/AIControlPage"));
+const AgentAccessPage = lazy(() => import("../pages/admin/AgentAccessPage"));
 const ExportsPage = lazy(() => import("../pages/operations/ExportsPage"));
 const PilotPage = lazy(() => import("../pages/operations/PilotPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
@@ -104,6 +105,14 @@ export function AppRoutes(props: AppRoutesProps) {
           element={
             <Guarded roles={ADMIN_ONLY} activeRole={activeRole} resource="Admin">
               <AIControlPage />
+            </Guarded>
+          }
+        />
+        <Route
+          path="/agent-access"
+          element={
+            <Guarded roles={ADMIN_ONLY} activeRole={activeRole} resource="MCP Access">
+              <AgentAccessPage />
             </Guarded>
           }
         />

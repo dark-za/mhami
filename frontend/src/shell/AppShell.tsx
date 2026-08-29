@@ -349,7 +349,7 @@ export function AppShell(props: AppShellProps) {
           <nav className="nav-list" aria-label="Role aware navigation">
             <Link to="/">{locale === "ar" ? "الملخص" : "Summary"}</Link>
             {visibleNav.map((item) => (
-              <Link key={item.module} to={`/${item.module}`}>
+              <Link key={item.module} to={item.href}>
                 <span>{locale === "ar" ? item.labelAr : item.labelEn}</span>
                 <small>{item.module}</small>
               </Link>

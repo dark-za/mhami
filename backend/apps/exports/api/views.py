@@ -13,6 +13,7 @@ from ..models import ExportRequest
 from ..serializers import (
     ExportBoundaryPolicySerializer,
     ExportRequestCreateSerializer,
+    ExportRequestListSerializer,
     ExportRequestSerializer,
 )
 from ..services import complete_export_request, export_download_response, prepare_export_request
@@ -22,7 +23,7 @@ class ExportPolicyView(TenantAPIView):
     # BE-01: Export policy is a management view; OWNER + MONITOR.
     required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
-    @extend_schema(responses=OpenApiResponse(description="Export policy for the active company."))
+    @extend_schema(responses=ExportBoundaryPolicySerializer)
     def get(self, request):
         return Response(ExportBoundaryPolicySerializer({}).data)
 
@@ -31,7 +32,7 @@ class ExportRequestListView(TenantAPIView):
     # BE-01: Listing export requests is a management view; OWNER + MONITOR.
     required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
-    @extend_schema(responses=OpenApiResponse(description="List of export requests for the active company."))
+    @extend_schema(responses=ExportRequestListSerializer)
     def get(self, request):
         company = self.get_tenant().company
         return Response(

@@ -5,12 +5,14 @@ from uuid import UUID
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.utils import timezone
 
+from apps.audit.services import record_audit_event
 from apps.organizations.models import CompanyMembership, CompanyRole
 from apps.platform_core.request_id import get_request_id
 from apps.tenancy.models import Company
 
-from .models import AgentActionLog, AgentGrant, arguments_hash, validate_agent_scopes
+from .models import AgentActionLog, AgentGrant, AgentGrantStatus, arguments_hash, validate_agent_scopes
 
 
 def ensure_owner_can_manage_agent_access(*, user_id: object, company: Company) -> None:
@@ -24,6 +26,16 @@ def ensure_owner_can_manage_agent_access(*, user_id: object, company: Company) -
         raise PermissionDenied("Only an active company owner can manage MCP agent access.")
 
 
+def ensure_grant_user_belongs_to_company(*, user_id: object, company: Company) -> None:
+    is_member = company.owner_id == user_id or CompanyMembership.objects.filter(
+        company=company,
+        user_id=user_id,
+        active=True,
+    ).exists()
+    if not is_member:
+        raise PermissionDenied("MCP grant user must belong to the active company.")
+
+
 def create_agent_grant(
     *,
     owner_id: object,
@@ -35,6 +47,7 @@ def create_agent_grant(
     expires_at,
 ) -> AgentGrant:
     ensure_owner_can_manage_agent_access(user_id=owner_id, company=company)
+    ensure_grant_user_belongs_to_company(user_id=user_id, company=company)
     validate_agent_scopes(scopes)
     grant = AgentGrant(
         company=company,
@@ -46,6 +59,29 @@ def create_agent_grant(
     )
     grant.full_clean()
     grant.save()
+    record_audit_event(
+        event_type="MCP_AGENT_GRANT_CREATED",
+        actor_id=str(owner_id),
+        target_type="agent_grant",
+        target_id=str(grant.id),
+        metadata={"scopes": scopes, "client_name": client_name},
+    )
+    return grant
+
+
+def revoke_agent_grant(*, owner_id: object, grant: AgentGrant, reason: str = "") -> AgentGrant:
+    ensure_owner_can_manage_agent_access(user_id=owner_id, company=grant.company)
+    if grant.revoked_at is None:
+        grant.status = AgentGrantStatus.REVOKED
+        grant.revoked_at = timezone.now()
+        grant.save(update_fields=["status", "revoked_at", "updated_at"])
+        record_audit_event(
+            event_type="MCP_AGENT_GRANT_REVOKED",
+            actor_id=str(owner_id),
+            target_type="agent_grant",
+            target_id=str(grant.id),
+            metadata={"reason": reason},
+        )
     return grant
 
 

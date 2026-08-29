@@ -17,7 +17,211 @@ export interface paths {
          *     - YAML: application/vnd.oai.openapi
          *     - JSON: application/vnd.oai.openapi+json
          */
-        get: operations["schema_retrieve"];
+        get: operations["api_schema_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["agent_grants_list"];
+        put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["agent_grants_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/grants/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["agent_grants_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/grants/{grant_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["agent_grants_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["agent_action_logs_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/mcp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api_v1_agent_mcp_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_agent_scopes_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -35,7 +239,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_ai_analysis_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_ai_analysis_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -49,9 +271,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_ai_criteria_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_ai_criteria_retrieve"];
         put?: never;
-        post: operations["v1_ai_criteria_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_ai_criteria_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -65,13 +323,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_ai_provider_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_ai_provider_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_ai_provider_partial_update"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        patch: operations["api_v1_ai_provider_partial_update"];
         trace?: never;
     };
     "/api/v1/ai/shadow": {
@@ -81,7 +375,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_ai_shadow_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_ai_shadow_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -99,7 +411,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_company_acceptances_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_auth_company_acceptances_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -115,7 +445,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_company_branch_memberships_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_auth_company_branch_memberships_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -129,7 +477,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_auth_company_members_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_auth_company_members_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -147,8 +513,44 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_company_support_create"];
-        delete: operations["v1_auth_company_support_destroy"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_auth_company_support_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        delete: operations["api_v1_auth_company_support_destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -163,7 +565,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_company_users_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_auth_company_users_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -179,7 +599,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_login_create"];
+        post: operations["api_v1_auth_login_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -195,7 +615,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_logout_create"];
+        post: operations["api_v1_auth_logout_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -209,7 +629,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_auth_me_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_auth_me_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -227,7 +665,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_mfa_enroll_create"];
+        post: operations["api_v1_auth_mfa_enroll_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -243,7 +681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_mfa_verify_create"];
+        post: operations["api_v1_auth_mfa_verify_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -259,7 +697,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_register_create"];
+        post: operations["api_v1_auth_register_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -273,7 +711,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_backups_download_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_backups_download_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -289,13 +745,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_backups_policy_retrieve"];
-        put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_backups_policy_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        put: operations["api_v1_backups_policy_update"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_backups_policy_partial_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/backups/restore": {
@@ -307,7 +799,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_backups_restore_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_backups_restore_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -323,7 +833,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_backups_runs_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_backups_runs_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -337,7 +865,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_backups_runs_list_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_backups_runs_list_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -353,7 +899,219 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_bootstrap_retrieve"];
+        get: operations["api_v1_bootstrap_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bootstrap/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_bootstrap_legacy_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/dsr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Tenant-scoped Data Subject Rights request list and intake.
+         *
+         *     * ``GET`` — list DSR requests for the active company (owner/monitor
+         *       only). Useful for the company's privacy inbox.
+         *     * ``POST`` — submit a new DSR request. Available to any
+         *       authenticated user in the active tenant; the public DSR form
+         *       uses an unauthenticated path that bypasses ``TenantAPIView``.
+         */
+        get: operations["api_v1_compliance_dsr_list"];
+        put?: never;
+        /**
+         * @description Tenant-scoped Data Subject Rights request list and intake.
+         *
+         *     * ``GET`` — list DSR requests for the active company (owner/monitor
+         *       only). Useful for the company's privacy inbox.
+         *     * ``POST`` — submit a new DSR request. Available to any
+         *       authenticated user in the active tenant; the public DSR form
+         *       uses an unauthenticated path that bypasses ``TenantAPIView``.
+         */
+        post: operations["api_v1_compliance_dsr_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/dsr/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description State-machine transitions for a single :class:`DSRRequest`.
+         *
+         *     The view is dispatched through ``as_view(action="...")`` in the URL
+         *     config; the ``action`` kwarg becomes a class attribute on the
+         *     view instance and the request handler reads it from ``self``.
+         *
+         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+         *
+         *     All endpoints require an authenticated owner; the DPO can be
+         *     wired through ``apps.identity`` when the platform user role is
+         *     extended.
+         */
+        post: operations["api_v1_compliance_dsr_complete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/dsr/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description State-machine transitions for a single :class:`DSRRequest`.
+         *
+         *     The view is dispatched through ``as_view(action="...")`` in the URL
+         *     config; the ``action`` kwarg becomes a class attribute on the
+         *     view instance and the request handler reads it from ``self``.
+         *
+         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+         *
+         *     All endpoints require an authenticated owner; the DPO can be
+         *     wired through ``apps.identity`` when the platform user role is
+         *     extended.
+         */
+        post: operations["api_v1_compliance_dsr_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/dsr/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description State-machine transitions for a single :class:`DSRRequest`.
+         *
+         *     The view is dispatched through ``as_view(action="...")`` in the URL
+         *     config; the ``action`` kwarg becomes a class attribute on the
+         *     view instance and the request handler reads it from ``self``.
+         *
+         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+         *
+         *     All endpoints require an authenticated owner; the DPO can be
+         *     wired through ``apps.identity`` when the platform user role is
+         *     extended.
+         */
+        post: operations["api_v1_compliance_dsr_start_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/dsr/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description State-machine transitions for a single :class:`DSRRequest`.
+         *
+         *     The view is dispatched through ``as_view(action="...")`` in the URL
+         *     config; the ``action`` kwarg becomes a class attribute on the
+         *     view instance and the request handler reads it from ``self``.
+         *
+         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+         *
+         *     All endpoints require an authenticated owner; the DPO can be
+         *     wired through ``apps.identity`` when the platform user role is
+         *     extended.
+         */
+        post: operations["api_v1_compliance_dsr_verify_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/legal-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read-only list of currently published legal documents. */
+        get: operations["api_v1_compliance_legal_documents_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compliance/ropa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public, read-only list of published ROPA rows. */
+        get: operations["api_v1_compliance_ropa_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -369,9 +1127,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_connectors_enrollment_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_connectors_enrollment_retrieve"];
         put?: never;
-        post: operations["v1_connectors_enrollment_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_connectors_enrollment_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -385,7 +1179,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_connectors_health_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_connectors_health_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -403,7 +1215,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_connectors_heartbeat_create"];
+        post: operations["api_v1_connectors_heartbeat_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -419,7 +1231,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_connectors_revoke_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_connectors_revoke_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -435,7 +1265,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_evidence_capture_sessions_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_evidence_capture_sessions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -449,7 +1297,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_evidence_health_media_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_evidence_health_media_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -467,7 +1333,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_evidence_issues_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_evidence_issues_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -481,9 +1365,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_evidence_issues_messages_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_evidence_issues_messages_retrieve"];
         put?: never;
-        post: operations["v1_evidence_issues_messages_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_evidence_issues_messages_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -497,7 +1417,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_evidence_items_media_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_evidence_items_media_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -515,7 +1453,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_evidence_submit_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_evidence_submit_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -529,9 +1485,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_evidence_tasks_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_evidence_tasks_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exit-decisions/{phase}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
+        get: operations["api_v1_exit_decisions_list"];
+        put?: never;
+        /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
+        post: operations["api_v1_exit_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -545,7 +1537,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_exports_download_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_exports_download_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -561,13 +1571,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_exports_policy_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_exports_policy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_exports_policy_partial_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/exports/requests": {
@@ -579,7 +1607,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_exports_requests_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_exports_requests_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -593,7 +1639,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_exports_requests_list_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_exports_requests_list_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -609,6 +1673,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
         get: operations["notifications_list"];
         put?: never;
         post?: never;
@@ -627,6 +1709,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
         post: operations["notifications_mark_read"];
         delete?: never;
         options?: never;
@@ -643,6 +1743,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
         post: operations["notifications_mark_read_batch"];
         delete?: never;
         options?: never;
@@ -657,9 +1775,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_organizations_branches_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_organizations_branches_retrieve"];
         put?: never;
-        post: operations["v1_organizations_branches_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_organizations_branches_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -673,9 +1827,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_organizations_job_roles_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_organizations_job_roles_retrieve"];
         put?: never;
-        post: operations["v1_organizations_job_roles_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_organizations_job_roles_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -689,7 +1879,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_organizations_memberships_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_organizations_memberships_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -705,9 +1913,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_organizations_weekly_shifts_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_organizations_weekly_shifts_retrieve"];
         put?: never;
-        post: operations["v1_organizations_weekly_shifts_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_organizations_weekly_shifts_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -721,9 +1965,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_pilot_change_requests_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_pilot_change_requests_retrieve"];
         put?: never;
-        post: operations["v1_pilot_change_requests_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_pilot_change_requests_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -743,7 +2023,57 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_pilot_change_requests_partial_update"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        patch: operations["api_v1_pilot_change_requests_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/pilot/charter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description PILOT-01: read or sign the pilot charter.
+         *
+         *     - ``GET`` returns the most recent signed charter (404 if none).
+         *     - ``POST`` signs a new charter; only OWNERs may sign. The charter is
+         *       HMAC-signed over the canonical payload and the audit event
+         *       ``PILOT_CHARTER_SIGNED`` is recorded.
+         */
+        get: operations["api_v1_pilot_charter_retrieve"];
+        put?: never;
+        /**
+         * @description PILOT-01: read or sign the pilot charter.
+         *
+         *     - ``GET`` returns the most recent signed charter (404 if none).
+         *     - ``POST`` signs a new charter; only OWNERs may sign. The charter is
+         *       HMAC-signed over the canonical payload and the audit event
+         *       ``PILOT_CHARTER_SIGNED`` is recorded.
+         */
+        post: operations["api_v1_pilot_charter_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/pilot/dashboard": {
@@ -753,7 +2083,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_pilot_dashboard_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_pilot_dashboard_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -769,9 +2117,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_pilot_issues_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_pilot_issues_retrieve"];
         put?: never;
-        post: operations["v1_pilot_issues_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_pilot_issues_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -791,7 +2175,25 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_pilot_issues_partial_update"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        patch: operations["api_v1_pilot_issues_partial_update"];
         trace?: never;
     };
     "/api/v1/pilot/program": {
@@ -801,13 +2203,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_pilot_program_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_pilot_program_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_pilot_program_partial_update"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        patch: operations["api_v1_pilot_program_partial_update"];
         trace?: never;
     };
     "/api/v1/pilot/weekly-reports": {
@@ -817,9 +2255,95 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_pilot_weekly_reports_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_pilot_weekly_reports_retrieve"];
         put?: never;
-        post: operations["v1_pilot_weekly_reports_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_pilot_weekly_reports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_platform_bootstrap_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/bootstrap/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_platform_bootstrap_legacy_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/exit-decisions/{phase}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
+        get: operations["api_v1_platform_exit_decisions_list"];
+        put?: never;
+        /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
+        post: operations["api_v1_platform_exit_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -833,7 +2357,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_reviews_dashboard_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_reviews_dashboard_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -851,7 +2393,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_reviews_decisions_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_reviews_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -865,13 +2425,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_reviews_policy_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_reviews_policy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_reviews_policy_partial_update"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        patch: operations["api_v1_reviews_policy_partial_update"];
         trace?: never;
     };
     "/api/v1/reviews/queue": {
@@ -881,7 +2477,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_reviews_queue_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_reviews_queue_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -897,7 +2511,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_tasks_instances_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_tasks_instances_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -915,7 +2547,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_instances_cancel_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_instances_cancel_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -931,7 +2581,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_instances_claim_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_instances_claim_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -947,7 +2615,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_instances_complete_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_instances_complete_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -963,7 +2649,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_instances_start_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_instances_start_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -979,7 +2683,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_instances_transfers_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_instances_transfers_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -995,7 +2717,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_scheduler_run_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_scheduler_run_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1009,9 +2749,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_tasks_schedules_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_tasks_schedules_retrieve"];
         put?: never;
-        post: operations["v1_tasks_schedules_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_schedules_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1025,9 +2801,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_tasks_templates_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_tasks_templates_retrieve"];
         put?: never;
-        post: operations["v1_tasks_templates_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_templates_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1041,7 +2853,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_tasks_transfers_retrieve"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        get: operations["api_v1_tasks_transfers_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1059,7 +2889,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_tasks_transfers_resolve_create"];
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["api_v1_tasks_transfers_resolve_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1165,6 +3013,86 @@ export interface components {
         AcceptanceCreate: {
             document_type: components["schemas"]["DocumentTypeEnum"];
             document_version: string;
+        };
+        AgentActionLog: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            grant: string;
+            /** Format: uuid */
+            company: string;
+            /** Format: uuid */
+            request_id: string;
+            tool_name: string;
+            required_scope: string;
+            idempotency_key: string;
+            arguments_hash: string;
+            status?: components["schemas"]["AgentActionLogStatusEnum"];
+            result?: unknown;
+            error_code?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AgentActionLogList: {
+            logs: components["schemas"]["AgentActionLog"][];
+        };
+        /**
+         * @description * `received` - Received
+         *     * `executed` - Executed
+         *     * `rejected` - Rejected
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        AgentActionLogStatusEnum: "received" | "executed" | "rejected" | "failed";
+        AgentGrant: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            company: string;
+            /** Format: uuid */
+            user: string;
+            client_name: string;
+            client_fingerprint: string;
+            scopes?: unknown;
+            status?: components["schemas"]["AgentGrantStatusEnum"];
+            readonly active: boolean;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            revoked_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AgentGrantCreate: {
+            /** Format: uuid */
+            user_id: string;
+            client_name: string;
+            client_fingerprint: string;
+            scopes: components["schemas"]["ScopesEnum"][];
+            /** Format: date-time */
+            expires_at: string;
+        };
+        AgentGrantList: {
+            grants: components["schemas"]["AgentGrant"][];
+        };
+        AgentGrantRevoke: {
+            reason?: string;
+        };
+        /**
+         * @description * `active` - Active
+         *     * `revoked` - Revoked
+         *     * `expired` - Expired
+         * @enum {string}
+         */
+        AgentGrantStatusEnum: "active" | "revoked" | "expired";
+        AgentScope: {
+            readonly scopes: {
+                [key: string]: string;
+            }[];
         };
         /**
          * @description * `named_user` - Named User
@@ -1330,6 +3258,59 @@ export interface components {
             connector_version: string;
             provider_status: components["schemas"]["ProviderStatusEnum"];
         };
+        /** @description Inbound payload for DSR state transitions (verify/start/etc). */
+        DSRDecision: {
+            notes?: string;
+        };
+        DSRRequest: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly request_type: components["schemas"]["RequestTypeEnum"];
+            /** Format: email */
+            readonly subject_email: string;
+            readonly subject_reference: string;
+            readonly description: string;
+            readonly status: components["schemas"]["DSRRequestStatusEnum"];
+            readonly decision_notes: string;
+            /** Format: date-time */
+            readonly decided_at: string | null;
+            /** Format: date-time */
+            readonly submitted_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Inbound payload for ``POST /api/v1/compliance/dsr``. */
+        DSRRequestCreate: {
+            request_type: components["schemas"]["RequestTypeEnum"];
+            /** Format: email */
+            subject_email: string;
+            subject_reference?: string;
+            description?: string;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `verified` - Identity Verified
+         *     * `in_progress` - In Progress
+         *     * `completed` - Completed
+         *     * `rejected` - Rejected
+         * @enum {string}
+         */
+        DSRRequestStatusEnum: "pending" | "verified" | "in_progress" | "completed" | "rejected";
+        /**
+         * @description * `authorize` - Authorize
+         *     * `decline` - Decline
+         *     * `withdraw` - Withdraw
+         * @enum {string}
+         */
+        Decision0b3Enum: "authorize" | "decline" | "withdraw";
+        /**
+         * @description * `approved` - Approved
+         *     * `conditional` - Conditional approval
+         *     * `rejected` - Rejected
+         *     * `deferred` - Deferred
+         * @enum {string}
+         */
+        Decision4e8Enum: "approved" | "conditional" | "rejected" | "deferred";
         /**
          * @description * `approve` - Approve
          *     * `approve_despite_alert` - Approve Despite Alert
@@ -1420,6 +3401,31 @@ export interface components {
          * @enum {string}
          */
         EvidenceTypeEnum: "image" | "number" | "note" | "confirmation";
+        ExitDecision: {
+            /** Format: uuid */
+            readonly id: string;
+            phase: string;
+            decision: components["schemas"]["Decision4e8Enum"];
+            rationale: string;
+            /** Format: uuid */
+            readonly signed_by: string;
+            readonly signed_by_login: string;
+            /** Format: date-time */
+            readonly signed_at: string;
+            /** Format: uuid */
+            supersedes?: string | null;
+            readonly signature_hmac: string;
+            metadata?: unknown;
+        };
+        ExitDecisionCreate: {
+            decision: components["schemas"]["Decision4e8Enum"];
+            rationale: string;
+            /** Format: uuid */
+            supersedes?: string | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
         ExportBoundaryPolicy: {
             /** Format: uuid */
             readonly id: string;
@@ -1473,6 +3479,9 @@ export interface components {
             /** Format: date */
             end_date?: string;
         };
+        ExportRequestList: {
+            exports: components["schemas"]["ExportRequest"][];
+        };
         /**
          * @description * `queued` - Queued
          *     * `completed` - Completed
@@ -1510,6 +3519,45 @@ export interface components {
             code: string;
             active?: boolean;
         };
+        /**
+         * @description * `terms` - Terms of Use
+         *     * `privacy` - Privacy Notice
+         *     * `ai_transfer` - AI Transfer Notice
+         *     * `employee_privacy` - Employee Privacy Acknowledgement
+         *     * `data_processing` - Data Processing Terms
+         *     * `retention` - Retention and Deletion Policy
+         *     * `support_access` - Support Access Authorization
+         *     * `dpia` - Data Protection Impact Assessment
+         *     * `breach_response` - Data Breach Response Plan
+         *     * `ropa` - Record of Processing Activities
+         * @enum {string}
+         */
+        KindEnum: "terms" | "privacy" | "ai_transfer" | "employee_privacy" | "data_processing" | "retention" | "support_access" | "dpia" | "breach_response" | "ropa";
+        /**
+         * @description * `consent` - Consent
+         *     * `contract` - Contract performance
+         *     * `legal_obligation` - Legal obligation
+         *     * `vital_interests` - Vital interests
+         *     * `public_task` - Public task
+         *     * `legitimate_interests` - Legitimate interests
+         * @enum {string}
+         */
+        LawfulBasisEnum: "consent" | "contract" | "legal_obligation" | "vital_interests" | "public_task" | "legitimate_interests";
+        LegalDocument: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["KindEnum"];
+            readonly version: string;
+            readonly content_path: string;
+            readonly summary: string;
+            /** Format: date */
+            readonly effective_date: string;
+            readonly supersedes_version: string;
+            /** Format: date-time */
+            readonly published_at: string;
+            /** @default false */
+            readonly is_current: boolean;
+        };
         Login: {
             company_code: string;
             login_id: string;
@@ -1536,12 +3584,22 @@ export interface components {
             readonly id: number;
             method_type: components["schemas"]["MethodTypeEnum"];
             label?: string;
-            secret?: string;
             credential_id?: string;
             public_key?: string;
             /** Format: date-time */
             readonly verified_at: string | null;
             active?: boolean;
+        };
+        MfaEnrollmentCreate: {
+            readonly id: number;
+            method_type: components["schemas"]["MethodTypeEnum"];
+            label?: string;
+            credential_id?: string;
+            public_key?: string;
+            /** Format: date-time */
+            readonly verified_at: string | null;
+            active?: boolean;
+            readonly secret: string;
         };
         MfaVerify: {
             /** Format: uuid */
@@ -1581,21 +3639,6 @@ export interface components {
             /** Format: decimal */
             monthly_cost_limit?: string;
             enabled?: boolean;
-        };
-        PatchedBackupPolicyUpdate: {
-            destination_name?: string;
-            encrypted?: boolean;
-            schedule_cron?: string;
-            rpo_hours?: number;
-            rto_hours?: number;
-            includes_private_media?: boolean;
-            includes_configuration?: boolean;
-            includes_tenant_state?: boolean;
-        };
-        PatchedExportBoundaryPolicyUpdate: {
-            future_notification_boundaries?: string[];
-            external_storage_boundaries?: string[];
-            provider_review_checklist?: string[];
         };
         PatchedPilotChangeRequestUpdate: {
             status?: string;
@@ -1650,10 +3693,64 @@ export interface components {
         PilotChangeRequestList: {
             change_requests: components["schemas"]["PilotChangeRequest"][];
         };
+        PilotCharter: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            pilot_program: string;
+            /** Format: uuid */
+            company: string;
+            decision: components["schemas"]["Decision0b3Enum"];
+            rationale: string;
+            conditions?: string;
+            /** Format: date */
+            observation_start?: string | null;
+            /** Format: date */
+            observation_end?: string | null;
+            success_measures?: unknown;
+            /** Format: uuid */
+            signed_by: string;
+            /** Format: date-time */
+            readonly signed_at: string;
+            signature_hmac?: string;
+            readonly signature_valid: boolean;
+            metadata?: unknown;
+        };
+        PilotCharterCreate: {
+            decision: components["schemas"]["Decision0b3Enum"];
+            rationale: string;
+            conditions?: string;
+            /** Format: date */
+            observation_start?: string | null;
+            /** Format: date */
+            observation_end?: string | null;
+            success_measures?: string[];
+            metadata?: unknown;
+        };
+        PilotCharterSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            pilot_program: string;
+            decision: string;
+            rationale: string;
+            conditions: string;
+            /** Format: date */
+            observation_start: string | null;
+            /** Format: date */
+            observation_end: string | null;
+            success_measures: string[];
+            /** Format: uuid */
+            signed_by: string;
+            /** Format: date-time */
+            signed_at: string;
+            signature_valid: boolean;
+        };
         PilotDashboard: {
             program: components["schemas"]["PilotDashboardProgram"];
             summary: components["schemas"]["PilotDashboardSummary"];
             counts: components["schemas"]["PilotDashboardCounts"];
+            charter: components["schemas"]["PilotCharterSummary"] | null;
             /** Format: uuid */
             program_id: string;
         };
@@ -1769,6 +3866,27 @@ export interface components {
         PilotWeeklyReportList: {
             reports: components["schemas"]["PilotWeeklyReport"][];
         };
+        /** @description Serializer for :class:`ProcessingActivity` rows. */
+        ProcessingActivity: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly purpose: string;
+            readonly controller: string;
+            readonly processor: string;
+            readonly data_categories: unknown;
+            readonly data_subject_categories: unknown;
+            readonly recipients: unknown;
+            readonly lawful_basis: components["schemas"]["LawfulBasisEnum"];
+            readonly cross_border_transfer: boolean;
+            readonly transfer_mechanism: string;
+            readonly retention_days: number;
+            readonly security_measures: string;
+            /** Format: date */
+            readonly last_reviewed_at: string;
+            /** Format: date-time */
+            readonly published_at: string | null;
+        };
         /**
          * @description * `healthy` - Healthy
          *     * `degraded` - Degraded
@@ -1802,6 +3920,16 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `access` - Right to Access
+         *     * `rectification` - Right to Rectification
+         *     * `erasure` - Right to Erasure
+         *     * `restriction` - Right to Restriction
+         *     * `portability` - Right to Portability
+         *     * `objection` - Right to Object
+         * @enum {string}
+         */
+        RequestTypeEnum: "access" | "rectification" | "erasure" | "restriction" | "portability" | "objection";
         RestoreCreate: {
             /** Format: uuid */
             backup_run_id: string;
@@ -1902,6 +4030,15 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "owner" | "monitor" | "employee";
+        /**
+         * @description * `admin:full` - admin:full
+         *     * `read:reports` - read:reports
+         *     * `read:tasks` - read:tasks
+         *     * `write:reviews:approve` - write:reviews:approve
+         *     * `write:tasks:transfer` - write:tasks:transfer
+         * @enum {string}
+         */
+        ScopesEnum: "admin:full" | "read:reports" | "read:tasks" | "write:reviews:approve" | "write:tasks:transfer";
         /**
          * @description * `info` - Info
          *     * `success` - Success
@@ -2171,6 +4308,17 @@ export interface components {
             end_time: string;
             active?: boolean;
         };
+        /**
+         * @description Validate the inputs to ``POST /organizations/weekly-shifts``.
+         *
+         *     C-03 closed an IDOR (A01:2021 Broken Access Control) where
+         *     ``WeeklyShiftCreateSerializer`` accepted arbitrary ``branch_id`` and
+         *     ``user_id`` UUIDs from the request body and the view would create a
+         *     :class:`WeeklyShift` carrying cross-tenant references. The serializer
+         *     now requires an explicit ``company`` to scope the lookup, asserts both
+         *     foreign keys belong to that company, verifies the user is an active
+         *     member, and confirms the branch membership is also active.
+         */
         WeeklyShiftCreate: {
             /** Format: uuid */
             branch_id: string;
@@ -2191,7 +4339,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    schema_retrieve: {
+    api_schema_retrieve: {
         parameters: {
             query?: {
                 format?: "json" | "yaml";
@@ -2224,7 +4372,171 @@ export interface operations {
             };
         };
     };
-    v1_ai_analysis_create: {
+    agent_grants_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentGrantList"];
+                };
+            };
+        };
+    };
+    agent_grants_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentGrantCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AgentGrantCreate"];
+                "multipart/form-data": components["schemas"]["AgentGrantCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentGrant"];
+                };
+            };
+        };
+    };
+    agent_grants_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentGrant"];
+                };
+            };
+        };
+    };
+    agent_grants_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AgentGrantRevoke"];
+                "application/x-www-form-urlencoded": components["schemas"]["AgentGrantRevoke"];
+                "multipart/form-data": components["schemas"]["AgentGrantRevoke"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentGrant"];
+                };
+            };
+        };
+    };
+    agent_action_logs_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentActionLogList"];
+                };
+            };
+        };
+    };
+    api_v1_agent_mcp_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+                "application/x-www-form-urlencoded": {
+                    [key: string]: unknown;
+                };
+                "multipart/form-data": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description MCP JSON-RPC response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    api_v1_agent_scopes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentScope"];
+                };
+            };
+        };
+    };
+    api_v1_ai_analysis_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2249,7 +4561,7 @@ export interface operations {
             };
         };
     };
-    v1_ai_criteria_retrieve: {
+    api_v1_ai_criteria_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2267,7 +4579,7 @@ export interface operations {
             };
         };
     };
-    v1_ai_criteria_create: {
+    api_v1_ai_criteria_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2292,7 +4604,7 @@ export interface operations {
             };
         };
     };
-    v1_ai_provider_retrieve: {
+    api_v1_ai_provider_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2311,7 +4623,7 @@ export interface operations {
             };
         };
     };
-    v1_ai_provider_partial_update: {
+    api_v1_ai_provider_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2336,7 +4648,7 @@ export interface operations {
             };
         };
     };
-    v1_ai_shadow_retrieve: {
+    api_v1_ai_shadow_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2354,7 +4666,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_acceptances_create: {
+    api_v1_auth_company_acceptances_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2382,7 +4694,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_branch_memberships_create: {
+    api_v1_auth_company_branch_memberships_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2410,7 +4722,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_members_retrieve: {
+    api_v1_auth_company_members_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2428,7 +4740,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_support_create: {
+    api_v1_auth_company_support_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2447,7 +4759,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_support_destroy: {
+    api_v1_auth_company_support_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -2465,7 +4777,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_company_users_create: {
+    api_v1_auth_company_users_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2493,7 +4805,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_login_create: {
+    api_v1_auth_login_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2518,7 +4830,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_logout_create: {
+    api_v1_auth_logout_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2536,7 +4848,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_me_retrieve: {
+    api_v1_auth_me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2554,7 +4866,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_mfa_enroll_create: {
+    api_v1_auth_mfa_enroll_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2574,12 +4886,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MfaEnrollment"];
+                    "application/json": components["schemas"]["MfaEnrollmentCreate"];
                 };
             };
         };
     };
-    v1_auth_mfa_verify_create: {
+    api_v1_auth_mfa_verify_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2604,7 +4916,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_register_create: {
+    api_v1_auth_register_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2629,7 +4941,7 @@ export interface operations {
             };
         };
     };
-    v1_backups_download_retrieve: {
+    api_v1_backups_download_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2640,7 +4952,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Backup artifact file download. */
+            /** @description Backup archive download. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2649,7 +4961,7 @@ export interface operations {
             };
         };
     };
-    v1_backups_policy_retrieve: {
+    api_v1_backups_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2658,17 +4970,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Backup policy for the active company. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["BackupPolicy"];
-                };
+                content?: never;
             };
         };
     };
-    v1_backups_policy_partial_update: {
+    api_v1_backups_policy_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2677,9 +4988,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedBackupPolicyUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedBackupPolicyUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedBackupPolicyUpdate"];
+                "application/json": components["schemas"]["BackupCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BackupCreate"];
+                "multipart/form-data": components["schemas"]["BackupCreate"];
             };
         };
         responses: {
@@ -2693,7 +5004,7 @@ export interface operations {
             };
         };
     };
-    v1_backups_restore_create: {
+    api_v1_backups_restore_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2708,7 +5019,7 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2718,7 +5029,7 @@ export interface operations {
             };
         };
     };
-    v1_backups_runs_create: {
+    api_v1_backups_runs_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2743,7 +5054,7 @@ export interface operations {
             };
         };
     };
-    v1_backups_runs_list_retrieve: {
+    api_v1_backups_runs_list_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2752,7 +5063,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of backup runs. */
+            /** @description List of backup runs for the active company. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2761,7 +5072,7 @@ export interface operations {
             };
         };
     };
-    v1_bootstrap_retrieve: {
+    api_v1_bootstrap_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2780,7 +5091,216 @@ export interface operations {
             };
         };
     };
-    v1_connectors_enrollment_retrieve: {
+    api_v1_bootstrap_legacy_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bootstrap"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"][];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DSRRequestCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["DSRRequestCreate"];
+                "multipart/form-data": components["schemas"]["DSRRequestCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_complete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DSRDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["DSRDecision"];
+                "multipart/form-data": components["schemas"]["DSRDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DSRDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["DSRDecision"];
+                "multipart/form-data": components["schemas"]["DSRDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_start_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DSRDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["DSRDecision"];
+                "multipart/form-data": components["schemas"]["DSRDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_dsr_verify_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DSRDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["DSRDecision"];
+                "multipart/form-data": components["schemas"]["DSRDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DSRRequest"];
+                };
+            };
+        };
+    };
+    api_v1_compliance_legal_documents_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalDocument"][];
+                };
+            };
+        };
+    };
+    api_v1_compliance_ropa_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProcessingActivity"][];
+                };
+            };
+        };
+    };
+    api_v1_connectors_enrollment_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2798,7 +5318,7 @@ export interface operations {
             };
         };
     };
-    v1_connectors_enrollment_create: {
+    api_v1_connectors_enrollment_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2823,7 +5343,7 @@ export interface operations {
             };
         };
     };
-    v1_connectors_health_retrieve: {
+    api_v1_connectors_health_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2841,7 +5361,7 @@ export interface operations {
             };
         };
     };
-    v1_connectors_heartbeat_create: {
+    api_v1_connectors_heartbeat_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2866,7 +5386,7 @@ export interface operations {
             };
         };
     };
-    v1_connectors_revoke_create: {
+    api_v1_connectors_revoke_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2891,7 +5411,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_capture_sessions_create: {
+    api_v1_evidence_capture_sessions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2916,7 +5436,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_health_media_retrieve: {
+    api_v1_evidence_health_media_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2934,7 +5454,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_issues_create: {
+    api_v1_evidence_issues_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2959,7 +5479,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_issues_messages_retrieve: {
+    api_v1_evidence_issues_messages_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2979,7 +5499,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_issues_messages_create: {
+    api_v1_evidence_issues_messages_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3006,7 +5526,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_items_media_retrieve: {
+    api_v1_evidence_items_media_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3026,7 +5546,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_submit_create: {
+    api_v1_evidence_submit_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3050,7 +5570,7 @@ export interface operations {
             };
         };
     };
-    v1_evidence_tasks_retrieve: {
+    api_v1_evidence_tasks_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3070,7 +5590,55 @@ export interface operations {
             };
         };
     };
-    v1_exports_download_retrieve: {
+    api_v1_exit_decisions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                phase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitDecision"][];
+                };
+            };
+        };
+    };
+    api_v1_exit_decisions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                phase: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExitDecisionCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExitDecisionCreate"];
+                "multipart/form-data": components["schemas"]["ExitDecisionCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitDecision"];
+                };
+            };
+        };
+    };
+    api_v1_exports_download_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3081,7 +5649,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Export archive download. */
+            /** @description Export artifact stream. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3090,7 +5658,7 @@ export interface operations {
             };
         };
     };
-    v1_exports_policy_retrieve: {
+    api_v1_exports_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3109,32 +5677,7 @@ export interface operations {
             };
         };
     };
-    v1_exports_policy_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedExportBoundaryPolicyUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedExportBoundaryPolicyUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedExportBoundaryPolicyUpdate"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExportBoundaryPolicy"];
-                };
-            };
-        };
-    };
-    v1_exports_requests_create: {
+    api_v1_exports_requests_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3159,7 +5702,7 @@ export interface operations {
             };
         };
     };
-    v1_exports_requests_list_retrieve: {
+    api_v1_exports_requests_list_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3168,12 +5711,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of export requests. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExportRequestList"];
+                };
             };
         };
     };
@@ -3240,7 +5784,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_branches_retrieve: {
+    api_v1_organizations_branches_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3258,7 +5802,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_branches_create: {
+    api_v1_organizations_branches_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3283,7 +5827,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_job_roles_retrieve: {
+    api_v1_organizations_job_roles_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3292,7 +5836,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of company job roles. */
+            /** @description List of job roles. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3301,7 +5845,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_job_roles_create: {
+    api_v1_organizations_job_roles_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3326,7 +5870,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_memberships_retrieve: {
+    api_v1_organizations_memberships_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3344,7 +5888,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_weekly_shifts_retrieve: {
+    api_v1_organizations_weekly_shifts_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3353,7 +5897,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of weekly shifts. */
+            /** @description List of weekly shifts for the active company. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3362,7 +5906,7 @@ export interface operations {
             };
         };
     };
-    v1_organizations_weekly_shifts_create: {
+    api_v1_organizations_weekly_shifts_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3387,7 +5931,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_change_requests_retrieve: {
+    api_v1_pilot_change_requests_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3406,7 +5950,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_change_requests_create: {
+    api_v1_pilot_change_requests_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3431,7 +5975,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_change_requests_partial_update: {
+    api_v1_pilot_change_requests_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3458,7 +6002,51 @@ export interface operations {
             };
         };
     };
-    v1_pilot_dashboard_retrieve: {
+    api_v1_pilot_charter_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PilotCharter"];
+                };
+            };
+        };
+    };
+    api_v1_pilot_charter_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PilotCharterCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PilotCharterCreate"];
+                "multipart/form-data": components["schemas"]["PilotCharterCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PilotCharter"];
+                };
+            };
+        };
+    };
+    api_v1_pilot_dashboard_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3477,7 +6065,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_issues_retrieve: {
+    api_v1_pilot_issues_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3496,7 +6084,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_issues_create: {
+    api_v1_pilot_issues_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3521,7 +6109,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_issues_partial_update: {
+    api_v1_pilot_issues_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3548,7 +6136,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_program_retrieve: {
+    api_v1_pilot_program_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3567,7 +6155,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_program_partial_update: {
+    api_v1_pilot_program_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3592,7 +6180,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_weekly_reports_retrieve: {
+    api_v1_pilot_weekly_reports_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3611,7 +6199,7 @@ export interface operations {
             };
         };
     };
-    v1_pilot_weekly_reports_create: {
+    api_v1_pilot_weekly_reports_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3636,7 +6224,93 @@ export interface operations {
             };
         };
     };
-    v1_reviews_dashboard_retrieve: {
+    api_v1_platform_bootstrap_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bootstrap"];
+                };
+            };
+        };
+    };
+    api_v1_platform_bootstrap_legacy_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bootstrap"];
+                };
+            };
+        };
+    };
+    api_v1_platform_exit_decisions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                phase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitDecision"][];
+                };
+            };
+        };
+    };
+    api_v1_platform_exit_decisions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                phase: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExitDecisionCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExitDecisionCreate"];
+                "multipart/form-data": components["schemas"]["ExitDecisionCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExitDecision"];
+                };
+            };
+        };
+    };
+    api_v1_reviews_dashboard_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3654,7 +6328,7 @@ export interface operations {
             };
         };
     };
-    v1_reviews_decisions_create: {
+    api_v1_reviews_decisions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3679,7 +6353,7 @@ export interface operations {
             };
         };
     };
-    v1_reviews_policy_retrieve: {
+    api_v1_reviews_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3698,7 +6372,7 @@ export interface operations {
             };
         };
     };
-    v1_reviews_policy_partial_update: {
+    api_v1_reviews_policy_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3723,7 +6397,7 @@ export interface operations {
             };
         };
     };
-    v1_reviews_queue_retrieve: {
+    api_v1_reviews_queue_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3741,7 +6415,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_retrieve: {
+    api_v1_tasks_instances_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3759,7 +6433,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_cancel_create: {
+    api_v1_tasks_instances_cancel_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3786,7 +6460,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_claim_create: {
+    api_v1_tasks_instances_claim_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3807,7 +6481,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_complete_create: {
+    api_v1_tasks_instances_complete_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3828,7 +6502,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_start_create: {
+    api_v1_tasks_instances_start_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3849,7 +6523,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_instances_transfers_create: {
+    api_v1_tasks_instances_transfers_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3876,7 +6550,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_scheduler_run_create: {
+    api_v1_tasks_scheduler_run_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3898,7 +6572,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_schedules_retrieve: {
+    api_v1_tasks_schedules_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3916,7 +6590,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_schedules_create: {
+    api_v1_tasks_schedules_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3941,7 +6615,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_templates_retrieve: {
+    api_v1_tasks_templates_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3959,7 +6633,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_templates_create: {
+    api_v1_tasks_templates_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3984,7 +6658,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_transfers_retrieve: {
+    api_v1_tasks_transfers_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4002,7 +6676,7 @@ export interface operations {
             };
         };
     };
-    v1_tasks_transfers_resolve_create: {
+    api_v1_tasks_transfers_resolve_create: {
         parameters: {
             query?: never;
             header?: never;

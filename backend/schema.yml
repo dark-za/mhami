@@ -150,6 +150,271 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/agent/grants:
+    get:
+      operationId: agent_grants_list
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGrantList'
+          description: ''
+    post:
+      operationId: agent_grants_create
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentGrantCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentGrantCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentGrantCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGrant'
+          description: ''
+  /api/v1/agent/grants/{grant_id}:
+    get:
+      operationId: agent_grants_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: grant_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGrant'
+          description: ''
+  /api/v1/agent/grants/{grant_id}/revoke:
+    post:
+      operationId: agent_grants_revoke
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      parameters:
+      - in: path
+        name: grant_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentGrantRevoke'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentGrantRevoke'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentGrantRevoke'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGrant'
+          description: ''
+  /api/v1/agent/logs:
+    get:
+      operationId: agent_action_logs_list
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentActionLogList'
+          description: ''
+  /api/v1/agent/mcp:
+    post:
+      operationId: api_v1_agent_mcp_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+            examples:
+              MCPToolsList:
+                value:
+                  jsonrpc: '2.0'
+                  id: 1
+                  method: tools/list
+                  params: {}
+                summary: MCP tools list
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: MCP JSON-RPC response.
+  /api/v1/agent/scopes:
+    get:
+      operationId: api_v1_agent_scopes_retrieve
+      description: |-
+        Base view that injects a ``TenantContext`` for the active request.
+
+        Subclasses can declare ``required_roles`` (a tuple of role codes) to
+        enforce a role check before the view method runs. The cached tenant is
+        exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+        ``[IsAuthenticated]``; override it for public views (login, register).
+
+        Example::
+
+            class CaptureSessionView(TenantAPIView):
+                required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+
+                def post(self, request):
+                    context = self.get_tenant()
+                    company = context.company
+                    ...
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentScope'
+          description: ''
   /api/v1/ai/analysis:
     post:
       operationId: api_v1_ai_analysis_create
@@ -875,7 +1140,11 @@ paths:
       - basicAuth: []
       responses:
         '200':
-          description: Restore run created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestoreRun'
+          description: ''
   /api/v1/backups/runs:
     post:
       operationId: api_v1_backups_runs_create
@@ -952,16 +1221,309 @@ paths:
       operationId: api_v1_bootstrap_retrieve
       tags:
       - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Bootstrap'
+          description: ''
+  /api/v1/bootstrap/legacy:
+    get:
+      operationId: api_v1_bootstrap_legacy_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bootstrap'
+          description: ''
+  /api/v1/compliance/dsr:
+    get:
+      operationId: api_v1_compliance_dsr_list
+      description: |-
+        Tenant-scoped Data Subject Rights request list and intake.
+
+        * ``GET`` — list DSR requests for the active company (owner/monitor
+          only). Useful for the company's privacy inbox.
+        * ``POST`` — submit a new DSR request. Available to any
+          authenticated user in the active tenant; the public DSR form
+          uses an unauthenticated path that bypasses ``TenantAPIView``.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DSRRequest'
+          description: ''
+    post:
+      operationId: api_v1_compliance_dsr_create
+      description: |-
+        Tenant-scoped Data Subject Rights request list and intake.
+
+        * ``GET`` — list DSR requests for the active company (owner/monitor
+          only). Useful for the company's privacy inbox.
+        * ``POST`` — submit a new DSR request. Available to any
+          authenticated user in the active tenant; the public DSR form
+          uses an unauthenticated path that bypasses ``TenantAPIView``.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DSRRequestCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DSRRequestCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DSRRequestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DSRRequest'
+          description: ''
+  /api/v1/compliance/dsr/{id}/complete:
+    post:
+      operationId: api_v1_compliance_dsr_complete_create
+      description: |-
+        State-machine transitions for a single :class:`DSRRequest`.
+
+        The view is dispatched through ``as_view(action="...")`` in the URL
+        config; the ``action`` kwarg becomes a class attribute on the
+        view instance and the request handler reads it from ``self``.
+
+        * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+        * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+        * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+        * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+
+        All endpoints require an authenticated owner; the DPO can be
+        wired through ``apps.identity`` when the platform user role is
+        extended.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DSRRequest'
+          description: ''
+  /api/v1/compliance/dsr/{id}/reject:
+    post:
+      operationId: api_v1_compliance_dsr_reject_create
+      description: |-
+        State-machine transitions for a single :class:`DSRRequest`.
+
+        The view is dispatched through ``as_view(action="...")`` in the URL
+        config; the ``action`` kwarg becomes a class attribute on the
+        view instance and the request handler reads it from ``self``.
+
+        * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+        * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+        * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+        * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+
+        All endpoints require an authenticated owner; the DPO can be
+        wired through ``apps.identity`` when the platform user role is
+        extended.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DSRRequest'
+          description: ''
+  /api/v1/compliance/dsr/{id}/start:
+    post:
+      operationId: api_v1_compliance_dsr_start_create
+      description: |-
+        State-machine transitions for a single :class:`DSRRequest`.
+
+        The view is dispatched through ``as_view(action="...")`` in the URL
+        config; the ``action`` kwarg becomes a class attribute on the
+        view instance and the request handler reads it from ``self``.
+
+        * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+        * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+        * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+        * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+
+        All endpoints require an authenticated owner; the DPO can be
+        wired through ``apps.identity`` when the platform user role is
+        extended.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DSRRequest'
+          description: ''
+  /api/v1/compliance/dsr/{id}/verify:
+    post:
+      operationId: api_v1_compliance_dsr_verify_create
+      description: |-
+        State-machine transitions for a single :class:`DSRRequest`.
+
+        The view is dispatched through ``as_view(action="...")`` in the URL
+        config; the ``action`` kwarg becomes a class attribute on the
+        view instance and the request handler reads it from ``self``.
+
+        * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
+        * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+        * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
+        * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
+
+        All endpoints require an authenticated owner; the DPO can be
+        wired through ``apps.identity`` when the platform user role is
+        extended.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DSRDecision'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DSRRequest'
+          description: ''
+  /api/v1/compliance/legal-documents:
+    get:
+      operationId: api_v1_compliance_legal_documents_list
+      description: Read-only list of currently published legal documents.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LegalDocument'
+          description: ''
+  /api/v1/compliance/ropa:
+    get:
+      operationId: api_v1_compliance_ropa_list
+      description: Public, read-only list of published ROPA rows.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessingActivity'
           description: ''
   /api/v1/connectors/enrollment:
     get:
@@ -1444,6 +2006,63 @@ paths:
         '200':
           description: Evidence, issues, messages, and capture sessions for a task
             instance.
+  /api/v1/exit-decisions/{phase}:
+    get:
+      operationId: api_v1_exit_decisions_list
+      description: 'C-06: sign a phase exit decision. Restricted to platform administrators.'
+      parameters:
+      - in: path
+        name: phase
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExitDecision'
+          description: ''
+    post:
+      operationId: api_v1_exit_decisions_create
+      description: 'C-06: sign a phase exit decision. Restricted to platform administrators.'
+      parameters:
+      - in: path
+        name: phase
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExitDecision'
+          description: ''
   /api/v1/exports/download/{token}:
     get:
       operationId: api_v1_exports_download_retrieve
@@ -1505,7 +2124,11 @@ paths:
       - basicAuth: []
       responses:
         '200':
-          description: Export policy for the active company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportBoundaryPolicy'
+          description: ''
   /api/v1/exports/requests:
     post:
       operationId: api_v1_exports_requests_create
@@ -1577,7 +2200,11 @@ paths:
       - basicAuth: []
       responses:
         '200':
-          description: List of export requests for the active company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportRequestList'
+          description: ''
   /api/v1/notifications/:
     get:
       operationId: notifications_list
@@ -2050,6 +2677,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/PilotChangeRequest'
           description: ''
+  /api/v1/pilot/charter:
+    get:
+      operationId: api_v1_pilot_charter_retrieve
+      description: |-
+        PILOT-01: read or sign the pilot charter.
+
+        - ``GET`` returns the most recent signed charter (404 if none).
+        - ``POST`` signs a new charter; only OWNERs may sign. The charter is
+          HMAC-signed over the canonical payload and the audit event
+          ``PILOT_CHARTER_SIGNED`` is recorded.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotCharter'
+          description: ''
+    post:
+      operationId: api_v1_pilot_charter_create
+      description: |-
+        PILOT-01: read or sign the pilot charter.
+
+        - ``GET`` returns the most recent signed charter (404 if none).
+        - ``POST`` signs a new charter; only OWNERs may sign. The charter is
+          HMAC-signed over the canonical payload and the audit event
+          ``PILOT_CHARTER_SIGNED`` is recorded.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PilotCharterCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PilotCharterCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PilotCharterCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PilotCharter'
+          description: ''
   /api/v1/pilot/dashboard:
     get:
       operationId: api_v1_pilot_dashboard_retrieve
@@ -2355,6 +3037,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PilotWeeklyReport'
+          description: ''
+  /api/v1/platform/bootstrap:
+    get:
+      operationId: api_v1_platform_bootstrap_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bootstrap'
+          description: ''
+  /api/v1/platform/bootstrap/legacy:
+    get:
+      operationId: api_v1_platform_bootstrap_legacy_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bootstrap'
+          description: ''
+  /api/v1/platform/exit-decisions/{phase}:
+    get:
+      operationId: api_v1_platform_exit_decisions_list
+      description: 'C-06: sign a phase exit decision. Restricted to platform administrators.'
+      parameters:
+      - in: path
+        name: phase
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExitDecision'
+          description: ''
+    post:
+      operationId: api_v1_platform_exit_decisions_create
+      description: 'C-06: sign a phase exit decision. Restricted to platform administrators.'
+      parameters:
+      - in: path
+        name: phase
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExitDecisionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExitDecision'
           description: ''
   /api/v1/reviews/dashboard:
     get:
@@ -3042,9 +3805,8 @@ components:
           format: uuid
         version_number:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         title:
           type: string
           maxLength: 255
@@ -3056,9 +3818,8 @@ components:
           type: boolean
         auto_pass_risk_threshold:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         active:
           type: boolean
         created_by:
@@ -3122,9 +3883,8 @@ components:
           maxLength: 128
         prompt_version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         status:
           $ref: '#/components/schemas/AIAnalysisRunStatusEnum'
         shadow_mode:
@@ -3214,9 +3974,8 @@ components:
           maxLength: 255
         monthly_token_limit:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         monthly_cost_limit:
           type: string
           format: decimal
@@ -3251,6 +4010,193 @@ components:
       required:
       - document_type
       - document_version
+    AgentActionLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        grant:
+          type: string
+          format: uuid
+        company:
+          type: string
+          format: uuid
+        request_id:
+          type: string
+          format: uuid
+        tool_name:
+          type: string
+          maxLength: 160
+        required_scope:
+          type: string
+          maxLength: 96
+        idempotency_key:
+          type: string
+          maxLength: 160
+        arguments_hash:
+          type: string
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/AgentActionLogStatusEnum'
+        result: {}
+        error_code:
+          type: string
+          maxLength: 96
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - arguments_hash
+      - company
+      - created_at
+      - grant
+      - id
+      - idempotency_key
+      - request_id
+      - required_scope
+      - tool_name
+      - updated_at
+    AgentActionLogList:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentActionLog'
+      required:
+      - logs
+    AgentActionLogStatusEnum:
+      enum:
+      - received
+      - executed
+      - rejected
+      - failed
+      type: string
+      description: |-
+        * `received` - Received
+        * `executed` - Executed
+        * `rejected` - Rejected
+        * `failed` - Failed
+    AgentGrant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        user:
+          type: string
+          format: uuid
+        client_name:
+          type: string
+          maxLength: 160
+        client_fingerprint:
+          type: string
+          maxLength: 128
+        scopes: {}
+        status:
+          $ref: '#/components/schemas/AgentGrantStatusEnum'
+        active:
+          type: boolean
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - active
+      - client_fingerprint
+      - client_name
+      - company
+      - created_at
+      - expires_at
+      - id
+      - updated_at
+      - user
+    AgentGrantCreate:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        client_name:
+          type: string
+          maxLength: 160
+        client_fingerprint:
+          type: string
+          maxLength: 128
+          pattern: ^sha256:[0-9a-fA-F]{64}$
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScopesEnum'
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - client_fingerprint
+      - client_name
+      - expires_at
+      - scopes
+      - user_id
+    AgentGrantList:
+      type: object
+      properties:
+        grants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentGrant'
+      required:
+      - grants
+    AgentGrantRevoke:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    AgentGrantStatusEnum:
+      enum:
+      - active
+      - revoked
+      - expired
+      type: string
+      description: |-
+        * `active` - Active
+        * `revoked` - Revoked
+        * `expired` - Expired
+    AgentScope:
+      type: object
+      properties:
+        scopes:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          readOnly: true
+      required:
+      - scopes
     AssignmentModeEnum:
       enum:
       - named_user
@@ -3305,14 +4251,12 @@ components:
           maxLength: 64
         rpo_hours:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         rto_hours:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         includes_private_media:
           type: boolean
         includes_configuration:
@@ -3350,7 +4294,7 @@ components:
           type: string
           format: uuid
         status:
-          $ref: '#/components/schemas/BackupRunStatusEnum'
+          $ref: '#/components/schemas/Status40eEnum'
         artifact_name:
           type: string
           maxLength: 255
@@ -3380,18 +4324,6 @@ components:
       - id
       - requested_by
       - started_at
-    BackupRunStatusEnum:
-      enum:
-      - requested
-      - completed
-      - failed
-      - restored
-      type: string
-      description: |-
-        * `requested` - Requested
-        * `completed` - Completed
-        * `failed` - Failed
-        * `restored` - Restored
     Bootstrap:
       type: object
       properties:
@@ -3648,6 +4580,117 @@ components:
       - connector_version
       - enrollment_id
       - provider_status
+    DSRDecision:
+      type: object
+      description: Inbound payload for DSR state transitions (verify/start/etc).
+      properties:
+        notes:
+          type: string
+    DSRRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        request_type:
+          allOf:
+          - $ref: '#/components/schemas/RequestTypeEnum'
+          readOnly: true
+        subject_email:
+          type: string
+          format: email
+          readOnly: true
+        subject_reference:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DSRRequestStatusEnum'
+          readOnly: true
+        decision_notes:
+          type: string
+          readOnly: true
+        decided_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - decided_at
+      - decision_notes
+      - description
+      - id
+      - request_type
+      - status
+      - subject_email
+      - subject_reference
+      - submitted_at
+      - updated_at
+    DSRRequestCreate:
+      type: object
+      description: Inbound payload for ``POST /api/v1/compliance/dsr``.
+      properties:
+        request_type:
+          $ref: '#/components/schemas/RequestTypeEnum'
+        subject_email:
+          type: string
+          format: email
+        subject_reference:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+      required:
+      - request_type
+      - subject_email
+    DSRRequestStatusEnum:
+      enum:
+      - pending
+      - verified
+      - in_progress
+      - completed
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `verified` - Identity Verified
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `rejected` - Rejected
+    Decision0b3Enum:
+      enum:
+      - authorize
+      - decline
+      - withdraw
+      type: string
+      description: |-
+        * `authorize` - Authorize
+        * `decline` - Decline
+        * `withdraw` - Withdraw
+    Decision4e8Enum:
+      enum:
+      - approved
+      - conditional
+      - rejected
+      - deferred
+      type: string
+      description: |-
+        * `approved` - Approved
+        * `conditional` - Conditional approval
+        * `rejected` - Rejected
+        * `deferred` - Deferred
     DecisionTypeEnum:
       enum:
       - approve
@@ -3716,9 +4759,8 @@ components:
           $ref: '#/components/schemas/EvidenceItemStatusEnum'
         sequence_number:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
           default: 1
         parent_submission:
           type: string
@@ -3748,20 +4790,17 @@ components:
           maxLength: 120
         media_size_bytes:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         media_width:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
           nullable: true
         media_height:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
           nullable: true
         raw_hash:
           type: string
@@ -3771,9 +4810,8 @@ components:
           maxLength: 64
         duplicate_risk_score:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         face_detected:
           type: boolean
         challenge_response:
@@ -3835,6 +4873,97 @@ components:
         * `number` - Number
         * `note` - Note
         * `confirmation` - Confirmation
+    ExitDecision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        phase:
+          type: string
+          maxLength: 16
+        decision:
+          $ref: '#/components/schemas/Decision4e8Enum'
+        rationale:
+          type: string
+        signed_by:
+          type: string
+          format: uuid
+          readOnly: true
+        signed_by_login:
+          type: string
+          readOnly: true
+        signed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        supersedes:
+          type: string
+          format: uuid
+          nullable: true
+        signature_hmac:
+          type: string
+          readOnly: true
+        metadata: {}
+      required:
+      - decision
+      - id
+      - phase
+      - rationale
+      - signature_hmac
+      - signed_at
+      - signed_by
+      - signed_by_login
+    ExitDecisionCreate:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/Decision4e8Enum'
+        rationale:
+          type: string
+          maxLength: 4000
+          minLength: 10
+        supersedes:
+          type: string
+          format: uuid
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: {}
+      required:
+      - decision
+      - rationale
+    ExportBoundaryPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        future_notification_boundaries: {}
+        external_storage_boundaries: {}
+        provider_review_checklist: {}
+        updated_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - id
+      - updated_at
     ExportRequest:
       type: object
       properties:
@@ -3920,6 +5049,15 @@ components:
           format: date
       required:
       - export_type
+    ExportRequestList:
+      type: object
+      properties:
+        exports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportRequest'
+      required:
+      - exports
     ExportRequestStatusEnum:
       enum:
       - queued
@@ -3983,6 +5121,91 @@ components:
       - code
       - id
       - name
+    KindEnum:
+      enum:
+      - terms
+      - privacy
+      - ai_transfer
+      - employee_privacy
+      - data_processing
+      - retention
+      - support_access
+      - dpia
+      - breach_response
+      - ropa
+      type: string
+      description: |-
+        * `terms` - Terms of Use
+        * `privacy` - Privacy Notice
+        * `ai_transfer` - AI Transfer Notice
+        * `employee_privacy` - Employee Privacy Acknowledgement
+        * `data_processing` - Data Processing Terms
+        * `retention` - Retention and Deletion Policy
+        * `support_access` - Support Access Authorization
+        * `dpia` - Data Protection Impact Assessment
+        * `breach_response` - Data Breach Response Plan
+        * `ropa` - Record of Processing Activities
+    LawfulBasisEnum:
+      enum:
+      - consent
+      - contract
+      - legal_obligation
+      - vital_interests
+      - public_task
+      - legitimate_interests
+      type: string
+      description: |-
+        * `consent` - Consent
+        * `contract` - Contract performance
+        * `legal_obligation` - Legal obligation
+        * `vital_interests` - Vital interests
+        * `public_task` - Public task
+        * `legitimate_interests` - Legitimate interests
+    LegalDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          readOnly: true
+        version:
+          type: string
+          readOnly: true
+        content_path:
+          type: string
+          readOnly: true
+        summary:
+          type: string
+          readOnly: true
+        effective_date:
+          type: string
+          format: date
+          readOnly: true
+        supersedes_version:
+          type: string
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_current:
+          type: boolean
+          readOnly: true
+          default: false
+      required:
+      - content_path
+      - effective_date
+      - id
+      - is_current
+      - kind
+      - published_at
+      - summary
+      - supersedes_version
+      - version
     Login:
       type: object
       properties:
@@ -4303,6 +5526,129 @@ components:
             $ref: '#/components/schemas/PilotChangeRequest'
       required:
       - change_requests
+    PilotCharter:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        pilot_program:
+          type: string
+          format: uuid
+        company:
+          type: string
+          format: uuid
+        decision:
+          $ref: '#/components/schemas/Decision0b3Enum'
+        rationale:
+          type: string
+        conditions:
+          type: string
+        observation_start:
+          type: string
+          format: date
+          nullable: true
+        observation_end:
+          type: string
+          format: date
+          nullable: true
+        success_measures: {}
+        signed_by:
+          type: string
+          format: uuid
+        signed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        signature_hmac:
+          type: string
+          maxLength: 64
+        signature_valid:
+          type: boolean
+          readOnly: true
+        metadata: {}
+      required:
+      - company
+      - decision
+      - id
+      - pilot_program
+      - rationale
+      - signature_valid
+      - signed_at
+      - signed_by
+    PilotCharterCreate:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/Decision0b3Enum'
+        rationale:
+          type: string
+        conditions:
+          type: string
+        observation_start:
+          type: string
+          format: date
+          nullable: true
+        observation_end:
+          type: string
+          format: date
+          nullable: true
+        success_measures:
+          type: array
+          items:
+            type: string
+        metadata: {}
+      required:
+      - decision
+      - rationale
+    PilotCharterSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pilot_program:
+          type: string
+          format: uuid
+        decision:
+          type: string
+        rationale:
+          type: string
+        conditions:
+          type: string
+        observation_start:
+          type: string
+          format: date
+          nullable: true
+        observation_end:
+          type: string
+          format: date
+          nullable: true
+        success_measures:
+          type: array
+          items:
+            type: string
+        signed_by:
+          type: string
+          format: uuid
+        signed_at:
+          type: string
+          format: date-time
+        signature_valid:
+          type: boolean
+      required:
+      - conditions
+      - decision
+      - id
+      - observation_end
+      - observation_start
+      - pilot_program
+      - rationale
+      - signature_valid
+      - signed_at
+      - signed_by
+      - success_measures
     PilotDashboard:
       type: object
       properties:
@@ -4312,10 +5658,15 @@ components:
           $ref: '#/components/schemas/PilotDashboardSummary'
         counts:
           $ref: '#/components/schemas/PilotDashboardCounts'
+        charter:
+          allOf:
+          - $ref: '#/components/schemas/PilotCharterSummary'
+          nullable: true
         program_id:
           type: string
           format: uuid
       required:
+      - charter
       - counts
       - program
       - program_id
@@ -4492,19 +5843,16 @@ components:
           maxLength: 32
         branch_count_target:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         employee_count_target:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         chrome_device_count:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         ai_provider_name:
           type: string
           maxLength: 64
@@ -4598,6 +5946,73 @@ components:
             $ref: '#/components/schemas/PilotWeeklyReport'
       required:
       - reports
+    ProcessingActivity:
+      type: object
+      description: Serializer for :class:`ProcessingActivity` rows.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        purpose:
+          type: string
+          readOnly: true
+        controller:
+          type: string
+          readOnly: true
+        processor:
+          type: string
+          readOnly: true
+        data_categories:
+          readOnly: true
+        data_subject_categories:
+          readOnly: true
+        recipients:
+          readOnly: true
+        lawful_basis:
+          allOf:
+          - $ref: '#/components/schemas/LawfulBasisEnum'
+          readOnly: true
+        cross_border_transfer:
+          type: boolean
+          readOnly: true
+        transfer_mechanism:
+          type: string
+          readOnly: true
+        retention_days:
+          type: integer
+          readOnly: true
+        security_measures:
+          type: string
+          readOnly: true
+        last_reviewed_at:
+          type: string
+          format: date
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - controller
+      - cross_border_transfer
+      - data_categories
+      - data_subject_categories
+      - id
+      - last_reviewed_at
+      - lawful_basis
+      - name
+      - processor
+      - published_at
+      - purpose
+      - recipients
+      - retention_days
+      - security_measures
+      - transfer_mechanism
     ProviderStatusEnum:
       enum:
       - healthy
@@ -4662,6 +6077,22 @@ components:
       required:
       - company
       - owner
+    RequestTypeEnum:
+      enum:
+      - access
+      - rectification
+      - erasure
+      - restriction
+      - portability
+      - objection
+      type: string
+      description: |-
+        * `access` - Right to Access
+        * `rectification` - Right to Rectification
+        * `erasure` - Right to Erasure
+        * `restriction` - Right to Restriction
+        * `portability` - Right to Portability
+        * `objection` - Right to Object
     RestoreCreate:
       type: object
       properties:
@@ -4678,6 +6109,48 @@ components:
       - backup_run_id
       - confirmation
       - target_name
+    RestoreRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        backup_run:
+          type: string
+          format: uuid
+        requested_by:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/Status40eEnum'
+        verified_database:
+          type: boolean
+        verified_media:
+          type: boolean
+        verified_configuration:
+          type: boolean
+        target_name:
+          type: string
+          maxLength: 64
+        report: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - backup_run
+      - company
+      - created_at
+      - id
+      - requested_by
     ReviewDecision:
       type: object
       properties:
@@ -4781,9 +6254,8 @@ components:
           type: boolean
         approved_task_weight_cap:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         updated_by:
           type: string
           format: uuid
@@ -4833,6 +6305,20 @@ components:
         * `owner` - Owner
         * `monitor` - Quality Monitor
         * `employee` - Employee
+    ScopesEnum:
+      enum:
+      - admin:full
+      - read:reports
+      - read:tasks
+      - write:reviews:approve
+      - write:tasks:transfer
+      type: string
+      description: |-
+        * `admin:full` - admin:full
+        * `read:reports` - read:reports
+        * `read:tasks` - read:tasks
+        * `write:reviews:approve` - write:reviews:approve
+        * `write:tasks:transfer` - write:tasks:transfer
     SeverityEnum:
       enum:
       - info
@@ -4845,6 +6331,18 @@ components:
         * `success` - Success
         * `warning` - Warning
         * `danger` - Danger
+    Status40eEnum:
+      enum:
+      - requested
+      - completed
+      - failed
+      - restored
+      type: string
+      description: |-
+        * `requested` - Requested
+        * `completed` - Completed
+        * `failed` - Failed
+        * `restored` - Restored
     SupportAuthorization:
       type: object
       properties:
@@ -5094,15 +6592,13 @@ components:
           nullable: true
         weekday:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
           nullable: true
         shift_offset_minutes:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         active:
           type: boolean
         last_generated_at:
@@ -5181,9 +6677,8 @@ components:
           $ref: '#/components/schemas/RiskLevelEnum'
         task_weight:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         active:
           type: boolean
       required:
@@ -5327,9 +6822,8 @@ components:
           nullable: true
         health_ttl_seconds:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         revoked_at:
           type: string
           format: date-time
@@ -5383,9 +6877,8 @@ components:
           format: uuid
         weekday:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         start_time:
           type: string
           format: time
@@ -5403,6 +6896,16 @@ components:
       - weekday
     WeeklyShiftCreate:
       type: object
+      description: |-
+        Validate the inputs to ``POST /organizations/weekly-shifts``.
+
+        C-03 closed an IDOR (A01:2021 Broken Access Control) where
+        ``WeeklyShiftCreateSerializer`` accepted arbitrary ``branch_id`` and
+        ``user_id`` UUIDs from the request body and the view would create a
+        :class:`WeeklyShift` carrying cross-tenant references. The serializer
+        now requires an explicit ``company`` to scope the lookup, asserts both
+        foreign keys belong to that company, verifies the user is an active
+        member, and confirms the branch membership is also active.
       properties:
         branch_id:
           type: string

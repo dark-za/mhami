@@ -10,7 +10,8 @@ export type WorkspaceRoute =
   | "/evidence"
   | "/people"
   | "/reviews"
-  | "/admin";
+  | "/admin"
+  | "/agent-access";
 
 export const routePermissions: Record<Exclude<WorkspaceRoute, "/">, Role[]> = {
   "/dashboard": ["platform_admin", "owner", "monitor", "employee"],
@@ -20,6 +21,7 @@ export const routePermissions: Record<Exclude<WorkspaceRoute, "/">, Role[]> = {
   "/people": ["platform_admin", "owner", "monitor"],
   "/reviews": ["platform_admin", "owner", "monitor"],
   "/admin": ["platform_admin", "owner"],
+  "/agent-access": ["platform_admin", "owner"],
 };
 
 export function getWorkspaceRoute(pathname: string): WorkspaceRoute {
@@ -42,6 +44,7 @@ export function routeTitle(locale: "ar" | "en", route: WorkspaceRoute): string {
     "/people": { ar: "الأفراد", en: "People" },
     "/reviews": { ar: "المراجعات", en: "Reviews" },
     "/admin": { ar: "الإدارة", en: "Admin" },
+    "/agent-access": { ar: "وصول MCP", en: "MCP Access" },
   };
   return locale === "ar" ? titles[route].ar : titles[route].en;
 }

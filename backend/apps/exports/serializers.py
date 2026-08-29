@@ -50,6 +50,10 @@ class ExportRequestSerializer(serializers.ModelSerializer):
         ]
 
 
+class ExportRequestListSerializer(serializers.Serializer):
+    exports = ExportRequestSerializer(many=True)
+
+
 class ExportRequestCreateSerializer(serializers.Serializer):
     export_type = serializers.ChoiceField(choices=ExportType.choices)
     branch_ids = serializers.ListField(child=serializers.UUIDField(), required=False)

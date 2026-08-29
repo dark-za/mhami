@@ -60,6 +60,14 @@ describe("FE-01 route table", () => {
     });
   });
 
+  test("employee is denied access to /agent-access", async () => {
+    window.localStorage.setItem("mhami.activeRole", "employee");
+    await renderAt("/agent-access");
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+    });
+  });
+
   test("monitor is allowed on /reviews but not /admin", async () => {
     window.localStorage.setItem("mhami.activeRole", "monitor");
     await renderAt("/reviews");

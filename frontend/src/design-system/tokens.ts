@@ -2,7 +2,15 @@ export type Locale = "ar" | "en";
 export type CalendarPreference = "gregorian" | "hijri";
 export type Role = "platform_admin" | "owner" | "monitor" | "employee";
 
-export type NavModule = "dashboard" | "operations" | "tasks" | "evidence" | "people" | "reviews" | "admin";
+export type NavModule =
+  | "dashboard"
+  | "operations"
+  | "tasks"
+  | "evidence"
+  | "people"
+  | "reviews"
+  | "admin"
+  | "agent_access";
 
 export type NavItem = {
   module: NavModule;
@@ -53,13 +61,14 @@ export const roleLabels: Record<Role, { ar: string; en: string }> = {
 };
 
 export const navItems: NavItem[] = [
-  { module: "dashboard", href: "#dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "operations", href: "#operations", labelAr: "العمليات", labelEn: "Operations", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "tasks", href: "#tasks", labelAr: "المهام", labelEn: "Tasks", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "evidence", href: "#evidence", labelAr: "الأدلة", labelEn: "Evidence", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "people", href: "#people", labelAr: "الأفراد", labelEn: "People", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "reviews", href: "#reviews", labelAr: "المراجعات", labelEn: "Reviews", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "admin", href: "#admin", labelAr: "الإدارة", labelEn: "Admin", roles: ["platform_admin", "owner"] },
+  { module: "dashboard", href: "/dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["platform_admin", "owner", "monitor", "employee"] },
+  { module: "operations", href: "/operations", labelAr: "العمليات", labelEn: "Operations", roles: ["platform_admin", "owner", "monitor", "employee"] },
+  { module: "tasks", href: "/tasks", labelAr: "المهام", labelEn: "Tasks", roles: ["platform_admin", "owner", "monitor", "employee"] },
+  { module: "evidence", href: "/evidence", labelAr: "الأدلة", labelEn: "Evidence", roles: ["platform_admin", "owner", "monitor", "employee"] },
+  { module: "people", href: "/people", labelAr: "الأفراد", labelEn: "People", roles: ["platform_admin", "owner", "monitor"] },
+  { module: "reviews", href: "/reviews", labelAr: "المراجعات", labelEn: "Reviews", roles: ["platform_admin", "owner", "monitor"] },
+  { module: "admin", href: "/admin", labelAr: "الإدارة", labelEn: "Admin", roles: ["platform_admin", "owner"] },
+  { module: "agent_access", href: "/agent-access", labelAr: "وصول MCP", labelEn: "MCP Access", roles: ["platform_admin", "owner"] },
 ];
 
 export const notificationSeed: NotificationItem[] = [

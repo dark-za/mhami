@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
 
-import json
-from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import get_user_model
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.exceptions import PermissionDenied, ValidationError
 from rest_framework.exceptions import ParseError
 

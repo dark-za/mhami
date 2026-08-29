@@ -30,7 +30,8 @@
     "evidence": "Evidence",
     "people": "People",
     "reviews": "Reviews",
-    "admin": "Admin"
+    "admin": "Admin",
+    "agent_access": "MCP Access"
   },
   "shell": {
     "access_restricted": "Access restricted",

@@ -30,7 +30,8 @@
     "evidence": "الأدلة",
     "people": "الأفراد",
     "reviews": "المراجعات",
-    "admin": "الإدارة"
+    "admin": "الإدارة",
+    "agent_access": "وصول MCP"
   },
   "shell": {
     "access_restricted": "الوصول مقيّد",

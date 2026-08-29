@@ -347,6 +347,11 @@ input[type="checkbox"] {
   padding: 14px;
 }
 
+.state-neutral {
+  background: var(--surface-muted);
+  color: #1d2521;
+}
+
 .state-card strong {
   display: block;
   margin-bottom: 8px;
@@ -366,6 +371,63 @@ input[type="checkbox"] {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scope-picker {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  padding: 10px;
+}
+
+.scope-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.scope-option span {
+  color: #1d2521;
+  overflow-wrap: anywhere;
+}
+
+.audit-list {
+  display: grid;
+  gap: 10px;
+}
+
+.audit-list h3 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(140px, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+
+.audit-row span,
+.audit-row small {
+  overflow-wrap: anywhere;
 }
 
 .primary-button,
@@ -519,7 +581,8 @@ input[type="checkbox"] {
   }
 
   .nav-list a,
-  .metric-row {
+  .metric-row,
+  .audit-row {
     grid-template-columns: 1fr;
   }
 }
