@@ -220,10 +220,10 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
             <option value="confirmation">Confirmation</option>
           </select>
         </label>
-        <label>
-          <span>Task ID</span>
-          <input value={taskId} readOnly />
-        </label>
+        <div className="state-card">
+          <strong>Selected task</strong>
+          <p className="muted">Evidence will be attached to the task opened from the task list.</p>
+        </div>
       </div>
       <div className="inline-actions">
         <button className="ghost-button" type="button" onClick={() => void startCamera()}>

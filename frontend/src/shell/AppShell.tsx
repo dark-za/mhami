@@ -35,6 +35,7 @@ import { useDirection } from "../hooks/useDirection";
 import i18n from "../i18n";
 
 const ROLE_STORAGE_KEY = "mhami.activeRole";
+const IS_DEVELOPMENT = import.meta.env.DEV;
 
 export interface AppShellProps {
   bootstrap: BootstrapState;
@@ -185,25 +186,42 @@ export function AppShell(props: AppShellProps) {
     <main className="app-shell">
       {loadError ? (
         <aside className="notice notice-warning">
-          <strong>Bootstrap fallback active.</strong>
-          <p>{loadError}</p>
+          <strong>{locale === "ar" ? "تعذر تحديث بيانات الجلسة" : "Session refresh needs attention"}</strong>
+          <p>
+            {locale === "ar"
+              ? "نعرض نسخة محدودة حتى يعود الاتصال بالخدمة."
+              : "A limited workspace snapshot is visible until the service responds."}
+          </p>
+          {IS_DEVELOPMENT ? <small>{loadError}</small> : null}
         </aside>
       ) : null}
 
       <aside className={`notice ${loading ? "notice-neutral" : "notice-success"}`}>
         <strong>
           {loading
-            ? "Loading live bootstrap data"
+            ? locale === "ar"
+              ? "جاري تحديث مساحة العمل"
+              : "Refreshing workspace"
             : bootstrap.source === "live"
-            ? "Live bootstrap connected"
-            : "Demo snapshot active"}
+            ? locale === "ar"
+              ? "مساحة العمل متصلة"
+              : "Workspace connected"
+            : locale === "ar"
+            ? "وضع معاينة محدود"
+            : "Limited preview mode"}
         </strong>
         <p>
           {loading
-            ? "The shell is hydrating from the backend contract."
+            ? locale === "ar"
+              ? "نجهز بيانات الشركة والصلاحيات."
+              : "Company and permission data are being prepared."
             : bootstrap.source === "live"
-            ? "Frontend data now reflects the current authenticated session."
-            : "Using the local fallback snapshot."}
+            ? locale === "ar"
+              ? "البيانات المعروضة من الجلسة الحالية."
+              : "Displayed data reflects the current session."
+            : locale === "ar"
+            ? "سجل الدخول لعرض بيانات التشغيل الفعلية."
+            : "Sign in to view live operating data."}
         </p>
       </aside>
 
@@ -225,7 +243,11 @@ export function AppShell(props: AppShellProps) {
       </header>
 
       <section className="shell-grid">
-        <Panel eyebrow="Access Surface" title="Login and shell entry">
+        <Panel
+          eyebrow={locale === "ar" ? "الدخول" : "Access"}
+          title={locale === "ar" ? "تسجيل الدخول لمساحة العمل" : "Workspace sign in"}
+          variant="action"
+        >
           <form className="form-stack" onSubmit={handleLogin}>
             <div className="form-grid">
               <label>
@@ -290,12 +312,12 @@ export function AppShell(props: AppShellProps) {
           </form>
           {authError ? <p className="status status-danger">{authError}</p> : null}
           {authMessage ? <p className="status status-success">{authMessage}</p> : null}
-          <p className="muted">
-            Login stays backend-authoritative. The shell only mirrors the approved contract.
-          </p>
         </Panel>
 
-        <Panel eyebrow="Controls" title="Locale and role preview">
+        <Panel
+          eyebrow={locale === "ar" ? "التفضيلات" : "Preferences"}
+          title={locale === "ar" ? "اللغة والتقويم" : "Language and calendar"}
+        >
           <div className="chip-row">
             {(["ar", "en"] as const).map((value) => (
               <button
@@ -314,57 +336,16 @@ export function AppShell(props: AppShellProps) {
                 onClick={() => setCalendar(value)}
                 type="button"
               >
-                {calendar === "gregorian" ? "Gregorian" : "Hijri"}
+                {value === "gregorian" ? "Gregorian" : "Hijri"}
               </button>
             ))}
           </div>
-          <div className="chip-row">
-            {Object.keys(roleLabels).map((value) => {
-              const nextRole = value as Role;
-              return (
-                <button
-                  key={nextRole}
-                  className={`chip ${role === nextRole ? "chip-active" : ""}`}
-                  onClick={() => setRole(nextRole)}
-                  type="button"
-                >
-                  {roleLabels[nextRole].en}
-                </button>
-              );
-            })}
-          </div>
         </Panel>
 
-        <Panel eyebrow="Design System" title="Branding and tokens">
-          <div className="token-grid">
-            <div
-              className="token-swatch"
-              style={{ background: company.branding.primary, color: readableTextColor(company.branding.primary) }}
-            >
-              <span>Primary</span>
-              <strong>{company.branding.primary}</strong>
-            </div>
-            <div
-              className="token-swatch"
-              style={{
-                background: company.branding.secondary,
-                color: readableTextColor(company.branding.secondary),
-              }}
-            >
-              <span>Secondary</span>
-              <strong>{company.branding.secondary}</strong>
-            </div>
-            <div
-              className="token-swatch"
-              style={{ background: company.branding.accent, color: readableTextColor(company.branding.accent) }}
-            >
-              <span>Accent</span>
-              <strong>{company.branding.accent}</strong>
-            </div>
-          </div>
-        </Panel>
-
-        <Panel eyebrow="Navigation" title="Role-aware modules">
+        <Panel
+          eyebrow={locale === "ar" ? "التنقل" : "Navigation"}
+          title={locale === "ar" ? "وحدات العمل المتاحة" : "Available work areas"}
+        >
           <nav className="nav-list" aria-label="Role aware navigation">
             <Link to="/">{locale === "ar" ? "الملخص" : "Summary"}</Link>
             {visibleNav.map((item) => (
@@ -374,12 +355,13 @@ export function AppShell(props: AppShellProps) {
               </Link>
             ))}
           </nav>
-          <p className="muted">
-            Only approved modules appear for the active role and live bootstrap snapshot when available.
-          </p>
         </Panel>
 
-        <Panel eyebrow="Notifications" title="In-app notification center">
+        <Panel
+          eyebrow={locale === "ar" ? "التنبيهات" : "Notifications"}
+          title={locale === "ar" ? "مركز التنبيهات" : "Notification center"}
+          variant="insight"
+        >
           <div className="notification-list">
             {notificationsError || notifications === null
               ? notificationSeed.map((item) => (
@@ -402,9 +384,66 @@ export function AppShell(props: AppShellProps) {
           </div>
         </Panel>
 
-        <Panel eyebrow="Chrome" title="Capability preflight">
-          <CapabilityCard />
-        </Panel>
+        {IS_DEVELOPMENT ? (
+          <>
+            <Panel eyebrow="Developer tools" title="Role preview">
+              <div className="chip-row">
+                {Object.keys(roleLabels).map((value) => {
+                  const nextRole = value as Role;
+                  return (
+                    <button
+                      key={nextRole}
+                      className={`chip ${role === nextRole ? "chip-active" : ""}`}
+                      onClick={() => setRole(nextRole)}
+                      type="button"
+                    >
+                      {roleLabels[nextRole].en}
+                    </button>
+                  );
+                })}
+              </div>
+            </Panel>
+
+            <Panel eyebrow="Developer tools" title="Brand tokens">
+              <div className="token-grid">
+                <div
+                  className="token-swatch"
+                  style={{
+                    background: company.branding.primary,
+                    color: readableTextColor(company.branding.primary),
+                  }}
+                >
+                  <span>Primary</span>
+                  <strong>{company.branding.primary}</strong>
+                </div>
+                <div
+                  className="token-swatch"
+                  style={{
+                    background: company.branding.secondary,
+                    color: readableTextColor(company.branding.secondary),
+                  }}
+                >
+                  <span>Secondary</span>
+                  <strong>{company.branding.secondary}</strong>
+                </div>
+                <div
+                  className="token-swatch"
+                  style={{
+                    background: company.branding.accent,
+                    color: readableTextColor(company.branding.accent),
+                  }}
+                >
+                  <span>Accent</span>
+                  <strong>{company.branding.accent}</strong>
+                </div>
+              </div>
+            </Panel>
+
+            <Panel eyebrow="Developer tools" title="Capability preflight">
+              <CapabilityCard />
+            </Panel>
+          </>
+        ) : null}
 
         {props.children}
       </section>

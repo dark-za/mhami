@@ -22,6 +22,6 @@ test("renders foundation shell", () => {
       />
     </MemoryRouter>,
   );
-  expect(html).toContain("Login and shell entry");
+  expect(html).toContain("تسجيل الدخول لمساحة العمل");
   expect(html).toContain("Nadi Foods");
 });

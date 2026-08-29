@@ -36,7 +36,7 @@
     "access_restricted": "Access restricted",
     "no_access": "You do not have access to this page",
     "access_explainer": "This page is reserved for the following roles:",
-    "fallback_active": "Bootstrap fallback active",
+    "fallback_active": "Session refresh needs attention",
     "live_connected": "Live bootstrap connected",
     "snapshot_active": "Demo snapshot active"
   },

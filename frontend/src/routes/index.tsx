@@ -61,7 +61,7 @@ export function AppRoutes(props: AppRoutesProps) {
           path="/"
           element={
             <Guarded roles={ALL_AUTHENTICATED_ROLES} activeRole={activeRole} resource="Open the workspace from the navigation rail">
-              <TasksPage onTaskSelected={props.onTaskSelected} />
+              <TasksPage onTaskSelected={props.onTaskSelected} bootstrap={props.bootstrap} />
             </Guarded>
           }
         />
@@ -69,7 +69,7 @@ export function AppRoutes(props: AppRoutesProps) {
           path="/tasks"
           element={
             <Guarded roles={ALL_AUTHENTICATED_ROLES} activeRole={activeRole} resource="Tasks">
-              <TasksPage onTaskSelected={props.onTaskSelected} />
+              <TasksPage onTaskSelected={props.onTaskSelected} bootstrap={props.bootstrap} />
             </Guarded>
           }
         />

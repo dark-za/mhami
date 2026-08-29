@@ -10,13 +10,15 @@ export function Panel({
   title,
   eyebrow,
   children,
+  variant = "section",
 }: {
   title: string;
   eyebrow: string;
   children: ReactNode;
+  variant?: "section" | "action" | "insight";
 }) {
   return (
-    <section className="panel">
+    <section className={`panel panel-${variant}`}>
       <p className="eyebrow">{eyebrow}</p>
       <h2>{title}</h2>
       {children}
@@ -38,5 +40,24 @@ export function StateCard({
       <strong>{title}</strong>
       <p>{body}</p>
     </article>
+  );
+}
+
+export function EmptyState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="empty-state" role="status">
+      <strong>{title}</strong>
+      <p>{body}</p>
+    </div>
+  );
+}
+
+export function SkeletonBlock({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className="skeleton-stack" aria-label="Loading">
+      {Array.from({ length: rows }).map((_, index) => (
+        <span key={index} className="skeleton-line" />
+      ))}
+    </div>
   );
 }
