@@ -1,7 +1,7 @@
 [project]
-name = "modular-operations-platform-backend"
+name = "mhami-backend"
 version = "0.1.0"
-description = "Backend foundation for the modular operations platform"
+description = "Backend foundation for the Mhami operations platform"
 requires-python = ">=3.13"
 
 dependencies = [

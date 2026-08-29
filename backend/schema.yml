@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Modular Operations Platform API
+  title: Mhami API
   version: 0.1.0
   description: Foundation API contract for the modular operations platform.
 paths:

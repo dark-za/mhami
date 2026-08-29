@@ -15,7 +15,7 @@ For each `vX.Y.md` document, the template should include:
    supersedes, approver, publisher, next review date.
 3. **Product inputs** — the platform behaviour that the document
    must reflect, copied or referenced from the corresponding section
-   in `upgrads/07_COMPLIANCE_LEGAL/00_SUMMARY.md`.
+   in the public release plan and approved legal workstream.
 4. **Acceptance tracking** — how acceptance is recorded (which
    `LegalDocumentType` and which API endpoint).
 5. **Review and change log** — pointer to the per-directory

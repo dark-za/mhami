@@ -11,7 +11,7 @@ test("landing page surfaces the login form", async ({ page }) => {
   // The shell renders the role badge text; in a guest session the
   // shell still shows the workspace rail so the operator can see
   // the available surfaces.
-  await expect(page.getByText(/Modular Operations Platform/i)).toBeVisible();
+  await expect(page.getByText(/Mhami/i)).toBeVisible();
 });
 
 test("login page is reachable and exposes a CSRF cookie", async ({ page, context }) => {

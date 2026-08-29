@@ -2,20 +2,40 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+| --- | --- |
+| 0.1.x | Yes |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Report vulnerabilities through a private GitHub security advisory for this repository, or contact the project maintainer through the repository owner account. Do not open public issues for suspected vulnerabilities that expose exploit details, secrets, tenant data, or deployment information.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Please include:
+
+- Affected component and version or commit SHA.
+- Reproduction steps.
+- Impact assessment.
+- Any relevant logs, screenshots, or proof-of-concept snippets with secrets removed.
+
+## Security Scope
+
+In scope:
+
+- Authentication and session handling.
+- Tenant isolation and branch scoping.
+- Evidence and media protection.
+- Export and backup access controls.
+- Connector request signing and replay protection.
+- AI-provider egress boundaries.
+- Production Compose and NGINX security controls.
+
+Out of scope:
+
+- Social engineering.
+- Denial-of-service testing against systems you do not own.
+- Attacks requiring compromised maintainer credentials.
+- Legal interpretations of placeholder policy documents.
+
+## Production Guidance
+
+Production deployments must use a secret manager or an equivalent protected runtime mechanism for all secrets. Never deploy with `.env.example` values. Run CI, dependency scans, migration checks, and deployment smoke tests before promoting a release.

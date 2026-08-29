@@ -14,7 +14,7 @@ from apps.reviews.models import ReviewDecision, ReviewDecisionType
 from apps.tenancy.models import Company
 
 from .models import AIAnalysisCriterion, AIAnalysisRun, AIAnalysisStatus, AIProviderConfig
-from .providers import FakeProvider, validate_provider_result
+from .providers import FakeProvider, OpenAIProvider, build_provider, validate_provider_result
 
 
 def accessible_branch_ids(company: Company, user: User) -> list[str]:
@@ -125,8 +125,8 @@ def create_criterion(company: Company, user: User, payload: dict[str, Any]) -> A
     return criterion
 
 
-def _provider_for(config: AIProviderConfig) -> FakeProvider:
-    return FakeProvider()
+def _provider_for(config: AIProviderConfig) -> FakeProvider | OpenAIProvider:
+    return build_provider(config)
 
 
 def _qualifying_human_decision(decision: ReviewDecision) -> bool:

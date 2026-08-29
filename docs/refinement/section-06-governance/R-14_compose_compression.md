@@ -78,7 +78,7 @@ worker:
 
 ## التحقق
 ```bash
-cd e:\APP\mhame\mhami-main
+cd path/to/mhami
 
 # Validate syntax
 docker compose -f compose.yml config --quiet                    # ✅ صامت

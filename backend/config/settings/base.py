@@ -3,7 +3,7 @@
 The module reads every environment variable through :func:`get_settings`
 to provide type-safe configuration. Production-critical secrets
 (``DJANGO_SECRET_KEY``, ``AUDIT_HMAC_SECRET``, ``METRICS_TOKEN``,
-``BACKUP_EXTERNAL_URI``) are still validated here so that a missing or
+``BACKUP_EXTERNAL_URI``, and backup encryption settings) are still validated here so that a missing or
 default value fails fast at import time.
 """
 
@@ -200,7 +200,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Modular Operations Platform API",
+    "TITLE": "Mhami API",
     "DESCRIPTION": "Foundation API contract for the modular operations platform.",
     "VERSION": "0.1.0",
 }
@@ -277,6 +277,23 @@ PLATFORM_MODULES = [
 # ---------------------------------------------------------------------------
 METRICS_TOKEN = settings.metrics_token
 BACKUP_EXTERNAL_URI = settings.backup_external_uri
+BACKUP_ENCRYPTION_KEY = settings.backup_encryption_key
+BACKUP_EXTERNAL_KEY_ID = settings.backup_external_key_id
+BACKUP_EXTERNAL_KEYS = settings.backup_external_keys
+BACKUP_EXTERNAL_REGION = settings.backup_external_region
+BACKUP_EXTERNAL_ENDPOINT = settings.backup_external_endpoint
+BACKUP_EXTERNAL_SSE = settings.backup_external_sse
+BACKUP_EXTERNAL_KMS_KEY_ID = settings.backup_external_kms_key_id
+BACKUP_EXTERNAL_RETENTION_DAYS = settings.backup_external_retention_days
+BACKUP_RESTORE_DB_ENGINE = settings.backup_restore_db_engine
+BACKUP_RESTORE_DB_NAME = settings.backup_restore_db_name
+BACKUP_RESTORE_DB_USER = settings.backup_restore_db_user
+BACKUP_RESTORE_DB_PASSWORD = settings.backup_restore_db_password
+BACKUP_RESTORE_DB_HOST = settings.backup_restore_db_host
+BACKUP_RESTORE_DB_PORT = settings.backup_restore_db_port
+AI_PROVIDER_API_KEY = settings.ai_provider_api_key
+AI_PROVIDER_ALLOWED_ENDPOINTS = parse_env_list(settings.ai_provider_allowed_endpoints)
+AI_PROVIDER_TIMEOUT_SECONDS = settings.ai_provider_timeout_seconds
 
 if (
     settings.django_settings_module == "config.settings.prod"
@@ -292,3 +309,12 @@ if (
     raise ImproperlyConfigured(
         "BACKUP_EXTERNAL_URI must be set to an approved destination in production."
     )
+if settings.django_settings_module == "config.settings.prod" and not BACKUP_ENCRYPTION_KEY:
+    raise ImproperlyConfigured(
+        "BACKUP_ENCRYPTION_KEY must be set to an independent Fernet key in production."
+    )
+if settings.django_settings_module == "config.settings.prod" and BACKUP_EXTERNAL_URI:
+    if not BACKUP_EXTERNAL_KEY_ID or not BACKUP_EXTERNAL_KEYS:
+        raise ImproperlyConfigured(
+            "BACKUP_EXTERNAL_KEY_ID and BACKUP_EXTERNAL_KEYS must be set when external backups are enabled."
+        )

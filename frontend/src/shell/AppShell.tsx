@@ -209,7 +209,7 @@ export function AppShell(props: AppShellProps) {
 
       <header className="shell-header" style={{ background: brandingSurface, color: textColor }}>
         <div>
-          <p className="eyebrow">Modular Operations Platform</p>
+          <p className="eyebrow">Mhami</p>
           <h1>{company.name}</h1>
           <p className="shell-summary">
             {company.code} · {today}

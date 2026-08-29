@@ -108,3 +108,5 @@ def test_approved_transfer_reassigns_in_progress_task_to_pending(
     assert resolved.status == "approved"
     assert instance.status == TaskStatus.PENDING
     assert instance.assigned_user_id == other.id
+    assert instance.claimed_by_id is None
+    assert instance.started_at is None

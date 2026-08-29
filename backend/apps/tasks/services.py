@@ -10,6 +10,7 @@ from django.utils import timezone
 from apps.audit.services import record_audit_event
 from apps.identity.models import User
 from apps.organizations.models import Branch, WeeklyShift
+from apps.tenancy.access import active_membership_q
 
 from .models import TaskInstance, TaskRecurrenceType, TaskSchedule, TaskTemplate, TaskTemplateVersion, TaskTransferRequest, TaskTransferStatus
 
@@ -244,15 +245,14 @@ def request_transfer(instance_id: str, requested_by: User, requested_to: User, r
     if instance.company_id is None:
         raise ValueError("Task instance is missing a company scope.")
     requester_company_ids = set(
-        requested_by.company_memberships.filter(active=True).values_list("company_id", flat=True)
+        requested_by.company_memberships.filter(active_membership_q()).values_list("company_id", flat=True)
     )
-    requester_company_ids.add(requested_by.company_memberships.filter(active=False).values_list("company_id", flat=True).first() or "")
     if instance.company.owner_id == requested_by.id:
         requester_company_ids.add(instance.company_id)
     if instance.company_id not in requester_company_ids:
         raise ValueError("Task instance is outside the requester's company.")
     if requested_to.id != instance.assigned_user_id and not instance.company.memberships.filter(
-        user=requested_to, active=True
+        active_membership_q(), user=requested_to
     ).exists() and instance.company.owner_id != requested_to.id:
         raise ValueError("Transfer target is outside the task instance's company.")
     transfer = TaskTransferRequest.objects.create(
@@ -288,7 +288,7 @@ def resolve_transfer(transfer_id: str, decided_by: User, approved: bool) -> Task
     # service layer must also reject decisions from outside the company
     # so future callers cannot bypass the view filter.
     decided_is_member = company.owner_id == decided_by.id or company.memberships.filter(
-        user=decided_by, active=True
+        active_membership_q(), user=decided_by
     ).exists()
     if not decided_is_member and decided_by.id != transfer.requested_to_id:
         raise ValueError("Only company members can resolve this transfer.")
@@ -299,8 +299,10 @@ def resolve_transfer(transfer_id: str, decided_by: User, approved: bool) -> Task
     if approved:
         task = transfer.task_instance
         task.assigned_user = transfer.requested_to
+        task.claimed_by = None
+        task.started_at = None
         transition_task_instance(task, TASK_STATUS_PENDING)
-        task.save(update_fields=["assigned_user", "status", "updated_at"])
+        task.save(update_fields=["assigned_user", "claimed_by", "started_at", "status", "updated_at"])
     record_audit_event(
         event_type="TASK_TRANSFER_RESOLVED",
         target_type="task_transfer_request",

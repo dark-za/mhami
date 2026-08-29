@@ -74,7 +74,10 @@ jobs:
           AUDIT_HMAC_SECRET: ci-audit-hmac-secret-for-production-settings-validation
           MFA_ENCRYPTION_KEYS: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
           METRICS_TOKEN: ci-test-metrics-token-for-production-settings-validation
+          BACKUP_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
           BACKUP_EXTERNAL_URI: s3://ci-test-backup-bucket/backups
+          BACKUP_EXTERNAL_KEY_ID: ci
+          BACKUP_EXTERNAL_KEYS: '{"ci":"MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="}'
         run: python manage.py check --deploy
       - name: Run backend tests
         env:

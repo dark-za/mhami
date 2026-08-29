@@ -61,16 +61,35 @@ class PlatformSettings(BaseSettings):
     mfa_encryption_keys: str = ""
     metrics_token: str = ""
     backup_external_uri: str = ""
+    backup_encryption_key: str = ""
+    backup_external_key_id: str = ""
+    backup_external_keys: str = ""
+    backup_external_region: str = ""
+    backup_external_endpoint: str = ""
+    backup_external_sse: str = "AES256"
+    backup_external_kms_key_id: str = ""
+    backup_external_retention_days: int = 30
 
     # Backup storage
     backup_storage_root: str = ""
     backup_restore_root: str = ""
+    backup_restore_db_engine: str = ""
+    backup_restore_db_name: str = "mhami_restore"
+    backup_restore_db_user: str = ""
+    backup_restore_db_password: str = ""
+    backup_restore_db_host: str = "127.0.0.1"
+    backup_restore_db_port: int = 5432
 
     # Runtime
     gunicorn_workers: int = 3
     celery_log_level: str = "INFO"
     celery_worker_concurrency: int = 2
     frontend_port: int = 8080
+
+    # AI provider boundary
+    ai_provider_api_key: str = ""
+    ai_provider_allowed_endpoints: str = ""
+    ai_provider_timeout_seconds: int = 15
 
     @field_validator("django_debug", mode="before")
     @classmethod

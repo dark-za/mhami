@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`../distor-en.md` remains the historical engineering constitution. This file records approved decisions that override or extend it. An implementation must follow this file where the two documents conflict.
+This file records approved engineering decisions and constraints for the Mhami implementation. Historical planning notes are not part of the public source distribution.
 
 ## Approved Amendments
 

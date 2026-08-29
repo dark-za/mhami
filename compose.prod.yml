@@ -41,6 +41,11 @@ x-backend-prod-env: &backend_prod_env
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
   DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Set DJANGO_ALLOWED_HOSTS in .env}
   MFA_ENCRYPTION_KEYS: ${MFA_ENCRYPTION_KEYS:?Set MFA_ENCRYPTION_KEYS in .env}
+  POSTGRES_DB: ${POSTGRES_DB:-platform}
+  POSTGRES_USER: ${POSTGRES_USER:-platform}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  POSTGRES_HOST: ${POSTGRES_HOST:-db}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
   # C-02 / INFRA-01: AUDIT_HMAC_SECRET is mandatory in production. Failing
   # fast here is what prevents the ImproperlyConfigured error at runtime
   # and keeps the audit chain's HMAC defense line non-bypassable.
@@ -59,6 +64,10 @@ x-backend-restart: &backend_restart
 services:
   db:
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     # INFRA-01: production database keeps a read-only root filesystem and
     # forces Postgres to write its data into the volume only.
     read_only: true
@@ -77,11 +86,22 @@ services:
     environment:
       <<: *backend_prod_env
       METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
       BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
+      BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
+      BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
+      BACKUP_EXTERNAL_KMS_KEY_ID: ${BACKUP_EXTERNAL_KMS_KEY_ID:-}
+      BACKUP_EXTERNAL_RETENTION_DAYS: ${BACKUP_EXTERNAL_RETENTION_DAYS:-30}
+      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
+      AI_PROVIDER_ALLOWED_ENDPOINTS: ${AI_PROVIDER_ALLOWED_ENDPOINTS:-api.openai.com}
+      AI_PROVIDER_TIMEOUT_SECONDS: ${AI_PROVIDER_TIMEOUT_SECONDS:-15}
     <<: *backend_restart
 
   worker:
-    <<: *backend_defaults
+    <<: [*backend_defaults, *backend_restart]
     command:
       [
         "celery",
@@ -95,14 +115,20 @@ services:
       ]
     environment:
       <<: *backend_prod_env
-      POSTGRES_DB: ${POSTGRES_DB:-platform}
-      POSTGRES_USER: ${POSTGRES_USER:-platform}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
       BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
+      BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
+      BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
+      BACKUP_EXTERNAL_KMS_KEY_ID: ${BACKUP_EXTERNAL_KMS_KEY_ID:-}
+      BACKUP_EXTERNAL_RETENTION_DAYS: ${BACKUP_EXTERNAL_RETENTION_DAYS:-30}
+      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
+      AI_PROVIDER_ALLOWED_ENDPOINTS: ${AI_PROVIDER_ALLOWED_ENDPOINTS:-api.openai.com}
+      AI_PROVIDER_TIMEOUT_SECONDS: ${AI_PROVIDER_TIMEOUT_SECONDS:-15}
     depends_on:
       api:
         condition: service_started
@@ -110,7 +136,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    <<: *backend_restart
     healthcheck:
       test: ["CMD-SHELL", "celery -A config.celery inspect ping --timeout=5 | grep -q pong"]
       interval: 30s
@@ -119,7 +144,7 @@ services:
       start_period: 20s
 
   beat:
-    <<: *backend_defaults
+    <<: [*backend_defaults, *backend_restart]
     command:
       [
         "celery",
@@ -131,14 +156,20 @@ services:
       ]
     environment:
       <<: *backend_prod_env
-      POSTGRES_DB: ${POSTGRES_DB:-platform}
-      POSTGRES_USER: ${POSTGRES_USER:-platform}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
       BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
+      BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
+      BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
+      BACKUP_EXTERNAL_KMS_KEY_ID: ${BACKUP_EXTERNAL_KMS_KEY_ID:-}
+      BACKUP_EXTERNAL_RETENTION_DAYS: ${BACKUP_EXTERNAL_RETENTION_DAYS:-30}
+      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
+      AI_PROVIDER_ALLOWED_ENDPOINTS: ${AI_PROVIDER_ALLOWED_ENDPOINTS:-api.openai.com}
+      AI_PROVIDER_TIMEOUT_SECONDS: ${AI_PROVIDER_TIMEOUT_SECONDS:-15}
     depends_on:
       api:
         condition: service_started
@@ -146,7 +177,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    <<: *backend_restart
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/celerybeat-schedule"]
       interval: 30s
