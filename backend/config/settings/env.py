@@ -44,6 +44,9 @@ class PlatformSettings(BaseSettings):
 
     # Audit / signing
     audit_hmac_secret: str = ""
+    mcp_internal_hmac_secret: str = ""
+    mcp_signature_tolerance_seconds: int = 300
+    mcp_nonce_ttl_seconds: int = 600
 
     # Database
     postgres_db: str = "platform"

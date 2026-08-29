@@ -45,6 +45,19 @@ if (
         "AUDIT_HMAC_SECRET must be set to a non-default value in production."
     )
 AUDIT_HMAC_SECRET = settings.audit_hmac_secret or SECRET_KEY
+if (
+    settings.django_settings_module == "config.settings.prod"
+    and (
+        not settings.mcp_internal_hmac_secret
+        or settings.mcp_internal_hmac_secret == "change-me"
+    )
+):
+    raise ImproperlyConfigured(
+        "MCP_INTERNAL_HMAC_SECRET must be set to a non-default value in production."
+    )
+MCP_INTERNAL_HMAC_SECRET = settings.mcp_internal_hmac_secret or AUDIT_HMAC_SECRET
+MCP_SIGNATURE_TOLERANCE_SECONDS = settings.mcp_signature_tolerance_seconds
+MCP_NONCE_TTL_SECONDS = settings.mcp_nonce_ttl_seconds
 
 # MFA keys: fall back to a derived dev key if not provided.
 if settings.mfa_encryption_keys:
