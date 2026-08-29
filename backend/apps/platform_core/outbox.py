@@ -27,6 +27,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.audit.models import AuditEvent
+from apps.audit.services import record_audit_event
 
 from .models import OutboxEvent
 from .request_id import get_request_id
@@ -96,12 +97,12 @@ def emit_audit_and_outbox(
     the canonical entry point for service-layer mutations that publish a
     domain event.
     """
-    audit = AuditEvent.objects.create(
+    audit = record_audit_event(
         event_type=audit_event_type,
-        actor_id=actor_id or "",
+        actor_id=actor_id,
         target_type=audit_target_type,
         target_id=audit_target_id,
-        branch_id=branch_id or "",
+        branch_id=branch_id,
         before=dict(audit_before or {}),
         after=dict(audit_after or {}),
         metadata=dict(audit_metadata or {}),

@@ -13,3 +13,8 @@ Initial ADR candidates:
 - `ADR-0007-runtime-baseline.md`
 - `ADR-0008-platform-core-foundation.md`
 - `ADR-0009-audit-outbox-events.md`
+- `ADR-0010-mcp-protocol-version.md`
+- `ADR-0011-mcp-actor-model.md`
+- `ADR-0012-mcp-oauth-and-scopes.md`
+- `ADR-0013-mcp-internal-hmac-contract.md`
+- `ADR-0014-mcp-audit-and-logging.md`

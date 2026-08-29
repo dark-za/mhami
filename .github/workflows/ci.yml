@@ -38,6 +38,8 @@ jobs:
         run: pip install -r requirements.txt pip-audit
       - name: Compile backend
         run: python -m compileall .
+      - name: Verify audit writes use audit service
+        run: python scripts/check_audit_access.py
       - name: Verify no default secrets in compose
         # C-02: enforce that the literal placeholder values
         # ("change-me", "replace-with-...") are not silently consumed as

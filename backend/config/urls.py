@@ -16,6 +16,7 @@ urlpatterns = [
     path("api/v1/reviews/", include("apps.reviews.api.urls")),
     path("api/v1/ai/", include("apps.ai_gateway.api.urls")),
     path("api/v1/connectors/", include("apps.connector_control.api.urls")),
+    path("api/v1/agent/", include("apps.agent_access.api.urls")),
     path("api/v1/exports/", include("apps.exports.api.urls")),
     path("api/v1/backups/", include("apps.backups.api.urls")),
     path("api/v1/notifications/", include("apps.notifications.api.urls")),
