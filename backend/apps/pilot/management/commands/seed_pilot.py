@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import time, timedelta
 
 from django.core.management.base import BaseCommand, CommandError
@@ -20,8 +21,6 @@ from apps.tenancy.models import Company, CompanyStatus, IndustryChoice, LegalAcc
 from apps.tenancy.services import normalize_company_code
 from apps.tasks.models import TaskAssignmentMode, TaskRiskLevel, TaskTemplate, TaskTemplateVersion
 from apps.pilot.services import pilot_program_for_company
-
-DEFAULT_PASSWORD = "PilotPass!2026"
 
 REFERENCE_TEMPLATES = [
     {
@@ -134,7 +133,7 @@ class Command(BaseCommand):
         parser.add_argument("--employees-per-branch", type=int, default=10, help="Employees per branch (default: 10).")
         parser.add_argument("--chrome-devices", type=int, default=0, help="Chrome device count (default: branches * 2).")
         parser.add_argument("--trial-days", type=int, default=60, help="Trial length in days (default: 60).")
-        parser.add_argument("--password", default=DEFAULT_PASSWORD, help="Shared account password for seeded users.")
+        parser.add_argument("--password", required=True, help="Shared account password for seeded users (required, non-production only).")
         parser.add_argument(
             "--reset",
             action="store_true",
@@ -153,8 +152,12 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
+            raise CommandError("seed_pilot is not allowed when DJANGO_SETTINGS_MODULE is config.settings.prod (non-production only).")
+        password = options.get("password")
+        if not password:
+            raise CommandError("--password is required.")
         code = normalize_company_code(options["company"])
-        password = options["password"] or DEFAULT_PASSWORD
         branches_count = options["branches"]
         employees_per_branch = options["employees_per_branch"]
         chrome_devices = options["chrome_devices"] or branches_count * 2
@@ -254,7 +257,7 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"Pilot seeded: company='{code}' ({name}), {branches_count} branches, "
                 f"{len(monitors)} monitors, {len(employees)} employees, "
-                f"owner='{code}-owner' / monitors / employees password='{password}', "
+                f"owner='{code}-owner', "
                 f"templates={len(REFERENCE_TEMPLATES)}, charter_signed={charter_signed}."
             )
         )

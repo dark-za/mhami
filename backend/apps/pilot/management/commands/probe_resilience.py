@@ -4,10 +4,12 @@ import csv
 import hashlib
 import io
 import json
+import secrets
 from datetime import time, timedelta
+from os import environ
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.test import Client
 from django.utils import timezone
 from PIL import Image
@@ -40,7 +42,6 @@ from apps.tenancy.services import (
 )
 
 PROBE_CODE = "lifecycleprobe"
-PASSWORD = "PilotPass!2026"
 
 
 def _image_bytes(color: str, size: int = 320) -> bytes:
@@ -60,6 +61,9 @@ class Command(BaseCommand):
     help = "Run the Phase 12 resilience and authorization exercises against a disposable company and pilot2026."
 
     def handle(self, *args, **options) -> None:
+        if environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
+            raise CommandError("probe_resilience is non-production only.")
+        self._password = secrets.token_urlsafe(32)
         result: dict[str, object] = {}
         probe = self._create_probe()
         result["probe_company_id"] = str(probe.id)
@@ -82,7 +86,7 @@ class Command(BaseCommand):
             company_code=PROBE_CODE,
             industry="other",
             owner_login_id=f"{PROBE_CODE}-owner",
-            owner_password=PASSWORD,
+            owner_password=self._password,
             owner_display_name="Probe Owner",
         )
         for document_type in (
@@ -100,7 +104,7 @@ class Command(BaseCommand):
             timezone="UTC",
             operational_day_cutoff=time(6, 0),
         )
-        employee = User.objects.create_user(login_id=f"{PROBE_CODE}-emp1", password=PASSWORD, display_name="Probe Employee")
+        employee = User.objects.create_user(login_id=f"{PROBE_CODE}-emp1", password=self._password, display_name="Probe Employee")
         CompanyMembership.objects.create(company=company, user=employee, role=CompanyRole.EMPLOYEE)
         UserBranchMembership.objects.create(company=company, user=employee, branch=branch, job_role=staff_role)
         self._probe_evidence(company, branch, employee)
@@ -221,7 +225,7 @@ class Command(BaseCommand):
         from apps.tenancy.api.views import _totp_token
 
         owner = probe.owner
-        support = User.objects.create_user(login_id=f"{PROBE_CODE}-support", password=PASSWORD, display_name="Probe Support")
+        support = User.objects.create_user(login_id=f"{PROBE_CODE}-support", password=self._password, display_name="Probe Support")
         grant = grant_support(probe, support, owner, reason="Staging support boundary exercise", expires_at=timezone.now() + timedelta(hours=1))
         enrollment = enroll_totp(support, label="support-totp")
         enrollment.verify()
@@ -232,7 +236,7 @@ class Command(BaseCommand):
             data={
                 "company_code": PROBE_CODE,
                 "login_id": support.login_id,
-                "password": PASSWORD,
+                "password": self._password,
                 "mfa_code": _totp_token(enrollment.secret),
             },
             content_type="application/json",
@@ -261,7 +265,7 @@ class Command(BaseCommand):
             None,
             company_code=PROBE_CODE,
             login_id=support.login_id,
-            password=PASSWORD,
+            password=self._password,
         )
         evidence = EvidenceItem.objects.filter(company=probe).first()
         return {

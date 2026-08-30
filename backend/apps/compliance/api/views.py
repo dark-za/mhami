@@ -74,7 +74,9 @@ class DSRRequestListView(TenantAPIView):
 
     @extend_schema(responses={200: DSRRequestSerializer(many=True)})
     def get(self, request):
-        company = self.get_tenant().company
+        context = self.get_tenant()
+        context.require_roles(CompanyRole.OWNER, CompanyRole.MONITOR)
+        company = context.company
         requests = DSRRequest.objects.filter(company=company).order_by("-submitted_at")
         return Response({"requests": DSRRequestSerializer(requests, many=True).data})
 

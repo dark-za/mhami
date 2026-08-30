@@ -63,11 +63,13 @@ The current release is a runnable product foundation, not a hosted service. It i
    - OpenAPI schema: <http://localhost:8000/api/schema/>
    - Swagger UI: <http://localhost:8000/api/docs/>
 
-5. Seed a pilot workspace when you need demo data:
+5. Seed a pilot workspace when you need demo data (non-production only):
 
    ```bash
-   docker compose -f compose.yml -f compose.dev.yml exec api python manage.py seed_pilot --company pilotco --password "replace-with-local-demo-password"
+   docker compose -f compose.yml -f compose.dev.yml exec api python manage.py seed_pilot --company pilotco --password "$MHAMI_PILOT_PASSWORD"
    ```
+
+   The `seed_pilot` command is non-production only and requires `--password`; it refuses to run when `DJANGO_SETTINGS_MODULE` is `config.settings.prod`.
 
 ## Local Quality Checks
 

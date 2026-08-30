@@ -12,10 +12,10 @@ Use the unfilled, non-evidence handoff templates in [`../pilot-evidence/`](../pi
 
 ## 2. Seed the pilot company
 
-Use the management command to create the company, branches, roles, users, shifts, and the pilot program in one step:
+Use the management command to create the company, branches, roles, users, shifts, and the pilot program in one step. This command is non-production only and requires `--password`; it refuses to run when `DJANGO_SETTINGS_MODULE` is `config.settings.prod`:
 
 ```bash
-docker compose -f compose.yml -f compose.dev.yml exec -T api python manage.py seed_pilot --company pilotco
+docker compose -f compose.yml -f compose.dev.yml exec -T api python manage.py seed_pilot --company pilotco --password "$MHAMI_PILOT_PASSWORD"
 ```
 
 Defaults create:
@@ -31,10 +31,10 @@ Defaults create:
 The seed is idempotent-guarded: re-running without `--reset` fails with a clear error. Use `--reset` to tear down the existing company cleanly before reseeding:
 
 ```bash
-docker compose -f compose.yml -f compose.dev.yml exec -T api python manage.py seed_pilot --company pilotcode --reset
+docker compose -f compose.yml -f compose.dev.yml exec -T api python manage.py seed_pilot --company pilotcode --reset --password "$MHAMI_PILOT_PASSWORD"
 ```
 
-Optional flags: `--name`, `--branches`, `--employees-per-branch`, `--password`.
+Optional flags: `--name`, `--branches`, `--employees-per-branch`, `--password` (required, non-production only).
 
 ## 3. Verify the seeded environment
 
