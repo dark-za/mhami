@@ -1,24 +1,32 @@
 /**
  * FE-02 acceptance tests for the i18n module and `useDirection` hook.
+ *
+ * The shared test setup initializes the application i18n singleton before
+ * components render, while production initialization remains unchanged.
  */
 import { describe, expect, test, beforeEach } from "vitest";
 import { act, render } from "@testing-library/react";
 import i18n from "./index";
 import { useDirection } from "../hooks/useDirection";
 
-beforeEach(() => {
-  localStorage.removeItem("mhami.locale");
-  document.documentElement.dir = "ltr";
-  document.documentElement.lang = "en";
-  void i18n.changeLanguage("en");
-});
-
 function DirectionProbe() {
   const probe = useDirection();
   return <span data-testid="dir">{probe.dir}</span>;
 }
 
+beforeEach(() => {
+  localStorage.removeItem("mhami.locale");
+  document.documentElement.dir = "ltr";
+  document.documentElement.lang = "en";
+});
+
 describe("FE-02 i18n + direction", () => {
+  beforeEach(async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+  });
+
   test("defaults to English when no persisted locale", () => {
     expect(i18n.resolvedLanguage ?? i18n.language).toBe("en");
   });

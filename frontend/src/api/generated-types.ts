@@ -3144,7 +3144,7 @@ export interface components {
             company: string;
             /** Format: uuid */
             requested_by: string;
-            status?: components["schemas"]["Status40eEnum"];
+            status?: components["schemas"]["BackupStatusEnum"];
             artifact_name?: string;
             artifact_sha256?: string;
             manifest_sha256?: string;
@@ -3157,6 +3157,14 @@ export interface components {
             /** Format: date-time */
             restored_at?: string | null;
         };
+        /**
+         * @description * `requested` - Requested
+         *     * `completed` - Completed
+         *     * `failed` - Failed
+         *     * `restored` - Restored
+         * @enum {string}
+         */
+        BackupStatusEnum: "requested" | "completed" | "failed" | "restored";
         Bootstrap: {
             current_user: components["schemas"]["BootstrapCurrentUser"];
             company: components["schemas"]["BootstrapCompany"] | null;
@@ -3254,11 +3262,18 @@ export interface components {
          * @enum {string}
          */
         CaptureSessionStatusEnum: "active" | "used" | "expired" | "revoked";
+        /**
+         * @description * `healthy` - Healthy
+         *     * `degraded` - Degraded
+         *     * `offline` - Offline
+         * @enum {string}
+         */
+        ConnectorHealthStatusEnum: "healthy" | "degraded" | "offline";
         ConnectorHeartbeat: {
             /** Format: uuid */
             enrollment_id: string;
             connector_version: string;
-            provider_status: components["schemas"]["ProviderStatusEnum"];
+            provider_status: components["schemas"]["ConnectorHealthStatusEnum"];
         };
         /** @description Inbound payload for DSR state transitions (verify/start/etc). */
         DSRDecision: {
@@ -3298,21 +3313,6 @@ export interface components {
          * @enum {string}
          */
         DSRRequestStatusEnum: "pending" | "verified" | "in_progress" | "completed" | "rejected";
-        /**
-         * @description * `authorize` - Authorize
-         *     * `decline` - Decline
-         *     * `withdraw` - Withdraw
-         * @enum {string}
-         */
-        Decision0b3Enum: "authorize" | "decline" | "withdraw";
-        /**
-         * @description * `approved` - Approved
-         *     * `conditional` - Conditional approval
-         *     * `rejected` - Rejected
-         *     * `deferred` - Deferred
-         * @enum {string}
-         */
-        Decision4e8Enum: "approved" | "conditional" | "rejected" | "deferred";
         /**
          * @description * `approve` - Approve
          *     * `approve_despite_alert` - Approve Despite Alert
@@ -3407,7 +3407,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             phase: string;
-            decision: components["schemas"]["Decision4e8Enum"];
+            decision: components["schemas"]["ExitDecisionEnum"];
             rationale: string;
             /** Format: uuid */
             readonly signed_by: string;
@@ -3420,7 +3420,7 @@ export interface components {
             metadata?: unknown;
         };
         ExitDecisionCreate: {
-            decision: components["schemas"]["Decision4e8Enum"];
+            decision: components["schemas"]["ExitDecisionEnum"];
             rationale: string;
             /** Format: uuid */
             supersedes?: string | null;
@@ -3428,6 +3428,14 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `approved` - Approved
+         *     * `conditional` - Conditional approval
+         *     * `rejected` - Rejected
+         *     * `deferred` - Deferred
+         * @enum {string}
+         */
+        ExitDecisionEnum: "approved" | "conditional" | "rejected" | "deferred";
         ExportBoundaryPolicy: {
             /** Format: uuid */
             readonly id: string;
@@ -3499,13 +3507,6 @@ export interface components {
          * @enum {string}
          */
         ExportTypeEnum: "csv" | "zip" | "pdf";
-        /**
-         * @description * `healthy` - Healthy
-         *     * `degraded` - Degraded
-         *     * `offline` - Offline
-         * @enum {string}
-         */
-        HealthStatusEnum: "healthy" | "degraded" | "offline";
         /**
          * @description * `restaurants_cafes` - Restaurants and Cafes
          *     * `retail` - Retail
@@ -3702,7 +3703,7 @@ export interface components {
             pilot_program: string;
             /** Format: uuid */
             company: string;
-            decision: components["schemas"]["Decision0b3Enum"];
+            decision: components["schemas"]["PilotCharterDecisionEnum"];
             rationale: string;
             conditions?: string;
             /** Format: date */
@@ -3719,7 +3720,7 @@ export interface components {
             metadata?: unknown;
         };
         PilotCharterCreate: {
-            decision: components["schemas"]["Decision0b3Enum"];
+            decision: components["schemas"]["PilotCharterDecisionEnum"];
             rationale: string;
             conditions?: string;
             /** Format: date */
@@ -3729,6 +3730,13 @@ export interface components {
             success_measures?: string[];
             metadata?: unknown;
         };
+        /**
+         * @description * `authorize` - Authorize
+         *     * `decline` - Decline
+         *     * `withdraw` - Withdraw
+         * @enum {string}
+         */
+        PilotCharterDecisionEnum: "authorize" | "decline" | "withdraw";
         PilotCharterSummary: {
             /** Format: uuid */
             id: string;
@@ -3890,13 +3898,6 @@ export interface components {
             readonly published_at: string | null;
         };
         /**
-         * @description * `healthy` - Healthy
-         *     * `degraded` - Degraded
-         *     * `offline` - Offline
-         * @enum {string}
-         */
-        ProviderStatusEnum: "healthy" | "degraded" | "offline";
-        /**
          * @description * `daily_fixed` - Daily Fixed
          *     * `weekly_fixed` - Weekly Fixed
          *     * `shift_relative` - Shift Relative
@@ -3947,7 +3948,7 @@ export interface components {
             backup_run: string;
             /** Format: uuid */
             requested_by: string;
-            status?: components["schemas"]["Status40eEnum"];
+            status?: components["schemas"]["BackupStatusEnum"];
             verified_database?: boolean;
             verified_media?: boolean;
             verified_configuration?: boolean;
@@ -4049,14 +4050,6 @@ export interface components {
          * @enum {string}
          */
         SeverityEnum: "info" | "success" | "warning" | "danger";
-        /**
-         * @description * `requested` - Requested
-         *     * `completed` - Completed
-         *     * `failed` - Failed
-         *     * `restored` - Restored
-         * @enum {string}
-         */
-        Status40eEnum: "requested" | "completed" | "failed" | "restored";
         SupportAuthorization: {
             readonly id: number;
             /** Format: uuid */
@@ -4271,7 +4264,7 @@ export interface components {
             connector_version: string;
             compatibility_window?: string;
             status?: components["schemas"]["TenantConnectorEnrollmentStatusEnum"];
-            health_status?: components["schemas"]["HealthStatusEnum"];
+            health_status?: components["schemas"]["ConnectorHealthStatusEnum"];
             /** Format: date-time */
             last_seen_at?: string | null;
             /** Format: date-time */

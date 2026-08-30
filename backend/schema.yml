@@ -1221,6 +1221,8 @@ paths:
       operationId: api_v1_bootstrap_retrieve
       tags:
       - api
+      security:
+      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1233,6 +1235,8 @@ paths:
       operationId: api_v1_bootstrap_legacy_retrieve
       tags:
       - api
+      security:
+      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3043,6 +3047,8 @@ paths:
       operationId: api_v1_platform_bootstrap_retrieve
       tags:
       - api
+      security:
+      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3055,6 +3061,8 @@ paths:
       operationId: api_v1_platform_bootstrap_legacy_retrieve
       tags:
       - api
+      security:
+      - cookieAuth: []
       responses:
         '200':
           content:
@@ -4294,7 +4302,7 @@ components:
           type: string
           format: uuid
         status:
-          $ref: '#/components/schemas/Status40eEnum'
+          $ref: '#/components/schemas/BackupStatusEnum'
         artifact_name:
           type: string
           maxLength: 255
@@ -4324,6 +4332,18 @@ components:
       - id
       - requested_by
       - started_at
+    BackupStatusEnum:
+      enum:
+      - requested
+      - completed
+      - failed
+      - restored
+      type: string
+      description: |-
+        * `requested` - Requested
+        * `completed` - Completed
+        * `failed` - Failed
+        * `restored` - Restored
     Bootstrap:
       type: object
       properties:
@@ -4341,6 +4361,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BootstrapBranch'
+        branch_scope:
+          type: array
+          items:
+            $ref: '#/components/schemas/BootstrapBranch'
         enabled_modules:
           type: array
           items:
@@ -4354,6 +4378,7 @@ components:
           type: string
       required:
       - app_version
+      - branch_scope
       - branches
       - company
       - current_user
@@ -4418,6 +4443,9 @@ components:
           type: string
           nullable: true
         display_name:
+          type: string
+          nullable: true
+        role:
           type: string
           nullable: true
       required:
@@ -4565,6 +4593,16 @@ components:
         * `used` - Used
         * `expired` - Expired
         * `revoked` - Revoked
+    ConnectorHealthStatusEnum:
+      enum:
+      - healthy
+      - degraded
+      - offline
+      type: string
+      description: |-
+        * `healthy` - Healthy
+        * `degraded` - Degraded
+        * `offline` - Offline
     ConnectorHeartbeat:
       type: object
       properties:
@@ -4575,7 +4613,7 @@ components:
           type: string
           maxLength: 64
         provider_status:
-          $ref: '#/components/schemas/ProviderStatusEnum'
+          $ref: '#/components/schemas/ConnectorHealthStatusEnum'
       required:
       - connector_version
       - enrollment_id
@@ -4669,28 +4707,6 @@ components:
         * `in_progress` - In Progress
         * `completed` - Completed
         * `rejected` - Rejected
-    Decision0b3Enum:
-      enum:
-      - authorize
-      - decline
-      - withdraw
-      type: string
-      description: |-
-        * `authorize` - Authorize
-        * `decline` - Decline
-        * `withdraw` - Withdraw
-    Decision4e8Enum:
-      enum:
-      - approved
-      - conditional
-      - rejected
-      - deferred
-      type: string
-      description: |-
-        * `approved` - Approved
-        * `conditional` - Conditional approval
-        * `rejected` - Rejected
-        * `deferred` - Deferred
     DecisionTypeEnum:
       enum:
       - approve
@@ -4884,7 +4900,7 @@ components:
           type: string
           maxLength: 16
         decision:
-          $ref: '#/components/schemas/Decision4e8Enum'
+          $ref: '#/components/schemas/ExitDecisionEnum'
         rationale:
           type: string
         signed_by:
@@ -4919,7 +4935,7 @@ components:
       type: object
       properties:
         decision:
-          $ref: '#/components/schemas/Decision4e8Enum'
+          $ref: '#/components/schemas/ExitDecisionEnum'
         rationale:
           type: string
           maxLength: 4000
@@ -4934,6 +4950,18 @@ components:
       required:
       - decision
       - rationale
+    ExitDecisionEnum:
+      enum:
+      - approved
+      - conditional
+      - rejected
+      - deferred
+      type: string
+      description: |-
+        * `approved` - Approved
+        * `conditional` - Conditional approval
+        * `rejected` - Rejected
+        * `deferred` - Deferred
     ExportBoundaryPolicy:
       type: object
       properties:
@@ -5080,16 +5108,6 @@ components:
         * `csv` - CSV
         * `zip` - ZIP
         * `pdf` - PDF
-    HealthStatusEnum:
-      enum:
-      - healthy
-      - degraded
-      - offline
-      type: string
-      description: |-
-        * `healthy` - Healthy
-        * `degraded` - Degraded
-        * `offline` - Offline
     IndustryEnum:
       enum:
       - restaurants_cafes
@@ -5540,7 +5558,7 @@ components:
           type: string
           format: uuid
         decision:
-          $ref: '#/components/schemas/Decision0b3Enum'
+          $ref: '#/components/schemas/PilotCharterDecisionEnum'
         rationale:
           type: string
         conditions:
@@ -5581,7 +5599,7 @@ components:
       type: object
       properties:
         decision:
-          $ref: '#/components/schemas/Decision0b3Enum'
+          $ref: '#/components/schemas/PilotCharterDecisionEnum'
         rationale:
           type: string
         conditions:
@@ -5602,6 +5620,16 @@ components:
       required:
       - decision
       - rationale
+    PilotCharterDecisionEnum:
+      enum:
+      - authorize
+      - decline
+      - withdraw
+      type: string
+      description: |-
+        * `authorize` - Authorize
+        * `decline` - Decline
+        * `withdraw` - Withdraw
     PilotCharterSummary:
       type: object
       properties:
@@ -6013,16 +6041,6 @@ components:
       - retention_days
       - security_measures
       - transfer_mechanism
-    ProviderStatusEnum:
-      enum:
-      - healthy
-      - degraded
-      - offline
-      type: string
-      description: |-
-        * `healthy` - Healthy
-        * `degraded` - Degraded
-        * `offline` - Offline
     RecurrenceTypeEnum:
       enum:
       - daily_fixed
@@ -6126,7 +6144,7 @@ components:
           type: string
           format: uuid
         status:
-          $ref: '#/components/schemas/Status40eEnum'
+          $ref: '#/components/schemas/BackupStatusEnum'
         verified_database:
           type: boolean
         verified_media:
@@ -6331,18 +6349,6 @@ components:
         * `success` - Success
         * `warning` - Warning
         * `danger` - Danger
-    Status40eEnum:
-      enum:
-      - requested
-      - completed
-      - failed
-      - restored
-      type: string
-      description: |-
-        * `requested` - Requested
-        * `completed` - Completed
-        * `failed` - Failed
-        * `restored` - Restored
     SupportAuthorization:
       type: object
       properties:
@@ -6811,7 +6817,7 @@ components:
         status:
           $ref: '#/components/schemas/TenantConnectorEnrollmentStatusEnum'
         health_status:
-          $ref: '#/components/schemas/HealthStatusEnum'
+          $ref: '#/components/schemas/ConnectorHealthStatusEnum'
         last_seen_at:
           type: string
           format: date-time

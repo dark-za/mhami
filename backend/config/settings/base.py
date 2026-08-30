@@ -217,6 +217,12 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Mhami API",
     "DESCRIPTION": "Foundation API contract for the modular operations platform.",
     "VERSION": "0.1.0",
+    "ENUM_NAME_OVERRIDES": {
+        "PilotCharterDecisionEnum": "apps.pilot.models.PilotCharter.Decision",
+        "ExitDecisionEnum": "apps.platform_core.models.ExitDecision.Decision",
+        "BackupStatusEnum": "apps.backups.models.BackupStatus",
+        "ConnectorHealthStatusEnum": "apps.connector_control.models.ConnectorHealthStatus",
+    },
 }
 
 API_DOCS_REQUIRE_STAFF = False
