@@ -21,6 +21,7 @@ from ..serializers import (
     AgentActionLogListSerializer,
     AgentActionLogSerializer,
     AgentGrantCreateSerializer,
+    AgentGrantCreateResponseSerializer,
     AgentGrantListSerializer,
     AgentGrantRevokeSerializer,
     AgentGrantSerializer,
@@ -120,14 +121,14 @@ class AgentGrantListCreateView(TenantAPIView):
     @extend_schema(
         operation_id="agent_grants_create",
         request=AgentGrantCreateSerializer,
-        responses={201: AgentGrantSerializer},
+        responses={201: AgentGrantCreateResponseSerializer},
     )
     @platform_service_call
     def post(self, request):
         company = self.get_tenant().company
         serializer = AgentGrantCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        grant = create_agent_grant(
+        grant, secret = create_agent_grant(
             owner_id=request.user.id,
             company=company,
             user_id=serializer.validated_data["user_id"],
@@ -136,7 +137,9 @@ class AgentGrantListCreateView(TenantAPIView):
             scopes=list(serializer.validated_data["scopes"]),
             expires_at=serializer.validated_data["expires_at"],
         )
-        return Response(AgentGrantSerializer(grant).data, status=201)
+        payload = AgentGrantSerializer(grant).data
+        payload["secret"] = secret
+        return Response(payload, status=201)
 
 
 class AgentGrantDetailView(TenantAPIView):
@@ -179,7 +182,7 @@ class AgentGrantRevokeView(TenantAPIView):
 
 
 class AgentActionLogListView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(
         operation_id="agent_action_logs_list",

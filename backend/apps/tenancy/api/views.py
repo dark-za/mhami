@@ -1,58 +1,40 @@
 from __future__ import annotations
 
-import base64
-import hashlib
-import hmac
-import struct
-import time
+from secrets import compare_digest
 
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.db import transaction
-from rest_framework.permissions import IsAuthenticated
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
 from apps.audit.services import record_audit_event
-from apps.identity.models import MfaEnrollment, MfaMethodType, User
+from apps.identity.models import User
 from apps.organizations.models import Branch, CompanyMembership, CompanyRole, JobRole, UserBranchMembership
-from apps.platform_core.errors import PlatformAPIException, platform_service_call
+from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException, platform_service_call
 from apps.platform_core.mixins import TenantAPIView
 
 from ..access import active_membership_q, require_company_user
-from ..auth_backends import CompanyCodeBackend
-from ..models import Company, LegalAcceptance, SupportAuthorization
+from ..auth_backends import LocalInstallationBackend
+from ..models import Company, LegalAcceptance
 from ..serializers import (
     AcceptanceCreateSerializer,
     AuthSessionSerializer,
     BranchMembershipCreateSerializer,
     CompanyMembershipSerializer,
     CompanySerializer,
+    InitialSetupSerializer,
     LoginSerializer,
-    MfaEnrollRequestSerializer,
-    MfaEnrollmentCreateSerializer,
-    MfaEnrollmentSerializer,
-    MfaVerifySerializer,
     MemberCreateSerializer,
-    RegisterSerializer,
-    RegisterResponseSerializer,
-    SupportAuthorizationCreateSerializer,
-    SupportAuthorizationSerializer,
     UserSerializer,
 )
-from ..services import (
-    enroll_totp,
-    current_support_authorization,
-    ensure_company_operational,
-    grant_support,
-    normalize_company_code,
-    register_company,
-    revoke_support,
-)
+from ..services import ensure_company_operational, initial_setup_required, provision_initial_owner
 from ..throttles import (
     LoginAccountThrottle,
     LoginIPThrottle,
-    MfaUserThrottle,
     RegistrationIPThrottle,
 )
 
@@ -76,9 +58,8 @@ def _is_legal_version_published(document_type: str, document_version: str) -> bo
     The helper imports ``apps.compliance`` lazily so the tenancy
     module remains importable when the compliance app is not yet
     installed (e.g. fresh migrations during deployment). When the
-    compliance app is unavailable, the check is permissive — the
-    existing ``register_company`` flow continues to work and operators
-    can install the compliance app before production promotion.
+    compliance app is unavailable, the check is permissive so an
+    operator can install the compliance app before production use.
     """
     try:
         from apps.compliance.acceptance import LEGAL_TYPE_TO_KIND
@@ -106,71 +87,7 @@ def _is_legal_version_published(document_type: str, document_version: str) -> bo
     return document.version == document_version
 
 
-def _totp_token(secret: str, timestamp: int | None = None) -> str:
-    step = 30
-    counter = int((timestamp or time.time()) // step)
-    try:
-        key = base64.b32decode(secret, casefold=True)
-    except (ValueError, TypeError) as exc:
-        raise PlatformAPIException("Invalid MFA enrollment secret.") from exc
-    msg = struct.pack(">Q", counter)
-    digest = hmac.new(key, msg, hashlib.sha1).digest()
-    offset = digest[-1] & 0x0F
-    code_int = (
-        ((digest[offset] & 0x7F) << 24)
-        | ((digest[offset + 1] & 0xFF) << 16)
-        | ((digest[offset + 2] & 0xFF) << 8)
-        | (digest[offset + 3] & 0xFF)
-    )
-    return f"{code_int % 1_000_000:06d}"
-
-
-def _verify_totp(secret: str, code: str) -> bool:
-    candidates = (
-        _totp_token(secret),
-        _totp_token(secret, int(time.time()) - 30),
-        _totp_token(secret, int(time.time()) + 30),
-    )
-    return any(hmac.compare_digest(code, candidate) for candidate in candidates)
-
-
-def _matching_totp_timestep(secret: str, code: str) -> int | None:
-    current_timestep = int(time.time() // 30)
-    for timestep in (current_timestep, current_timestep - 1, current_timestep + 1):
-        if hmac.compare_digest(code, _totp_token(secret, timestep * 30)):
-            return timestep
-    return None
-
-
-@transaction.atomic
-def _consume_totp(enrollment: MfaEnrollment, code: str) -> bool:
-    locked = MfaEnrollment.objects.select_for_update().get(id=enrollment.id)
-    timestep = _matching_totp_timestep(locked.secret, code)
-    if timestep is None:
-        return False
-    if locked.last_used_timestep is not None and timestep <= locked.last_used_timestep:
-        return False
-    locked.last_used_timestep = timestep
-    locked.save(update_fields=["last_used_timestep", "updated_at"])
-    return True
-
-
-class RegisterView(APIView):
-    authentication_classes: list[type] = []
-    permission_classes: list[type] = []
-    throttle_classes = [RegistrationIPThrottle]
-
-    @extend_schema(request=RegisterSerializer, responses=RegisterResponseSerializer)
-    @platform_service_call
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        company, owner = register_company(**serializer.validated_data)
-        login(request, owner, backend="django.contrib.auth.backends.ModelBackend")
-        request.session["company_id"] = str(company.id)
-        return Response({"company": CompanySerializer(company).data, "owner": UserSerializer(owner).data}, status=201)
-
-
+@method_decorator(csrf_protect, name="dispatch")
 class LoginView(APIView):
     authentication_classes: list[type] = []
     permission_classes: list[type] = []
@@ -180,25 +97,22 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        company_code = normalize_company_code(serializer.validated_data["company_code"])
-        user = CompanyCodeBackend().authenticate(
+        user = LocalInstallationBackend().authenticate(
             request,
-            company_code=company_code,
             login_id=serializer.validated_data["login_id"],
             password=serializer.validated_data["password"],
         )
         if user is None:
-            raise PlatformAPIException("Invalid credentials or company code.")
-        company = Company.objects.get(code=company_code)
-        mfa_enrollments = MfaEnrollment.objects.filter(user=user, active=True, verified_at__isnull=False)
-        if mfa_enrollments.exists():
-            provided = serializer.validated_data.get("mfa_code")
-            if not provided or not any(
-                enrollment.method_type == MfaMethodType.TOTP and _consume_totp(enrollment, provided)
-                for enrollment in mfa_enrollments
-            ):
-                raise PlatformAPIException("MFA code is required.")
-        login(request, user, backend="apps.tenancy.auth_backends.CompanyCodeBackend")
+            raise PlatformAPIException("Invalid credentials.")
+        # Fail closed if sole organization cannot be resolved (0 or >1).
+        company_qs = Company.objects.all()
+        if company_qs.count() != 1:
+            raise PlatformAPIException("Invalid credentials.")
+        company = company_qs.first()
+        assert company is not None
+        if not company.is_operational():
+            raise PlatformAPIException("Invalid credentials.")
+        login(request, user, backend="apps.tenancy.auth_backends.LocalInstallationBackend")
         request.session["company_id"] = str(company.id)
         record_audit_event(
             event_type="USER_LOGIN",
@@ -207,21 +121,42 @@ class LoginView(APIView):
             actor_id=str(user.id),
             metadata={"company_id": str(company.id)},
         )
-        support_grant = current_support_authorization(company, user)
-        if support_grant is not None:
-            record_audit_event(
-                event_type="SUPPORT_ACCESS_USED",
-                target_type="support_authorization",
-                target_id=str(support_grant.id),
-                actor_id=str(user.id),
-                metadata={
-                    "company_id": str(company.id),
-                    "reason": support_grant.reason,
-                    "expires_at": support_grant.expires_at.isoformat(),
-                },
-            )
         return Response({"user": UserSerializer(user).data, "company": CompanySerializer(company).data})
 
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+@method_decorator(csrf_protect, name="dispatch")
+class InitialSetupView(APIView):
+    """Create the first owner only while the installation is empty."""
+
+    authentication_classes: list[type] = []
+    permission_classes: list[type] = []
+    throttle_classes = [RegistrationIPThrottle]
+
+    @extend_schema(request=InitialSetupSerializer, responses={201: AuthSessionSerializer})
+    @platform_service_call
+    def post(self, request):
+        serializer = InitialSetupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        configured_token = settings.INITIAL_SETUP_TOKEN
+        supplied_token = serializer.validated_data["setup_token"]
+        if not configured_token or not compare_digest(configured_token, supplied_token):
+            raise PlatformAPIException("Initial setup is unavailable.")
+
+        if not initial_setup_required():
+            raise PlatformAPIException("Initial setup is unavailable.")
+
+        company, owner = provision_initial_owner(
+            organization_name=serializer.validated_data["organization_name"],
+            owner_login_id=serializer.validated_data["owner_login_id"],
+            owner_display_name=serializer.validated_data.get("owner_display_name", ""),
+            password=serializer.validated_data["password"],
+            initiated_via="browser_setup",
+        )
+        login(request, owner, backend="apps.tenancy.auth_backends.LocalInstallationBackend")
+        request.session["company_id"] = str(company.id)
+        return Response({"user": UserSerializer(owner).data, "company": CompanySerializer(company).data}, status=201)
 
 class LogoutView(APIView):
     @extend_schema(request=None, responses={204: None})
@@ -268,111 +203,132 @@ class MeView(TenantAPIView):
         )
 
 
-class MfaEnrollView(APIView):
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [MfaUserThrottle]
-
-    @extend_schema(request=MfaEnrollRequestSerializer, responses={201: MfaEnrollmentCreateSerializer})
-    def post(self, request):
-        serializer = MfaEnrollRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        method_type = serializer.validated_data["method_type"]
-        label = serializer.validated_data.get("label", "")
-        if method_type == MfaMethodType.TOTP:
-            enrollment = enroll_totp(request.user, label=label)
-        else:
-            raise PlatformAPIException("Passkey enrollment is not available in this release.")
-        record_audit_event(
-            event_type="MFA_ENROLLMENT_CREATED",
-            target_type="user",
-            target_id=str(request.user.id),
-            actor_id=str(request.user.id),
-            metadata={"method_type": enrollment.method_type, "enrollment_id": str(enrollment.id)},
-        )
-        return Response(MfaEnrollmentCreateSerializer(enrollment).data, status=201)
-
-
-class MfaVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [MfaUserThrottle]
-
-    @extend_schema(request=MfaVerifySerializer, responses=MfaEnrollmentSerializer)
-    def post(self, request):
-        serializer = MfaVerifySerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        enrollment = MfaEnrollment.objects.get(id=serializer.validated_data["enrollment_id"], user=request.user)
-        if enrollment.method_type != MfaMethodType.TOTP:
-            raise PlatformAPIException("Only TOTP verification is implemented in this phase.")
-        if enrollment.verified_at is not None:
-            raise PlatformAPIException("This MFA enrollment is already verified.")
-        if not _consume_totp(enrollment, serializer.validated_data["code"]):
-            raise PlatformAPIException("Invalid MFA code.")
-        enrollment.verify()
-        record_audit_event(
-            event_type="MFA_ENROLLED",
-            target_type="user",
-            target_id=str(request.user.id),
-            actor_id=str(request.user.id),
-            metadata={"method_type": enrollment.method_type},
-        )
-        return Response(MfaEnrollmentSerializer(enrollment).data)
-
-
 class CompanyMembersView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER,)
+    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
     @extend_schema(responses=OpenApiResponse(description="List of company memberships."))
     def get(self, request):
-        company = self.get_tenant().company
-        memberships = CompanyMembership.objects.filter(company=company).select_related("user")
+        context = self.get_tenant()
+        company = context.company
+        if context.role == CompanyRole.OWNER:
+            memberships = CompanyMembership.objects.filter(company=company).select_related("user")
+        else:
+            # Monitor gets only active employee memberships that have an active branch assignment
+            # in a branch assigned to the monitor. Use server-side filters only.
+            branch_ids = context.branch_ids
+            if not branch_ids:
+                memberships = CompanyMembership.objects.none()
+            else:
+                from django.db.models import Exists, OuterRef
+
+                from apps.organizations.models import UserBranchMembership
+
+                memberships = (
+                    CompanyMembership.objects.filter(company=company, role=CompanyRole.EMPLOYEE, active=True)
+                    .filter(active_membership_q())
+                    .filter(
+                        Exists(
+                            UserBranchMembership.objects.filter(
+                                company=company,
+                                user_id=OuterRef("user_id"),
+                                active=True,
+                                branch_id__in=branch_ids,
+                                branch__active=True,
+                            ).filter(active_membership_q())
+                        )
+                    )
+                    .select_related("user")
+                )
         return Response({"memberships": CompanyMembershipSerializer(memberships, many=True).data})
 
 
 class CompanyUsersView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER,)
+    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
     @extend_schema(request=MemberCreateSerializer, responses={201: OpenApiResponse(response=dict, description="Created company user.")})
     @platform_service_call
     def post(self, request):
-        company = self.get_tenant().company
+        context = self.get_tenant()
+        company = context.company
         ensure_company_operational(company)
         serializer = MemberCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.create_user(
-            login_id=serializer.validated_data["login_id"],
-            password=serializer.validated_data["password"],
-            display_name=serializer.validated_data.get("display_name", ""),
-        )
-        CompanyMembership.objects.create(
-            company=company,
-            user=user,
-            role=serializer.validated_data["role"],
-        )
+        requested_role = serializer.validated_data["role"]
+        branch = None
+        job_role = None
+        if context.role == CompanyRole.MONITOR and requested_role != CompanyRole.EMPLOYEE:
+            raise PlatformPermissionException("Monitors may create only employee users.")
+        if context.role == CompanyRole.MONITOR:
+            branch_id = serializer.validated_data.get("branch_id")
+            job_role_id = serializer.validated_data.get("job_role_id")
+            if not branch_id or not job_role_id:
+                raise PlatformPermissionException(
+                    "Monitors must assign a branch and job role when creating an employee."
+                )
+            if branch_id not in context.branch_ids:
+                raise PlatformPermissionException("This branch is outside your access scope.")
+            branch = Branch.objects.filter(id=branch_id, company=company, active=True).first()
+            job_role = JobRole.objects.filter(id=job_role_id, company=company, active=True).first()
+            if branch is None or job_role is None:
+                raise PlatformPermissionException("The selected branch or job role is unavailable.")
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                login_id=serializer.validated_data["login_id"],
+                password=serializer.validated_data["password"],
+                display_name=serializer.validated_data.get("display_name", ""),
+            )
+            CompanyMembership.objects.create(
+                company=company,
+                user=user,
+                role=requested_role,
+            )
+            if branch is not None and job_role is not None:
+                UserBranchMembership.objects.create(
+                    company=company,
+                    user=user,
+                    branch=branch,
+                    job_role=job_role,
+                    membership_type="primary",
+                )
         record_audit_event(
             event_type="COMPANY_USER_CREATED",
             target_type="company",
             target_id=str(company.id),
             actor_id=str(request.user.id),
-            metadata={"user_id": str(user.id), "role": serializer.validated_data["role"]},
+            metadata={"user_id": str(user.id), "role": requested_role},
         )
         return Response({"user": UserSerializer(user).data}, status=201)
 
 
 class BranchMembershipView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER,)
+    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
 
     @extend_schema(request=BranchMembershipCreateSerializer, responses={201: OpenApiResponse(response=dict, description="Created branch membership.")})
     @platform_service_call
     def post(self, request):
-        company = self.get_tenant().company
+        context = self.get_tenant()
+        company = context.company
         ensure_company_operational(company)
         serializer = BranchMembershipCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_id = serializer.validated_data["user_id"]
-        require_company_user(self.get_tenant(), user_id)
+        branch_id = serializer.validated_data["branch_id"]
+        require_company_user(context, user_id)
         user = User.objects.get(id=user_id)
-        branch = Branch.objects.get(id=serializer.validated_data["branch_id"], company=company)
+        branch = Branch.objects.get(id=branch_id, company=company)
         job_role = JobRole.objects.get(id=serializer.validated_data["job_role_id"], company=company)
+        if context.role == CompanyRole.MONITOR:
+            target_membership = (
+                CompanyMembership.objects.filter(company=company, user_id=user_id, active=True)
+                .filter(active_membership_q())
+                .first()
+            )
+            target_role = target_membership.role if target_membership else None
+            if target_role != CompanyRole.EMPLOYEE:
+                raise PlatformPermissionException("Monitors may assign branches only for employee users.")
+            if branch.id not in context.branch_ids:
+                raise PlatformPermissionException("This branch is outside your access scope.")
         membership = UserBranchMembership.objects.create(
             company=company,
             user=user,
@@ -441,33 +397,3 @@ class AcceptanceView(TenantAPIView):
             },
         )
         return Response({"acceptance": acceptance.id}, status=201)
-
-
-class SupportAuthorizationView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER,)
-
-    @extend_schema(request=None, responses={201: SupportAuthorizationSerializer})
-    @platform_service_call
-    def post(self, request):
-        company = self.get_tenant().company
-        serializer = SupportAuthorizationCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        support_user = User.objects.get(id=serializer.validated_data["support_user_id"])
-        grant = grant_support(
-            company,
-            support_user,
-            request.user,
-            reason=serializer.validated_data["reason"],
-            expires_at=serializer.validated_data["expires_at"],
-        )
-        return Response(SupportAuthorizationSerializer(grant).data, status=201)
-
-    @extend_schema(request=None, responses={204: None})
-    def delete(self, request):
-        company = self.get_tenant().company
-        support_user_id = request.data.get("support_user_id")
-        grant = SupportAuthorization.objects.filter(company=company, support_user_id=support_user_id, active=True).first()
-        if grant is None:
-            raise PlatformAPIException("Support authorization not found.")
-        revoke_support(grant, revoked_by=request.user)
-        return Response(status=204)

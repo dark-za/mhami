@@ -1,46 +1,54 @@
-/** AppShell — top header + side rail + outlet for child routes.
+/** Authenticated workspace chrome. Login is rendered only by LoginPage. */
 
-Reads locale/calendar/role from :class:`useBootstrap` (state) and exposes
-them via props to the children rendered through ``<Outlet />``. Auth-aware
-navigation is also handled here.
-*/
-
-import { useEffect, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
-import { Link, Outlet, useLocation } from "react-router";
+import { useState } from "react";
+import type { ReactNode } from "react";
+import { NavLink, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import {
+  Bell,
+  Bot,
+  CalendarDays,
+  CheckSquare,
+  ChevronLeft,
+  ClipboardCheck,
+  FileArchive,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
-import { ensureCsrfToken, getCsrfToken } from "../api/client";
-import { fetchBootstrap } from "../api/bootstrap";
-import type { LoginRequest } from "../api/contract";
+import type { BootstrapState } from "../api/bootstrap";
 import {
   formatLocalizedDate,
   getVisibleNavItems,
-  notificationSeed,
   readableTextColor,
   roleLabels,
   tintedSurface,
   type CalendarPreference,
   type Locale,
-  type Role,
 } from "../design-system/tokens";
-import type { BootstrapState } from "../api/bootstrap";
 import type { LiveNotification } from "../domain";
 import { getWorkspaceRoute, routeTitle } from "../domain";
-import { Badge, Panel } from "./ui";
-import { CapabilityCard } from "./CapabilityCard";
 import { useActiveRole } from "../hooks/useActiveRole";
 import { LocaleSwitcher } from "../components/LocaleSwitcher";
-import { useDirection } from "../hooks/useDirection";
-import i18n from "../i18n";
-
-const ROLE_STORAGE_KEY = "mhami.activeRole";
+import { Badge } from "./ui";
 const IS_DEVELOPMENT = import.meta.env.DEV;
+
+const navIcons = {
+  dashboard: LayoutDashboard,
+  operations: FileArchive,
+  tasks: CheckSquare,
+  evidence: ClipboardCheck,
+  people: Users,
+  reviews: ShieldCheck,
+  admin: Settings,
+  agent_access: Bot,
+};
 
 export interface AppShellProps {
   bootstrap: BootstrapState;
-  setBootstrap: (updater: (current: BootstrapState) => BootstrapState) => void;
-  loading: boolean;
   loadError: string | null;
   locale: Locale;
   setLocale: (next: Locale) => void;
@@ -48,14 +56,14 @@ export interface AppShellProps {
   setCalendar: (next: CalendarPreference) => void;
   notifications: LiveNotification[] | null;
   notificationsError: boolean;
+  onLogout: () => Promise<void>;
   children?: ReactNode;
 }
 
 export function AppShell(props: AppShellProps) {
+  const { t } = useTranslation();
   const {
     bootstrap,
-    setBootstrap,
-    loading,
     loadError,
     locale,
     setLocale,
@@ -63,394 +71,122 @@ export function AppShell(props: AppShellProps) {
     setCalendar,
     notifications,
     notificationsError,
+    onLogout,
+    children,
   } = props;
-
   const role = useActiveRole(bootstrap);
-  const setRole = (next: Role) => {
-    if (!IS_DEVELOPMENT || typeof window === "undefined") {
-      return;
-    }
+  const location = useLocation();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setLogoutError(null);
     try {
-      window.localStorage.setItem(ROLE_STORAGE_KEY, next);
-      window.dispatchEvent(
-        new StorageEvent("storage", { key: ROLE_STORAGE_KEY, newValue: next }),
-      );
-    } catch (_error) {
-      /* localStorage may be disabled; silently ignore */
+      await onLogout();
+    } catch (_error: unknown) {
+      setLogoutError(t("shell.sign_out_failed"));
+    } finally {
+      setLoggingOut(false);
     }
   };
-
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [loginForm, setLoginForm] = useState({
-    companyCode: bootstrap.snapshot.company.code,
-    loginId: bootstrap.snapshot.currentUser.loginId,
-    password: "",
-    mfaCode: "",
-  });
-  const location = useLocation();
-  const { i18n } = useTranslation();
-  useDirection();
-
-  useEffect(() => {
-    document.documentElement.lang = locale === "ar" ? "ar" : "en";
-    document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-    // Keep i18n aligned with the prop-driven locale in case callers
-    // toggle the language through the chip controls.
-    if (typeof i18n.changeLanguage === "function" && (i18n.resolvedLanguage ?? i18n.language) !== locale) {
-      void i18n.changeLanguage(locale);
-    }
-  }, [locale, i18n]);
-
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthLoading(true);
-    setAuthError(null);
-    setAuthMessage(null);
-
-    try {
-      // C-04: use the shared client so the X-CSRFToken header is added
-      // automatically and a missing cookie is surfaced as a 403 instead
-      // of a silent 4xx.
-      const body: LoginRequest = {
-        company_code: loginForm.companyCode,
-        login_id: loginForm.loginId,
-        password: loginForm.password,
-        mfa_code: loginForm.mfaCode || undefined,
-      };
-      await ensureCsrfToken();
-      const csrfToken = getCsrfToken();
-      const response = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const detail = await response.json().catch(() => null);
-        throw new Error(detail?.detail ?? `Login failed with ${response.status}`);
-      }
-
-      const bootstrapResponse = await fetchBootstrap();
-      setBootstrap((current) => ({
-        ...current,
-        snapshot: {
-          ...current.snapshot,
-          currentUser: {
-            ...current.snapshot.currentUser,
-            id: bootstrapResponse.current_user.id ?? current.snapshot.currentUser.id,
-            loginId: bootstrapResponse.current_user.login_id ?? current.snapshot.currentUser.loginId,
-            displayName:
-              bootstrapResponse.current_user.display_name ?? current.snapshot.currentUser.displayName,
-            authenticated: bootstrapResponse.current_user.is_authenticated,
-            role: (bootstrapResponse.current_user.role as Role | null | undefined) ?? null,
-          },
-          company: bootstrapResponse.company
-            ? {
-                ...current.snapshot.company,
-                name: bootstrapResponse.company.name ?? current.snapshot.company.name,
-                code: bootstrapResponse.company.code ?? current.snapshot.company.code,
-                status: bootstrapResponse.company.status ?? current.snapshot.company.status,
-              }
-            : current.snapshot.company,
-          permissions: bootstrapResponse.permissions,
-          enabledModules: bootstrapResponse.enabled_modules as typeof current.snapshot.enabledModules,
-        },
-        branches: bootstrapResponse.branches,
-        branchScope: bootstrapResponse.branch_scope ?? [],
-        source: "live",
-      }));
-      setAuthMessage("Session is live and bootstrap data has been refreshed.");
-    } catch (error: unknown) {
-      setAuthError(error instanceof Error ? error.message : "Login failed.");
-    } finally {
-      setAuthLoading(false);
-    }
-  }
 
   const visibleNav = getVisibleNavItems(role, bootstrap.snapshot.enabledModules);
   const company = bootstrap.snapshot.company;
   const brandingSurface = tintedSurface(company.branding.primary, 0.12);
   const textColor = readableTextColor(company.branding.primary);
   const today = formatLocalizedDate(new Date(), locale, calendar);
-  const languageLabel = locale === "ar" ? "العربية" : "English";
-  const calendarLabel = calendar === "gregorian" ? "Gregorian" : "Hijri";
+  const calendarLabel = calendar === "gregorian" ? t("shell.gregorian") : t("shell.hijri");
+  const logoutLabel = t("common.logout");
+  const notificationsLabel = t("shell.notifications");
   const activeRoute = getWorkspaceRoute(location.pathname);
   const routeSummary = routeTitle(locale, activeRoute);
+  const unreadCount = notifications?.filter((item) => !item.read_at).length ?? 0;
 
   return (
     <main className="app-shell">
-      {loadError ? (
-        <aside className="notice notice-warning">
-          <strong>{locale === "ar" ? "تعذر تحديث بيانات الجلسة" : "Session refresh needs attention"}</strong>
-          <p>
-            {locale === "ar"
-              ? "نعرض نسخة محدودة حتى يعود الاتصال بالخدمة."
-              : "A limited workspace snapshot is visible until the service responds."}
-          </p>
-          {IS_DEVELOPMENT ? <small>{loadError}</small> : null}
-        </aside>
-      ) : null}
-
-      <aside className={`notice ${loading ? "notice-neutral" : "notice-success"}`}>
-        <strong>
-          {loading
-            ? locale === "ar"
-              ? "جاري تحديث مساحة العمل"
-              : "Refreshing workspace"
-            : bootstrap.source === "live"
-            ? locale === "ar"
-              ? "مساحة العمل متصلة"
-              : "Workspace connected"
-            : locale === "ar"
-            ? "وضع معاينة محدود"
-            : "Limited preview mode"}
-        </strong>
-        <p>
-          {loading
-            ? locale === "ar"
-              ? "نجهز بيانات الشركة والصلاحيات."
-              : "Company and permission data are being prepared."
-            : bootstrap.source === "live" && bootstrap.snapshot.currentUser.authenticated
-            ? locale === "ar"
-              ? "البيانات المعروضة من الجلسة الحالية."
-              : "Displayed data reflects the current session."
-            : locale === "ar"
-            ? "سجل الدخول لعرض بيانات التشغيل الفعلية."
-            : "Sign in to view live operating data."}
-        </p>
-      </aside>
-
-      <header className="shell-header" style={{ background: brandingSurface, color: textColor }}>
-        <div>
-          <p className="eyebrow">Mhami</p>
-          <h1>{company.name}</h1>
-          <p className="shell-summary">
-            {company.code} · {today}
-          </p>
+      <header className="workspace-header" style={{ background: brandingSurface, color: textColor }}>
+        <div className="brand-block">
+          <span className="brand-mark" aria-hidden="true">M</span>
+          <div>
+            <p className="eyebrow">Mhami</p>
+            <p className="company-name">{company.name}</p>
+            <p className="shell-summary"><bdi>{company.code}</bdi> · <bdi>{today}</bdi></p>
+          </div>
         </div>
         <div className="header-actions">
-          <Badge tone="info">{role ? roleLabels[role][locale] : locale === "ar" ? "غير مسجل" : "Signed out"}</Badge>
-          <Badge tone="neutral">{languageLabel}</Badge>
-          <Badge tone="neutral">{calendarLabel}</Badge>
-          <Badge tone="neutral">{routeSummary}</Badge>
-          <LocaleSwitcher />
+          <Badge tone="info">{role ? t(`people.role.${role}`, { defaultValue: roleLabels[role][locale] }) : ""}</Badge>
+          <span className="route-title">{routeSummary}</span>
+          <LocaleSwitcher onLocaleChange={setLocale} />
+          <button className="icon-button" type="button" aria-label={t("shell.toggle_calendar")} title={calendarLabel} onClick={() => setCalendar(calendar === "gregorian" ? "hijri" : "gregorian")}>
+            <CalendarDays size={18} aria-hidden="true" />
+          </button>
+          <button className="icon-button" type="button" aria-label={notificationsLabel} title={notificationsLabel}>
+            <Bell size={18} aria-hidden="true" />
+            {unreadCount > 0 ? <span className="notification-count">{unreadCount}</span> : null}
+          </button>
+          <button className="logout-button" type="button" onClick={() => void handleLogout()} disabled={loggingOut}>
+            <LogOut size={17} aria-hidden="true" />
+            <span>{loggingOut ? t("shell.signing_out") : logoutLabel}</span>
+          </button>
         </div>
       </header>
 
-      <section className="shell-grid">
-        <Panel
-          eyebrow={locale === "ar" ? "الدخول" : "Access"}
-          title={locale === "ar" ? "تسجيل الدخول لمساحة العمل" : "Workspace sign in"}
-          variant="action"
-        >
-          <form className="form-stack" onSubmit={handleLogin}>
-            <div className="form-grid">
-              <label>
-                <span>Company code</span>
-                <input
-                  value={loginForm.companyCode}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({ ...current, companyCode: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                <span>Login ID</span>
-                <input
-                  value={loginForm.loginId}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({ ...current, loginId: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({ ...current, password: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                <span>MFA code</span>
-                <input
-                  inputMode="numeric"
-                  placeholder="123456"
-                  value={loginForm.mfaCode}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({ ...current, mfaCode: event.target.value }))
-                  }
-                />
-              </label>
-            </div>
-            <div className="inline-actions">
-              <button className="primary-button" type="submit" disabled={authLoading}>
-                {authLoading ? "Signing in..." : "Sign in"}
-              </button>
-              <button
-                className="ghost-button"
-                type="button"
-                onClick={() =>
-                  setLoginForm({
-                    companyCode: company.code,
-                    loginId: bootstrap.snapshot.currentUser.loginId,
-                    password: "",
-                    mfaCode: "",
-                  })
-                }
-              >
-                Reset
-              </button>
-            </div>
-          </form>
-          {authError ? <p className="status status-danger">{authError}</p> : null}
-          {authMessage ? <p className="status status-success">{authMessage}</p> : null}
-        </Panel>
-
-        <Panel
-          eyebrow={locale === "ar" ? "التفضيلات" : "Preferences"}
-          title={locale === "ar" ? "اللغة والتقويم" : "Language and calendar"}
-        >
-          <div className="chip-row">
-            {(["ar", "en"] as const).map((value) => (
-              <button
-                key={value}
-                className={`chip ${locale === value ? "chip-active" : ""}`}
-                onClick={() => setLocale(value)}
-                type="button"
-              >
-                {value === "ar" ? "Arabic RTL" : "English LTR"}
-              </button>
-            ))}
-            {(["gregorian", "hijri"] as const).map((value) => (
-              <button
-                key={value}
-                className={`chip ${calendar === value ? "chip-active" : ""}`}
-                onClick={() => setCalendar(value)}
-                type="button"
-              >
-                {value === "gregorian" ? "Gregorian" : "Hijri"}
-              </button>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel
-          eyebrow={locale === "ar" ? "التنقل" : "Navigation"}
-          title={locale === "ar" ? "وحدات العمل المتاحة" : "Available work areas"}
-        >
-          <nav className="nav-list" aria-label="Role aware navigation">
-            <Link to="/">{locale === "ar" ? "الملخص" : "Summary"}</Link>
-            {visibleNav.map((item) => (
-              <Link key={item.module} to={item.href}>
-                <span>{locale === "ar" ? item.labelAr : item.labelEn}</span>
-                <small>{item.module}</small>
-              </Link>
-            ))}
+      <div className="workspace-layout">
+        <aside className="workspace-sidebar">
+          <nav className="nav-list" aria-label={t("shell.role_aware_navigation")}>
+            <NavLink className={({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`} to="/">
+              <CheckSquare size={18} aria-hidden="true" />
+              <span>{t("nav.tasks")}</span>
+            </NavLink>
+            {visibleNav.filter((item) => item.module !== "tasks").map((item) => {
+              const Icon = navIcons[item.module];
+              return (
+                <NavLink key={item.module} className={({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`} to={item.href}>
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{t(`nav.${item.module}`, { defaultValue: locale === "ar" ? item.labelAr : item.labelEn })}</span>
+                  <ChevronLeft className="nav-chevron" size={16} aria-hidden="true" />
+                </NavLink>
+              );
+            })}
           </nav>
-        </Panel>
 
-        <Panel
-          eyebrow={locale === "ar" ? "التنبيهات" : "Notifications"}
-          title={locale === "ar" ? "مركز التنبيهات" : "Notification center"}
-          variant="insight"
-        >
-          <div className="notification-list">
+          <section className="sidebar-settings" aria-label={t("shell.display_preferences")}>
+            <p className="sidebar-label">{t("shell.display")}</p>
+            <div className="chip-row">
+              {(["gregorian", "hijri"] as const).map((value) => (
+                <button key={value} className={`chip ${calendar === value ? "chip-active" : ""}`} onClick={() => setCalendar(value)} type="button">
+                  {value === "gregorian" ? t("shell.gregorian") : t("shell.hijri")}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="sidebar-notifications" aria-label={notificationsLabel}>
+            <div className="sidebar-section-title">
+              <Bell size={16} aria-hidden="true" />
+              <span>{notificationsLabel}</span>
+            </div>
             {notificationsError || notifications === null
-              ? notificationSeed.map((item) => (
-                  <div key={item.id} className="notification-item">
-                    <strong>{locale === "ar" ? item.titleAr : item.titleEn}</strong>
-                    <p>{locale === "ar" ? item.bodyAr : item.bodyEn}</p>
-                  </div>
-                ))
+              ? <p className="sidebar-note">{t("shell.updates_available")}</p>
               : notifications.length > 0
-              ? notifications.map((item) => (
-                  <div key={item.id} className="notification-item">
-                    <strong>{item.title}</strong>
-                    <p>{item.body || item.severity}</p>
-                    <small>{item.read_at ? `Read ${item.read_at}` : "Unread"}</small>
-                  </div>
-                ))
-              : (
-                <p className="muted">No notifications yet.</p>
-              )}
-          </div>
-        </Panel>
+                ? <p className="sidebar-note">{unreadCount > 0 ? t("shell.unread_updates", { count: unreadCount }) : t("shell.no_unread_updates")}</p>
+                : <p className="sidebar-note">{t("shell.no_new_notifications")}</p>}
+          </section>
+        </aside>
 
-        {IS_DEVELOPMENT ? (
-          <>
-            <Panel eyebrow="Developer tools" title="Role preview">
-              <div className="chip-row">
-                {Object.keys(roleLabels).map((value) => {
-                  const nextRole = value as Role;
-                  return (
-                    <button
-                      key={nextRole}
-                      className={`chip ${role === nextRole ? "chip-active" : ""}`}
-                      onClick={() => setRole(nextRole)}
-                      type="button"
-                    >
-                      {roleLabels[nextRole].en}
-                    </button>
-                  );
-                })}
-              </div>
-            </Panel>
-
-            <Panel eyebrow="Developer tools" title="Brand tokens">
-              <div className="token-grid">
-                <div
-                  className="token-swatch"
-                  style={{
-                    background: company.branding.primary,
-                    color: readableTextColor(company.branding.primary),
-                  }}
-                >
-                  <span>Primary</span>
-                  <strong>{company.branding.primary}</strong>
-                </div>
-                <div
-                  className="token-swatch"
-                  style={{
-                    background: company.branding.secondary,
-                    color: readableTextColor(company.branding.secondary),
-                  }}
-                >
-                  <span>Secondary</span>
-                  <strong>{company.branding.secondary}</strong>
-                </div>
-                <div
-                  className="token-swatch"
-                  style={{
-                    background: company.branding.accent,
-                    color: readableTextColor(company.branding.accent),
-                  }}
-                >
-                  <span>Accent</span>
-                  <strong>{company.branding.accent}</strong>
-                </div>
-              </div>
-            </Panel>
-
-            <Panel eyebrow="Developer tools" title="Capability preflight">
-              <CapabilityCard />
-            </Panel>
-          </>
-        ) : null}
-
-        {props.children}
-      </section>
-
-      <Outlet />
+        <section className="workspace-main">
+          {loadError ? (
+            <aside className="notice notice-warning" role="status">
+              <strong>{t("shell.session_refresh_title")}</strong>
+              <p>{t("shell.session_refresh_body")}</p>
+              {IS_DEVELOPMENT ? <small>{loadError}</small> : null}
+            </aside>
+          ) : null}
+          {logoutError ? <p className="status status-danger" role="alert">{logoutError}</p> : null}
+          <section className="shell-grid">{children}</section>
+        </section>
+      </div>
     </main>
   );
 }

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
 from apps.organizations.models import CompanyRole
-from apps.platform_core.errors import PlatformAPIException
+from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException
 from apps.platform_core.mixins import TenantAPIView
 from apps.tenancy.access import has_company_role, validate_company_reference, validate_company_reference_or_none
 
@@ -27,11 +27,8 @@ def _owner_or_400(company, user):
 
 
 class ProviderConfigView(TenantAPIView):
-    # BE-01: Read is restricted to OWNER + MONITOR (matches the historical
-    # ``_owner_or_400`` gate used for the PATCH path). Class-level
-    # enforcement ensures the read endpoint cannot accidentally leak
-    # provider credentials to an employee in the future.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    # Provider configuration, including its credential reference, is owner-only.
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=AIProviderConfigSerializer)
     def get(self, request):
@@ -53,9 +50,7 @@ class ProviderConfigView(TenantAPIView):
 
 
 class CriteriaView(TenantAPIView):
-    # BE-01: AI criteria are management tooling; restrict to OWNER + MONITOR
-    # which mirrors the existing in-method role check.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="Company AI analysis criteria summary."))
     def get(self, request):
@@ -65,8 +60,7 @@ class CriteriaView(TenantAPIView):
     @extend_schema(request=AIAnalysisCriterionCreateSerializer, responses={201: AIAnalysisCriterionSerializer})
     def post(self, request):
         company = self.get_tenant().company
-        if not has_company_role(company, request.user, str(CompanyRole.OWNER), str(CompanyRole.MONITOR)):
-            raise PlatformAPIException("Monitor or owner access required.")
+        _owner_or_400(company, request.user)
         serializer = AIAnalysisCriterionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         criterion = create_criterion(company, request.user, serializer.validated_data)
@@ -90,9 +84,13 @@ class AnalysisRunView(TenantAPIView):
         # ``AIAnalysisCriterion`` lives in this app.
         from apps.evidence.models import EvidenceItem
 
-        validate_company_reference(
+        evidence = validate_company_reference(
             company, EvidenceItem, serializer.validated_data["evidence_item_id"]
         )
+        context = self.get_tenant()
+        context.require_branch(evidence.branch_id)
+        if context.role == CompanyRole.EMPLOYEE and evidence.task_instance.assigned_user_id != request.user.id:
+            raise PlatformPermissionException("Employees may analyse only evidence from their assigned tasks.")
         validate_company_reference_or_none(
             company, AIAnalysisCriterion, serializer.validated_data.get("criterion_id")
         )
@@ -106,9 +104,7 @@ class AnalysisRunView(TenantAPIView):
 
 
 class ShadowSummaryView(TenantAPIView):
-    # BE-01: Shadow-mode agreement is a management view; restrict to
-    # OWNER + MONITOR.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="AI shadow-mode agreement and error summary."))
     def get(self, request):

@@ -25,7 +25,7 @@ class ReviewDashboardView(TenantAPIView):
     @platform_service_call
     def get(self, request):
         company = self.get_tenant().company
-        return Response(dashboard_summary(company, request.user))
+        return Response(dashboard_summary(company, request.user, request.query_params.get("period", "day")))
 
 
 class ReviewQueueView(TenantAPIView):

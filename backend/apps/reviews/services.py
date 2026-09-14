@@ -8,9 +8,10 @@ from django.utils import timezone
 from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem, EvidenceStatus, TaskIssueReport
 from apps.identity.models import User
+from apps.organizations.models import CompanyMembership, CompanyRole, UserBranchMembership
 from apps.tasks.models import TaskInstance, TaskStatus
 from apps.tasks.services import cancel_task
-from apps.tenancy.access import accessible_company_branch_ids
+from apps.tenancy.access import accessible_company_branch_ids, active_membership_q
 from apps.tenancy.models import Company
 
 from .models import ReviewDecision, ReviewDecisionType, ReviewPolicySetting
@@ -82,12 +83,31 @@ def review_queue(company: Company, user: User) -> list[dict[str, object]]:
     return sorted(items, key=lambda item: str(item["created_at"]), reverse=True)
 
 
-def dashboard_summary(company: Company, user: User) -> dict[str, object]:
+_DASHBOARD_PERIODS = {
+    "day": timedelta(days=1),
+    "three_days": timedelta(days=3),
+    "week": timedelta(days=7),
+    "month": timedelta(days=30),
+}
+
+
+def dashboard_summary(company: Company, user: User, period: str = "day") -> dict[str, object]:
+    if period not in _DASHBOARD_PERIODS:
+        raise ValueError("Unsupported dashboard period.")
     branch_ids = accessible_branch_ids(company, user)
     now = timezone.now()
+    start = now - _DASHBOARD_PERIODS[period]
     start_of_day = timezone.make_aware(timezone.datetime.combine(now.date(), timezone.datetime.min.time()))
     tasks = TaskInstance.objects.filter(company=company, branch_id__in=branch_ids)
     branches = list(company.branches.filter(id__in=branch_ids))
+    memberships = CompanyMembership.objects.filter(company=company, active=True).filter(active_membership_q())
+    if user.id != company.owner_id:
+        scoped_user_ids = UserBranchMembership.objects.filter(
+            company=company,
+            branch_id__in=branch_ids,
+            active=True,
+        ).filter(active_membership_q()).values_list("user_id", flat=True)
+        memberships = memberships.filter(user_id__in=scoped_user_ids)
     branch_summaries = []
     for branch in branches:
         branch_tasks = tasks.filter(branch=branch)
@@ -96,7 +116,10 @@ def dashboard_summary(company: Company, user: User) -> dict[str, object]:
                 "branch_id": str(branch.id),
                 "branch_name": branch.name,
                 "completed_today": branch_tasks.filter(completed_at__gte=start_of_day).count(),
+                "completed_in_period": branch_tasks.filter(completed_at__gte=start).count(),
+                "pending": branch_tasks.filter(status=TaskStatus.PENDING).count(),
                 "overdue": branch_tasks.filter(status=TaskStatus.OVERDUE).count(),
+                "cancelled": branch_tasks.filter(status=TaskStatus.CANCELLED).count(),
                 "quality_exceptions": EvidenceItem.objects.filter(branch=branch, status=EvidenceStatus.NEEDS_REVIEW).count(),
             }
         )
@@ -105,15 +128,30 @@ def dashboard_summary(company: Company, user: User) -> dict[str, object]:
     open_issues = TaskIssueReport.objects.filter(company=company, branch_id__in=branch_ids, resolved_at__isnull=True).count()
     pending_review = EvidenceItem.objects.filter(company=company, branch_id__in=branch_ids, status=EvidenceStatus.NEEDS_REVIEW).count()
     total_quality_exceptions = pending_review + open_issues
+    task_statuses = {
+        status: tasks.filter(status=status).count()
+        for status in (TaskStatus.PENDING, TaskStatus.CLAIMED, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED, TaskStatus.CANCELLED, TaskStatus.OVERDUE)
+    }
+    trend = []
+    cursor = start.date()
+    while cursor <= now.date():
+        day_start = timezone.make_aware(timezone.datetime.combine(cursor, timezone.datetime.min.time()))
+        day_end = day_start + timedelta(days=1)
+        trend.append(
+            {
+                "date": cursor.isoformat(),
+                "completed": tasks.filter(completed_at__gte=day_start, completed_at__lt=day_end).count(),
+                "created": tasks.filter(created_at__gte=day_start, created_at__lt=day_end).count(),
+            }
+        )
+        cursor += timedelta(days=1)
     company_status = company.status
-    trial_days_left = max(0, (company.trial_ends_at.date() - now.date()).days)
     return {
         "company": {
             "id": str(company.id),
             "name": company.name,
             "code": company.code,
             "status": company_status,
-            "trial_days_left": trial_days_left,
         },
         "summary": {
             "completed_today": completed_today,
@@ -121,8 +159,17 @@ def dashboard_summary(company: Company, user: User) -> dict[str, object]:
             "quality_exceptions": total_quality_exceptions,
             "open_issues": open_issues,
             "pending_review": pending_review,
+            "employees": memberships.filter(role=CompanyRole.EMPLOYEE).count(),
+            "monitors": memberships.filter(role=CompanyRole.MONITOR).count(),
+            "branches": len(branches),
+            "completed_in_period": tasks.filter(completed_at__gte=start).count(),
+            "pending": task_statuses[TaskStatus.PENDING],
+            "in_progress": task_statuses[TaskStatus.IN_PROGRESS] + task_statuses[TaskStatus.CLAIMED],
+            "cancelled": task_statuses[TaskStatus.CANCELLED],
         },
         "branches": branch_summaries,
+        "period": period,
+        "trend": trend,
     }
 
 

@@ -5,7 +5,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from apps.organizations.models import CompanyRole
-from apps.tasks.models import TaskAssignmentMode
+from apps.tasks.models import TaskAssignmentMode, TaskSchedule, TaskTemplate
 from apps.tasks.services import request_transfer, schedule_due_tasks
 
 
@@ -84,6 +84,187 @@ def test_task_template_api_and_scheduler_trigger(
     assert "daily-clean" in slugs
 
 
+def test_scheduled_task_endpoint_creates_template_version_and_schedule_atomically(
+    make_user,
+    make_company,
+    make_membership,
+    make_branch,
+    make_template,
+    make_template_version,
+    make_schedule,
+    make_job_role,
+    make_branch_membership,
+):
+    owner, employee, company, branch, _template = _setup_company(
+        make_user,
+        make_company,
+        make_membership,
+        make_branch,
+        make_template,
+        make_template_version,
+        make_schedule,
+        owner_login="scheduled-owner",
+        employee_login="scheduled-employee",
+        code="scheduled-co",
+        name="Scheduled Co",
+        template_slug="scheduled-seed",
+        template_name="Scheduled Seed",
+    )
+    assert employee is not None
+    role = make_job_role(company=company, name="Staff", code="staff")
+    make_branch_membership(company=company, user=employee, branch=branch, job_role=role)
+
+    from django.test import Client
+
+    client = Client()
+    client.force_login(owner, backend="django.contrib.auth.backends.ModelBackend")
+    session = client.session
+    session["company_id"] = str(company.id)
+    session.save()
+
+    response = client.post(
+        "/api/v1/tasks/scheduled-tasks",
+        data={
+            "branch_id": str(branch.id),
+            "slug": "opening-checklist",
+            "name": "Opening checklist",
+            "assigned_user_id": str(employee.id),
+            "instructions": "Check counters and doors.",
+            "recurrence_type": "daily_fixed",
+            "scheduled_time": "09:00:00",
+        },
+        content_type="application/json",
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    template = TaskTemplate.objects.get(id=payload["template"]["id"])
+    assert template.slug == "opening-checklist"
+    assert template.assigned_user == employee
+    assert template.versions.get().instructions == "Check counters and doors."
+    schedule = TaskSchedule.objects.get(id=payload["schedule"]["id"])
+    assert schedule.template == template
+    assert schedule.branch == branch
+
+
+def test_scheduled_task_endpoint_rolls_back_partial_objects(
+    monkeypatch,
+    make_user,
+    make_company,
+    make_membership,
+    make_branch,
+    make_template,
+    make_template_version,
+    make_schedule,
+    make_job_role,
+    make_branch_membership,
+):
+    owner, employee, company, branch, _template = _setup_company(
+        make_user,
+        make_company,
+        make_membership,
+        make_branch,
+        make_template,
+        make_template_version,
+        make_schedule,
+        owner_login="scheduled-rollback-owner",
+        employee_login="scheduled-rollback-employee",
+        code="scheduled-rollback-co",
+        name="Scheduled Rollback Co",
+        template_slug="scheduled-rollback-seed",
+        template_name="Scheduled Rollback Seed",
+    )
+    assert employee is not None
+    role = make_job_role(company=company, name="Staff", code="staff")
+    make_branch_membership(company=company, user=employee, branch=branch, job_role=role)
+
+    def fail_schedule_create(*_args, **_kwargs):
+        raise RuntimeError("schedule create failed")
+
+    monkeypatch.setattr("apps.tasks.api.views.TaskSchedule.objects.create", fail_schedule_create)
+
+    from django.test import Client
+
+    client = Client()
+    client.raise_request_exception = False
+    client.force_login(owner, backend="django.contrib.auth.backends.ModelBackend")
+    session = client.session
+    session["company_id"] = str(company.id)
+    session.save()
+
+    response = client.post(
+        "/api/v1/tasks/scheduled-tasks",
+        data={
+            "branch_id": str(branch.id),
+            "slug": "rollback-checklist",
+            "name": "Rollback checklist",
+            "assigned_user_id": str(employee.id),
+            "instructions": "This must not persist.",
+            "recurrence_type": "daily_fixed",
+            "scheduled_time": "09:00:00",
+        },
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert not TaskTemplate.objects.filter(company=company, slug="rollback-checklist").exists()
+
+
+def test_employee_cannot_use_scheduled_task_endpoint(
+    make_user,
+    make_company,
+    make_membership,
+    make_branch,
+    make_template,
+    make_template_version,
+    make_schedule,
+    make_job_role,
+    make_branch_membership,
+):
+    _owner, employee, company, branch, _template = _setup_company(
+        make_user,
+        make_company,
+        make_membership,
+        make_branch,
+        make_template,
+        make_template_version,
+        make_schedule,
+        owner_login="scheduled-forbidden-owner",
+        employee_login="scheduled-forbidden-employee",
+        code="scheduled-forbidden-co",
+        name="Scheduled Forbidden Co",
+        template_slug="scheduled-forbidden-seed",
+        template_name="Scheduled Forbidden Seed",
+    )
+    assert employee is not None
+    role = make_job_role(company=company, name="Staff", code="staff")
+    make_branch_membership(company=company, user=employee, branch=branch, job_role=role)
+
+    from django.test import Client
+
+    client = Client()
+    client.force_login(employee, backend="django.contrib.auth.backends.ModelBackend")
+    session = client.session
+    session["company_id"] = str(company.id)
+    session.save()
+
+    response = client.post(
+        "/api/v1/tasks/scheduled-tasks",
+        data={
+            "branch_id": str(branch.id),
+            "name": "Forbidden checklist",
+            "assigned_user_id": str(employee.id),
+            "instructions": "Should fail.",
+            "recurrence_type": "daily_fixed",
+            "scheduled_time": "09:00:00",
+        },
+        content_type="application/json",
+    )
+
+    assert response.status_code == 403
+    assert not TaskTemplate.objects.filter(company=company, name="Forbidden checklist").exists()
+
+
 @freeze_time("2026-01-05 09:30:00+00:00")
 def test_task_instances_are_limited_to_the_active_branch(
     make_user, make_company, make_membership, make_branch,
@@ -101,13 +282,21 @@ def test_task_instances_are_limited_to_the_active_branch(
     role = make_job_role(company=company, name="Staff", code="staff")
     make_branch_membership(company=company, user=employee, branch=branch_one, job_role=role)
 
-    # Second scheduled template on branch_two for the same employee
+    # Employee-assigned template on branch_two (outside employee's branch scope) – should be hidden
     template_two = make_template(
         company=company, branch=branch_two,
         slug="clean-b", name="clean-b", assigned_user=employee,
     )
     make_template_version(template=template_two)
     make_schedule(company=company, branch=branch_two, template=template_two, scheduled_time=timezone.now().time())
+
+    # Employee-assigned template on branch_one (inside scope) – should be visible
+    template_visible = make_template(
+        company=company, branch=branch_one,
+        slug="clean-a-emp", name="clean-a emp", assigned_user=employee,
+    )
+    make_template_version(template=template_visible)
+    make_schedule(company=company, branch=branch_one, template=template_visible, scheduled_time=timezone.now().time())
 
     schedule_due_tasks()
 
@@ -123,6 +312,9 @@ def test_task_instances_are_limited_to_the_active_branch(
     instances = response.json()["instances"]
     assert len(instances) == 1
     assert instances[0]["branch"] == str(branch_one.id)
+    assert instances[0]["name"] == "clean-a emp"
+    assert instances[0]["branch_name"] == "Main"
+    assert instances[0]["assigned_user_name"] == "Employee"
 
 
 def test_transfer_listing_and_completion_endpoint(
@@ -198,6 +390,47 @@ def test_employee_cannot_create_task_templates_or_run_scheduler(
     assert create_response.status_code == 403
     assert scheduler_response.status_code == 403
     assert not TaskTemplate.objects.filter(slug="forbidden-template").exists()
+
+
+@freeze_time("2026-01-05 09:30:00+00:00")
+def test_employee_transfer_recipients_are_limited_to_the_task_branch(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+    make_job_role, make_branch_membership,
+):
+    _owner, employee, company, branch_one, template = _setup_company(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        owner_login="recipient-owner", employee_login="recipient-employee",
+        code="recipient-co", name="Recipient Co",
+    )
+    assert employee is not None
+    role = make_job_role(company=company, name="Staff", code="staff")
+    make_branch_membership(company=company, user=employee, branch=branch_one, job_role=role)
+    recipient = make_user(login_id="recipient-target", display_name="Recipient Target")
+    make_membership(user=recipient, company=company, role=CompanyRole.EMPLOYEE)
+    make_branch_membership(company=company, user=recipient, branch=branch_one, job_role=role)
+    other_branch = make_branch(company=company, code="other", name="Other")
+    outside_user = make_user(login_id="recipient-outside", display_name="Outside User")
+    make_membership(user=outside_user, company=company, role=CompanyRole.EMPLOYEE)
+    make_branch_membership(company=company, user=outside_user, branch=other_branch, job_role=role)
+    template.assigned_user = employee
+    template.save(update_fields=["assigned_user"])
+    instance = schedule_due_tasks()[0]
+
+    from django.test import Client
+
+    client = Client()
+    client.force_login(employee, backend="django.contrib.auth.backends.ModelBackend")
+    session = client.session
+    session["company_id"] = str(company.id)
+    session.save()
+
+    response = client.get(f"/api/v1/tasks/transfer-recipients?task_instance_id={instance.id}")
+    assert response.status_code == 200
+    assert response.json()["recipients"] == [
+        {"id": str(recipient.id), "display_name": "Recipient Target"},
+    ]
 
 
 def test_owner_cannot_create_task_objects_with_another_company_scope(

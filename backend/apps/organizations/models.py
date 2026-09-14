@@ -76,7 +76,7 @@ class UserBranchMembership(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user"],
+                fields=["user", "branch"],
                 condition=Q(active=True),
                 name="organization_one_active_branch_per_user",
             ),

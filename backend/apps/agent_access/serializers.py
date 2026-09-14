@@ -11,6 +11,7 @@ from .models import (
 
 class AgentGrantSerializer(serializers.ModelSerializer):
     active = serializers.BooleanField(read_only=True)
+    client_fingerprint = serializers.CharField(read_only=True)
 
     class Meta:
         model = AgentGrant
@@ -42,6 +43,15 @@ class AgentGrantCreateSerializer(serializers.Serializer):
         allow_empty=False,
     )
     expires_at = serializers.DateTimeField()
+
+
+class AgentGrantCreateResponseSerializer(AgentGrantSerializer):
+    """Grant metadata plus the one-time secret returned only at issuance."""
+
+    secret = serializers.CharField(read_only=True)
+
+    class Meta(AgentGrantSerializer.Meta):
+        fields = [*AgentGrantSerializer.Meta.fields, "secret"]
 
 
 class AgentGrantRevokeSerializer(serializers.Serializer):

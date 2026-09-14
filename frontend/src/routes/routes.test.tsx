@@ -35,6 +35,14 @@ function liveBootstrap(role: Role): BootstrapState {
   };
 }
 
+function firstInstallBootstrap(): BootstrapState {
+  return {
+    ...createFallbackState(bootstrapSnapshot),
+    setupRequired: true,
+    source: "live",
+  };
+}
+
 async function renderAt(path: string, bootstrap?: BootstrapState) {
   let result: ReturnType<typeof render> | null = null;
   await act(async () => {
@@ -63,8 +71,7 @@ describe("FE-01 route table", () => {
   });
 
   test("owner can access /", async () => {
-    window.localStorage.setItem("mhami.activeRole", "owner");
-    await renderAt("/");
+    await renderAt("/", liveBootstrap("owner"));
     // The role-aware home page should mount; either the tasks page or its
     // shell is rendered. We just need to confirm the access-denied
     // surface is not shown.
@@ -74,17 +81,37 @@ describe("FE-01 route table", () => {
   });
 
   test("employee is denied access to /admin", async () => {
-    window.localStorage.setItem("mhami.activeRole", "employee");
-    await renderAt("/admin");
+    await renderAt("/admin", liveBootstrap("employee"));
     await waitFor(() => {
       expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+    });
+  });
+
+  test("routes a fresh installation to the one-time setup screen", async () => {
+    await renderAt("/", firstInstallBootstrap());
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Set up your organization/i);
+    });
+  });
+
+  test("redirects a fresh installation away from login and into setup", async () => {
+    await renderAt("/login", firstInstallBootstrap());
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Set up your organization/i);
+    });
+  });
+
+  test("does not expose the setup screen after an installation is configured", async () => {
+    await renderAt("/setup", createFallbackState(bootstrapSnapshot));
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Sign in to the workspace/i);
     });
   });
 
   test("fallback bootstrap does not grant privileged route access", async () => {
     await renderAt("/admin", createFallbackState(bootstrapSnapshot));
     await waitFor(() => {
-      expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+      expect(document.body.textContent ?? "").toMatch(/Sign in to the workspace/i);
     });
   });
 
@@ -97,16 +124,14 @@ describe("FE-01 route table", () => {
   });
 
   test("employee is denied access to /agent-access", async () => {
-    window.localStorage.setItem("mhami.activeRole", "employee");
-    await renderAt("/agent-access");
+    await renderAt("/agent-access", liveBootstrap("employee"));
     await waitFor(() => {
       expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
     });
   });
 
   test("monitor is allowed on /reviews but not /admin", async () => {
-    window.localStorage.setItem("mhami.activeRole", "monitor");
-    await renderAt("/reviews");
+    await renderAt("/reviews", liveBootstrap("monitor"));
     await waitFor(() => {
       const text = document.body.textContent ?? "";
       // Should not show access denied for /reviews with monitor.
@@ -114,9 +139,15 @@ describe("FE-01 route table", () => {
     });
   });
 
+  test("monitor is denied access to owner-only operations", async () => {
+    await renderAt("/operations", liveBootstrap("monitor"));
+    await waitFor(() => {
+      expect(document.body.textContent ?? "").toMatch(/Access restricted|do not have access/i);
+    });
+  });
+
   test("unknown path redirects to /", async () => {
-    window.localStorage.setItem("mhami.activeRole", "owner");
-    await renderAt("/does-not-exist");
+    await renderAt("/does-not-exist", liveBootstrap("owner"));
     await waitFor(() => {
       // After redirect to /, the role guard allows owner through, so the
       // page must not show the access-denied surface.

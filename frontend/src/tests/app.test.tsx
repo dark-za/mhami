@@ -6,12 +6,14 @@ import { bootstrapSnapshot, type CalendarPreference, type Locale } from "../desi
 import { createFallbackState } from "../api/bootstrap";
 
 test("renders foundation shell", () => {
+  const fixture = {
+    ...bootstrapSnapshot,
+    company: { ...bootstrapSnapshot.company, name: "Test Organization" },
+  };
   const html = renderToStaticMarkup(
     <MemoryRouter initialEntries={["/"]}>
       <AppShell
-        bootstrap={createFallbackState(bootstrapSnapshot)}
-        setBootstrap={() => undefined}
-        loading={false}
+        bootstrap={createFallbackState(fixture)}
         loadError={null}
         locale={bootstrapSnapshot.company.locale as Locale}
         setLocale={() => undefined}
@@ -19,9 +21,10 @@ test("renders foundation shell", () => {
         setCalendar={() => undefined}
         notifications={null}
         notificationsError={false}
+        onLogout={async () => undefined}
       />
     </MemoryRouter>,
   );
-  expect(html).toContain("تسجيل الدخول لمساحة العمل");
-  expect(html).toContain("Nadi Foods");
+  expect(html).not.toContain("تسجيل الدخول لمساحة العمل");
+  expect(html).toContain("Test Organization");
 });

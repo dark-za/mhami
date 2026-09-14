@@ -4,11 +4,13 @@
  * and the navigation guard before any data is fetched.
  */
 import { test, expect } from "@playwright/test";
-import { setActiveRole, setLocale } from "./fixtures";
+import { installNetworkStubs } from "./bootstrap.js";
+import { setLocale, setBootstrapRole } from "./fixtures";
 
 test.describe("FE-06 tasks", () => {
   test.beforeEach(async ({ page }) => {
-    await setActiveRole(page, "owner");
+    await installNetworkStubs(page);
+    await setBootstrapRole(page, "owner");
     await setLocale(page, "en");
   });
 

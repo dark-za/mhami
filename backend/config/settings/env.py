@@ -41,10 +41,11 @@ class PlatformSettings(BaseSettings):
     django_secret_key: str = "change-me"
     django_debug: bool = False
     django_allowed_hosts: str = ""
+    django_csrf_trusted_origins: str = ""
+    initial_setup_token: str = ""
 
     # Audit / signing
     audit_hmac_secret: str = ""
-    mcp_internal_hmac_secret: str = ""
     mcp_signature_tolerance_seconds: int = 300
     mcp_nonce_ttl_seconds: int = 600
 
@@ -61,7 +62,6 @@ class PlatformSettings(BaseSettings):
     celery_result_backend: str = "redis://redis:6379/1"
 
     # Secrets
-    mfa_encryption_keys: str = ""
     metrics_token: str = ""
     backup_external_uri: str = ""
     backup_encryption_key: str = ""

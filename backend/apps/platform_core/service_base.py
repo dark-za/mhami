@@ -81,11 +81,10 @@ def audited_service(
 
     Example::
 
-        @audited_service(event_type="tenancy.company.created", target_type="Company")
-        def register_company(...):
-            company = Company.objects.create(...)
-            owner = User.objects.create_user(...)
-            return company, owner
+        @audited_service(event_type="task.created", target_type="Task")
+        def create_domain_record(...):
+            record = Task.objects.create(...)
+            return record
     """
 
     def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:

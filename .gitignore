@@ -25,6 +25,12 @@ secrets/
 media/
 
 # Local tooling
+.agents/
 .codex-tools/
 .DS_Store
 Thumbs.db
+
+# Generated test and schema artifacts
+frontend/test-results/
+frontend/playwright-report/
+.tmp-opencode-state/

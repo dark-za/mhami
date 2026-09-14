@@ -1,6 +1,7 @@
-# E2E Tests
+// filepath: frontend/tests/e2e/README.md
+# Browser/UI Integration Tests
 
-Playwright-based end-to-end suite for the workspace shell.
+Playwright-based browser/UI integration suite for the workspace shell.
 
 ## Running locally
 
@@ -26,6 +27,15 @@ npm run test:e2e
 | `tasks.spec.ts` | Tasks page lifecycle |
 | `evidence.spec.ts` | Evidence route mount |
 | `reviews.spec.ts` | Reviews route mount |
+
+## Testing Notes
+
+This is a browser/UI integration test suite with mocked API endpoints:
+
+- All tests mock `/api/v1/bootstrap`, `/api/v1/auth/login`, and other required endpoints
+- Tests verify the shell's behavior without a real Django backend
+- Role behavior is tested via authenticated bootstrap responses, not localStorage overrides
+- i18n direction tests explicitly set locale through UI or test setup to ensure reliability
 
 ## CI
 

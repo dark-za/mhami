@@ -40,8 +40,7 @@ def test_unsafe_request_without_csrf_token_is_rejected(client):
     csrf_client = Client(enforce_csrf_checks=True)
     response = csrf_client.post(
         "/api/v1/auth/login",
-        data={"company_code": "x", "login_id": "y", "password": "z"},
+        data={"login_id": "y", "password": "z"},
         content_type="application/json",
     )
-    assert response.status_code == 400
-    assert "invalid" in (response.content.decode("utf-8") or "").lower()
+    assert response.status_code == 403

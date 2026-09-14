@@ -10,8 +10,9 @@ export type Direction = "rtl" | "ltr";
 
 export function useDirection(): { dir: Direction; language: string } {
   const { i18n } = useTranslation();
-  const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
-  const dir: Direction = language.startsWith("ar") ? "rtl" : "ltr";
+  const resolvedLanguage = i18n.resolvedLanguage ?? i18n.language ?? "en";
+  const language = resolvedLanguage.startsWith("ar") ? "ar" : "en";
+  const dir: Direction = language === "ar" ? "rtl" : "ltr";
 
   useEffect(() => {
     if (typeof document === "undefined") {

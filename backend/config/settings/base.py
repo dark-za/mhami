@@ -9,8 +9,6 @@ default value fails fast at import time.
 
 from __future__ import annotations
 
-import base64
-import hashlib
 from pathlib import Path
 
 from celery.schedules import crontab
@@ -36,6 +34,8 @@ SECRET_KEY = settings.django_secret_key
 
 DEBUG = settings.django_debug
 ALLOWED_HOSTS = parse_env_list(settings.django_allowed_hosts)
+CSRF_TRUSTED_ORIGINS = parse_env_list(settings.django_csrf_trusted_origins)
+INITIAL_SETUP_TOKEN = settings.initial_setup_token
 
 if (
     settings.django_settings_module == "config.settings.prod"
@@ -45,27 +45,14 @@ if (
         "AUDIT_HMAC_SECRET must be set to a non-default value in production."
     )
 AUDIT_HMAC_SECRET = settings.audit_hmac_secret or SECRET_KEY
-if (
-    settings.django_settings_module == "config.settings.prod"
-    and (
-        not settings.mcp_internal_hmac_secret
-        or settings.mcp_internal_hmac_secret == "change-me"
-    )
-):
-    raise ImproperlyConfigured(
-        "MCP_INTERNAL_HMAC_SECRET must be set to a non-default value in production."
-    )
-MCP_INTERNAL_HMAC_SECRET = settings.mcp_internal_hmac_secret or AUDIT_HMAC_SECRET
+if settings.django_settings_module == "config.settings.prod" and settings.postgres_password in {
+    "",
+    "platform",
+    "change-me",
+}:
+    raise ImproperlyConfigured("POSTGRES_PASSWORD must be set to a non-default value in production.")
 MCP_SIGNATURE_TOLERANCE_SECONDS = settings.mcp_signature_tolerance_seconds
 MCP_NONCE_TTL_SECONDS = settings.mcp_nonce_ttl_seconds
-
-# MFA keys: fall back to a derived dev key if not provided.
-if settings.mfa_encryption_keys:
-    MFA_ENCRYPTION_KEYS = parse_env_list(settings.mfa_encryption_keys)
-else:
-    development_key = hashlib.sha256(f"{SECRET_KEY}:mhami:mfa".encode()).digest()
-    MFA_ENCRYPTION_KEYS = [base64.urlsafe_b64encode(development_key).decode("ascii")]
-
 
 # ---------------------------------------------------------------------------
 # Applications
@@ -93,7 +80,6 @@ INSTALLED_APPS = [
     "apps.exports.apps.ExportsConfig",
     "apps.backups.apps.BackupsConfig",
     "apps.notifications.apps.NotificationsConfig",
-    "apps.pilot.apps.PilotConfig",
     "apps.compliance.apps.ComplianceConfig",
 ]
 
@@ -104,7 +90,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.platform_core.request_id.RequestIDMiddleware",
-    "apps.identity.middleware.MFAEnforcementMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -126,7 +111,7 @@ DATABASES = {
 
 AUTH_USER_MODEL = "identity.User"
 AUTHENTICATION_BACKENDS = [
-    "apps.tenancy.auth_backends.CompanyCodeBackend",
+    "apps.tenancy.auth_backends.LocalInstallationBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -210,7 +195,6 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "registration_ip": "5/hour",
     "login_ip": "60/minute",
     "login_account": "5/minute",
-    "mfa_user": "10/minute",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -218,10 +202,12 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Foundation API contract for the modular operations platform.",
     "VERSION": "0.1.0",
     "ENUM_NAME_OVERRIDES": {
-        "PilotCharterDecisionEnum": "apps.pilot.models.PilotCharter.Decision",
         "ExitDecisionEnum": "apps.platform_core.models.ExitDecision.Decision",
         "BackupStatusEnum": "apps.backups.models.BackupStatus",
         "ConnectorHealthStatusEnum": "apps.connector_control.models.ConnectorHealthStatus",
+        "AgentGrantStatusEnum": "apps.agent_access.models.AgentGrantStatus",
+        "TaskRequestKindEnum": "apps.tasks.models.TaskRequestKind",
+        "TaskRequestStatusEnum": "apps.tasks.models.TaskRequestStatus",
     },
 }
 
@@ -239,13 +225,6 @@ CELERY_TASK_ROUTES = {
 }
 
 CELERY_BEAT_SCHEDULE = {
-    # C-11: explicit scheduling of every lifecycle job. The beat
-    # scheduler is the single entry point so a deployment cannot run a
-    # subset of the jobs by accident.
-    "process-lifecycle-expirations-daily": {
-        "task": "apps.tenancy.process_lifecycle_expirations",
-        "schedule": crontab(hour=2, minute=0),
-    },
     "create-daily-backups": {
         "task": "apps.backups.create_daily_backups",
         "schedule": crontab(hour=2, minute=30),
@@ -258,9 +237,9 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.notifications.process_outbox_events",
         "schedule": crontab(minute="*/5"),
     },
-    "run-scheduler-quarter-hourly": {
+    "run-scheduler-every-minute": {
         "task": "apps.tasks.run_scheduler",
-        "schedule": crontab(minute="*/15"),
+        "schedule": crontab(minute="*"),
     },
     "mark-overdue-tasks-quarter-hourly": {
         "task": "apps.tasks.mark_overdue",
@@ -291,7 +270,6 @@ PLATFORM_MODULES = [
     "exports",
     "backups",
     "notifications",
-    "pilot",
 ]
 
 
@@ -324,13 +302,6 @@ if (
 ):
     raise ImproperlyConfigured(
         "METRICS_TOKEN must be set to a non-default value in production."
-    )
-if (
-    settings.django_settings_module == "config.settings.prod"
-    and (not BACKUP_EXTERNAL_URI or "replace-with-approved" in BACKUP_EXTERNAL_URI)
-):
-    raise ImproperlyConfigured(
-        "BACKUP_EXTERNAL_URI must be set to an approved destination in production."
     )
 if settings.django_settings_module == "config.settings.prod" and not BACKUP_ENCRYPTION_KEY:
     raise ImproperlyConfigured(

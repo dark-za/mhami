@@ -3,10 +3,12 @@
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { api, ensureCsrfToken, getCsrfToken, ApiError } from "./client";
+import { SESSION_RECHECK_EVENT } from "./session";
 
 const fetchMock = vi.fn();
 
 beforeEach(() => {
+  fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   document.cookie = "csrftoken=; path=/";
 });
@@ -17,6 +19,25 @@ afterEach(() => {
 });
 
 describe("FE-05 CSRF integration", () => {
+  test.each([
+    [403, "NOT_AUTHENTICATED", true],
+    [401, "AUTHENTICATION_FAILED", true],
+    [403, "CORE-FORBIDDEN-001", false],
+    [403, "PERMISSION_DENIED", false],
+    [400, "CORE-ERROR-001", false],
+  ])("session recheck for status %s and code %s is %s", async (status, code, expected) => {
+    const listener = vi.fn();
+    window.addEventListener(SESSION_RECHECK_EVENT, listener);
+    try {
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ error: { code, message: "Denied" } }), { status }));
+      await expect(api("/api/v1/tasks/instances")).rejects.toBeInstanceOf(ApiError);
+      expect(listener).toHaveBeenCalledTimes(expected ? 1 : 0);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener(SESSION_RECHECK_EVENT, listener);
+    }
+  });
+
   test("getCsrfToken reads the cookie value", () => {
     document.cookie = "csrftoken=abc123; path=/";
     expect(getCsrfToken()).toBe("abc123");

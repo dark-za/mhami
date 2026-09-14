@@ -41,6 +41,7 @@ def test_chain_links_when_written_sequentially():
     assert verify_audit_chain() is True
 
 
+@pytest.mark.django_db(transaction=True)
 def test_concurrent_writers_do_not_collide_on_previous_hash():
     """Run on PostgreSQL only — SQLite serialises everything in the GIL.
 

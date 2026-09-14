@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from django.test import Client
 from django.utils import timezone
 
@@ -8,6 +9,7 @@ from datetime import timedelta
 from apps.organizations.models import CompanyRole
 
 
+@pytest.mark.django_db
 def test_bootstrap_endpoint_returns_foundation_payload():
     response = Client().get("/api/v1/bootstrap")
     assert response.status_code == 200

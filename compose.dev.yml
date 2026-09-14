@@ -5,16 +5,16 @@
 services:
   db:
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
   redis:
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   api:
     command: ["sh", "-c", "python manage.py migrate --noinput && exec python manage.py runserver 0.0.0.0:8000"]
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     # Dev only: relax the read-only filesystem so runserver can write
     # bytecode / migration state, and allow the bind-mount to be writable.
     read_only: false
@@ -23,15 +23,35 @@ services:
     environment:
       DJANGO_DEBUG: "true"
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+
+  worker:
+    read_only: false
+    volumes:
+      - ./backend:/app/backend
+
+  beat:
+    read_only: false
+    volumes:
+      - ./backend:/app/backend
 
   frontend:
     build:
       target: development
-    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["sh", "-c", "npm ci && exec npm run dev -- --host 0.0.0.0"]
+    pids_limit: 300
+    mem_limit: 768m
     environment:
       VITE_API_PROXY_TARGET: http://api:8000
+      VITE_DOCKER_WATCH: "true"
+      NPM_CONFIG_CACHE: /tmp/npm-cache
+      HOME: /tmp
+      XDG_CACHE_HOME: /tmp/.cache
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     read_only: false
     volumes:
       - ./frontend:/app/frontend

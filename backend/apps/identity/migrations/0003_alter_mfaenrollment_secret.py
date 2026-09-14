@@ -5,6 +5,11 @@ from django.db import migrations
 
 
 def encrypt_existing_mfa_secrets(apps, schema_editor):
+    # The backup_restore database is intentionally a narrow restore target and
+    # does not contain identity tables. This historical data migration belongs
+    # only to the primary application database.
+    if schema_editor.connection.alias != "default":
+        return
     enrollment_model = apps.get_model("identity", "MfaEnrollment")
     enrollments = enrollment_model.objects.exclude(secret="").only("id", "secret")
     for enrollment in enrollments.iterator():

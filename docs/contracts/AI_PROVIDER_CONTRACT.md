@@ -16,7 +16,7 @@ Allow each company to select an AI provider without binding business modules to 
 - Template and criteria version identifiers.
 - Risk level and allowed decision policy.
 - Blurred evidence derivative and permitted reference media.
-- No employee name, phone, credentials, session identifiers, or unrelated tenant data.
+- No employee name, phone, credentials, session identifiers, or unrelated organization data.
 
 ## Required Response Semantics
 

@@ -5,6 +5,7 @@ import { App } from "../App";
 import { createFallbackState } from "../api/bootstrap";
 import { bootstrapSnapshot } from "../design-system/tokens";
 import type { Role } from "../design-system/tokens";
+import i18n from "../i18n";
 
 vi.mock("../hooks/useBootstrap", () => ({
   useBootstrap: () => ({
@@ -19,9 +20,10 @@ vi.mock("../hooks/useNotifications", () => ({
   useNotifications: () => ({ items: null, error: false }),
 }));
 
-beforeEach(() => {
+beforeEach(async () => {
   // Default to owner so the / route does not trip the RoleGuard.
   window.localStorage.removeItem("mhami.activeRole");
+  await i18n.changeLanguage("ar");
 });
 
 afterEach(() => {
@@ -30,7 +32,7 @@ afterEach(() => {
 });
 
 describe("C-01 unified BrowserRouter (FE-01)", () => {
-  test("App renders without nested router warning and exposes primary route", async () => {
+  test("App renders without nested router warning and fails closed before authentication", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
@@ -43,7 +45,7 @@ describe("C-01 unified BrowserRouter (FE-01)", () => {
     });
 
     await waitFor(() => {
-      expect(document.body.textContent ?? "").toMatch(/Tasks|Task|Mhami/i);
+      expect(document.body.textContent ?? "").toContain("تسجيل الدخول إلى مساحة العمل");
     });
 
     const nestedRouterWarning = warn.mock.calls
@@ -61,7 +63,7 @@ describe("C-01 unified BrowserRouter (FE-01)", () => {
     error.mockRestore();
   });
 
-  test("App supports a non-default role via localStorage and renders People page", async () => {
+  test("App does not let a development role preview expose People before authentication", async () => {
     window.localStorage.setItem("mhami.activeRole", "monitor" satisfies Role);
     await act(async () => {
       render(
@@ -71,7 +73,7 @@ describe("C-01 unified BrowserRouter (FE-01)", () => {
       );
     });
     await waitFor(() => {
-      expect(document.body.textContent ?? "").toMatch(/People|Roster|Branch/);
+      expect(document.body.textContent ?? "").toContain("تسجيل الدخول إلى مساحة العمل");
     });
   });
 });

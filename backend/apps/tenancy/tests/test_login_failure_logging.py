@@ -1,10 +1,8 @@
-"""BE-05 regression tests: log failed login attempts.
+"""BE-05 regression tests: log failed login attempts for single-org local login.
 
-The ``CompanyCodeBackend`` must record an audit event for every
-unsuccessful login attempt. The reason code in the metadata is the
-authoritative contract; tests assert each of the known reasons is
-covered (missing fields, unknown company, inactive company, unknown
-user, bad password, no membership).
+The ``CompanyCodeBackend`` (now sole-organization local backend) must record an audit event for every
+unsuccessful login attempt. The reason code in the metadata is the authoritative contract; tests assert each
+of the known reasons is covered (missing fields, inactive company, unknown user, bad password, no membership).
 """
 from __future__ import annotations
 
@@ -40,36 +38,23 @@ def _login_failed_events(reason: str) -> list[AuditEvent]:
 
 def test_missing_fields_recorded_as_failure():
     backend = CompanyCodeBackend()
-    result = backend.authenticate(request=_request(), company_code="", login_id="x", password="p")
+    result = backend.authenticate(request=_request(), login_id="", password="p")
     assert result is None
     assert _login_failed_events("missing_fields"), "missing_fields event expected"
 
 
-def test_unknown_company_recorded_as_failure():
-    backend = CompanyCodeBackend()
-    result = backend.authenticate(
-        request=_request(), company_code="nope", login_id="u", password="p"
-    )
-    assert result is None
-    assert _login_failed_events("unknown_company")
-
-
 def test_inactive_company_recorded_as_failure(make_company):
-    company = make_company(status=CompanyStatus.SUSPENDED)
+    make_company(status=CompanyStatus.SUSPENDED)
     backend = CompanyCodeBackend()
-    result = backend.authenticate(
-        request=_request(), company_code=company.code, login_id="u", password="p"
-    )
+    result = backend.authenticate(request=_request(), login_id="u", password="p")
     assert result is None
     assert _login_failed_events("inactive_company")
 
 
 def test_unknown_user_recorded_as_failure(make_company):
-    company = make_company()
+    make_company()
     backend = CompanyCodeBackend()
-    result = backend.authenticate(
-        request=_request(), company_code=company.code, login_id="ghost", password="p"
-    )
+    result = backend.authenticate(request=_request(), login_id="ghost", password="p")
     assert result is None
     assert _login_failed_events("unknown_user")
 
@@ -79,29 +64,19 @@ def test_bad_password_recorded_as_failure(make_user, make_company):
     company = make_company()
     CompanyMembership.objects.create(company=company, user=user, role=CompanyRole.OWNER)
     backend = CompanyCodeBackend()
-    result = backend.authenticate(
-        request=_request(),
-        company_code=company.code,
-        login_id=user.login_id,
-        password="wrong",
-    )
+    result = backend.authenticate(request=_request(), login_id=user.login_id, password="wrong")
     assert result is None
     assert _login_failed_events("bad_password")
 
 
 def test_not_authorized_for_company_recorded_as_failure(make_user, make_company):
-    """A user that exists but is not a member of the active company."""
+    """A user that exists but is not a member of the sole company."""
     user = make_user(login_id="outsider")
     user.set_password("TestPass123!")
     user.save()
-    company = make_company()
+    make_company()
     backend = CompanyCodeBackend()
-    result = backend.authenticate(
-        request=_request(),
-        company_code=company.code,
-        login_id=user.login_id,
-        password="TestPass123!",
-    )
+    result = backend.authenticate(request=_request(), login_id=user.login_id, password="TestPass123!")
     assert result is None
     assert _login_failed_events("not_authorized_for_company")
 
@@ -117,23 +92,32 @@ def test_expired_membership_cannot_authenticate(make_user, make_company):
     )
     backend = CompanyCodeBackend()
 
-    result = backend.authenticate(
-        request=_request(),
-        company_code=company.code,
-        login_id=user.login_id,
-        password="TestPass123!",
-    )
+    result = backend.authenticate(request=_request(), login_id=user.login_id, password="TestPass123!")
 
     assert result is None
     assert _login_failed_events("not_authorized_for_company")
 
 
-def test_metadata_stores_remote_addr_and_company_code(make_company):
-    company = make_company()
+def test_metadata_stores_remote_addr(make_company):
+    make_company()
     backend = CompanyCodeBackend()
-    backend.authenticate(
-        request=_request(), company_code=company.code, login_id="ghost", password="p"
-    )
+    backend.authenticate(request=_request(), login_id="ghost", password="p")
     event = _login_failed_events("unknown_user")[-1]
     assert event.metadata["remote_addr"] == "203.0.113.7"
-    assert event.metadata["company_code"] == company.code
+    assert "reason" in event.metadata
+
+
+def test_no_organization_fails_closed():
+    backend = CompanyCodeBackend()
+    result = backend.authenticate(request=_request(), login_id="anyone", password="p")
+    assert result is None
+    assert _login_failed_events("no_organization") or _login_failed_events("unknown_user")
+
+
+def test_multiple_organizations_fails_closed(make_user, make_company):
+    make_company(code="co-a")
+    make_company(code="co-b")
+    backend = CompanyCodeBackend()
+    result = backend.authenticate(request=_request(), login_id="anyone", password="p")
+    assert result is None
+    assert _login_failed_events("multiple_organizations")

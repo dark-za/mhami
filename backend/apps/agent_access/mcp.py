@@ -8,10 +8,16 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.core.exceptions import PermissionDenied, ValidationError
 from rest_framework.exceptions import ParseError
 
+from apps.organizations.models import CompanyRole, UserBranchMembership
 from apps.tasks.models import TaskInstance
 from apps.tasks.serializers import TaskInstanceSerializer, TaskTransferRequestSerializer
 from apps.tasks.services import request_transfer
-from apps.tenancy.access import is_active_company_user
+from apps.tenancy.access import (
+    accessible_company_branch_ids,
+    active_membership_q,
+    company_role_for_user,
+    is_active_company_user,
+)
 
 from .models import AgentActionStatus, AgentGrant
 from .services import record_agent_action
@@ -65,6 +71,17 @@ def _tasks_list(grant: AgentGrant, arguments: Mapping[str, object]) -> dict[str,
         .select_related("template", "branch", "assigned_user")
         .order_by("-scheduled_for", "-created_at")
     )
+    role = company_role_for_user(grant.company, grant.user)
+    if role == CompanyRole.OWNER:
+        pass
+    elif role == CompanyRole.MONITOR:
+        branch_ids = accessible_company_branch_ids(grant.company, grant.user)
+        queryset = queryset.filter(branch_id__in=branch_ids)
+    elif role == CompanyRole.EMPLOYEE:
+        queryset = queryset.filter(assigned_user=grant.user)
+    else:
+        raise PermissionDenied("MCP grant user does not have an active company role.")
+
     status = arguments.get("status")
     if isinstance(status, str) and status:
         queryset = queryset.filter(status=status)
@@ -74,7 +91,9 @@ def _tasks_list(grant: AgentGrant, arguments: Mapping[str, object]) -> dict[str,
     return {"tasks": TaskInstanceSerializer(queryset[:limit], many=True).data}
 
 
-def _tasks_transfer_request(grant: AgentGrant, arguments: Mapping[str, object]) -> dict[str, object]:
+def _tasks_transfer_request(
+    grant: AgentGrant, arguments: Mapping[str, object]
+) -> dict[str, object]:
     task_id = _require_string(arguments, "task_id")
     requested_to_id = _require_string(arguments, "requested_to_id")
     reason = arguments.get("reason", "")
@@ -86,6 +105,34 @@ def _tasks_transfer_request(grant: AgentGrant, arguments: Mapping[str, object]) 
     requested_to = get_user_model().objects.filter(id=requested_to_id).first()
     if requested_to is None or not is_active_company_user(grant.company, requested_to):
         raise PermissionDenied("Transfer target does not exist in this company.")
+
+    role = company_role_for_user(grant.company, grant.user)
+    if role == CompanyRole.OWNER:
+        pass
+    elif role == CompanyRole.MONITOR:
+        permitted_branch_ids = accessible_company_branch_ids(grant.company, grant.user)
+        if str(instance.branch_id) not in permitted_branch_ids:
+            raise PermissionDenied("Task branch is outside the monitor's assigned branches.")
+    elif role == CompanyRole.EMPLOYEE:
+        if instance.assigned_user_id != grant.user.id:
+            raise PermissionDenied("Employees may only transfer task instances assigned to them.")
+    else:
+        raise PermissionDenied("Unknown role cannot request task transfers.")
+
+    target_in_task_branch = (
+        requested_to.id == grant.company.owner_id
+        or UserBranchMembership.objects.filter(
+            company=grant.company,
+            user=requested_to,
+            branch_id=instance.branch_id,
+            active=True,
+        )
+        .filter(active_membership_q())
+        .exists()
+    )
+    if not target_in_task_branch:
+        raise PermissionDenied("Transfer target is not active in the task branch.")
+
     transfer = request_transfer(str(instance.id), grant.user, requested_to, reason)
     return {"transfer": TaskTransferRequestSerializer(transfer).data}
 
@@ -100,7 +147,7 @@ TOOLS: dict[str, McpTool] = {
     ),
     "tasks.list": McpTool(
         name="tasks.list",
-        description="List task instances in the grant company.",
+        description="List task instances within the grant user's permitted scope.",
         required_scope="read:tasks",
         input_schema={
             "type": "object",

@@ -6,7 +6,7 @@ Approved baseline.
 
 ## Context
 
-The platform is multi-tenant and must prevent company and branch data leakage across users and support actors.
+The platform is single-organization and self-hosted. Company and branch data must remain isolated per user; there is no central support account or upstream access path.
 
 ## Decision
 

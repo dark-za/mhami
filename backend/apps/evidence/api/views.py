@@ -4,7 +4,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
-from apps.platform_core.errors import PlatformAPIException, platform_service_call
+from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException, platform_service_call
 from apps.platform_core.mixins import TenantAPIView
 from apps.organizations.models import CompanyRole
 from apps.tasks.models import TaskInstance
@@ -31,6 +31,13 @@ from ..services import (
 )
 
 
+def _require_task_access(context, task: TaskInstance, user) -> None:
+    """Enforce the task boundary in addition to the user's branch scope."""
+    context.require_branch(task.branch_id)
+    if context.role == CompanyRole.EMPLOYEE and task.assigned_user_id != user.id:
+        raise PlatformPermissionException("Employees may access only tasks assigned to themselves.")
+
+
 class CaptureSessionView(TenantAPIView):
     # BE-01: Capture sessions are created by the user that owns the task
     # instance; open to all tenant roles. The per-task scoping happens in
@@ -51,6 +58,7 @@ class CaptureSessionView(TenantAPIView):
         task_instance = validate_company_reference(
             company, TaskInstance, serializer.validated_data["task_instance_id"]
         )
+        _require_task_access(self.get_tenant(), task_instance, request.user)
         session = create_capture_session(
             task_instance=task_instance,
             user=request.user,
@@ -103,7 +111,7 @@ class EvidenceTaskView(TenantAPIView):
         task = validate_company_reference(company, TaskInstance, task_instance_id)
         # C-07: branch scope check. A user with branch-level access can
         # only see workflows for branches in their active scope.
-        context.require_branch(task.branch_id)
+        _require_task_access(context, task, request.user)
         evidence = EvidenceItem.objects.for_company(company).filter(task_instance=task).order_by("sequence_number")
         issues = TaskIssueReport.objects.for_company(company).filter(task_instance=task).order_by("created_at")
         messages = TaskDiscussionMessage.objects.for_company(company).filter(task_instance=task).order_by("created_at")
@@ -152,7 +160,7 @@ class IssueCreateView(TenantAPIView):
             company, TaskInstance, serializer.validated_data["task_instance_id"]
         )
         # C-07: branch scope check.
-        context.require_branch(task.branch_id)
+        _require_task_access(context, task, request.user)
         issue = create_issue_report(task, request.user, serializer.validated_data["note"], request.FILES.get("file"))
         return Response(TaskIssueReportSerializer(issue).data, status=201)
 
@@ -167,9 +175,8 @@ class IssueMessagesView(TenantAPIView):
     def get(self, request, issue_id):
         context = self.get_tenant()
         company = context.company
-        issue = TaskIssueReport.objects.get(id=issue_id, company=company)
-        # C-07: branch scope check.
-        context.require_branch(issue.branch_id)
+        issue = validate_company_reference(company, TaskIssueReport, issue_id)
+        _require_task_access(context, issue.task_instance, request.user)
         messages = TaskDiscussionMessage.objects.filter(issue_report=issue).order_by("created_at")
         return Response({"messages": TaskDiscussionMessageSerializer(messages, many=True).data})
 
@@ -182,15 +189,14 @@ class IssueMessagesView(TenantAPIView):
         serializer.is_valid(raise_exception=True)
         # BE-02: validate every external ID against the active company.
         issue = validate_company_reference(company, TaskIssueReport, issue_id)
-        # C-07: branch scope check on the issue first.
-        context.require_branch(issue.branch_id)
+        _require_task_access(context, issue.task_instance, request.user)
         task = validate_company_reference(
             company, TaskInstance, serializer.validated_data["task_instance_id"]
         )
         # Then verify the supplied task and issue are in the same branch.
         if task.branch_id != issue.branch_id:
             raise PlatformAPIException("Issue and task must belong to the same branch.")
-        context.require_branch(task.branch_id)
+        _require_task_access(context, task, request.user)
         reply_to = validate_company_reference_or_none(
             company,
             TaskDiscussionMessage,

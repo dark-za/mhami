@@ -7,7 +7,18 @@
 import { describe, expect, test, beforeEach } from "vitest";
 import { act, render } from "@testing-library/react";
 import i18n from "./index";
+import en from "./locales/en.json";
+import ar from "./locales/ar.json";
 import { useDirection } from "../hooks/useDirection";
+
+function translationKeys(value: Record<string, unknown>, prefix = ""): string[] {
+  return Object.entries(value).flatMap(([key, child]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    return child && typeof child === "object" && !Array.isArray(child)
+      ? translationKeys(child as Record<string, unknown>, path)
+      : [path];
+  });
+}
 
 function DirectionProbe() {
   const probe = useDirection();
@@ -21,14 +32,18 @@ beforeEach(() => {
 });
 
 describe("FE-02 i18n + direction", () => {
-  beforeEach(async () => {
-    await act(async () => {
-      await i18n.changeLanguage("en");
-    });
-  });
-
-  test("defaults to English when no persisted locale", () => {
-    expect(i18n.resolvedLanguage ?? i18n.language).toBe("en");
+  test("defaults to Arabic when no persisted locale (initializer config)", () => {
+    // No persisted locale: readPersistedLocale() returns null, production init falls back to "ar"
+    expect(localStorage.getItem("mhami.locale")).toBeNull();
+    // Verify module config without forcing changeLanguage: initializer uses "ar" as lng/fallbackLng
+    const fallback = i18n.options.fallbackLng as unknown as string | string[];
+    const fallbackIsAr = Array.isArray(fallback) ? fallback.includes("ar") : fallback === "ar";
+    expect(fallbackIsAr).toBe(true);
+    const configuredLng = (i18n.options as unknown as { lng?: string }).lng ?? (Array.isArray(fallback) ? fallback[0] : (fallback as string));
+    expect(configuredLng).toBe("ar");
+    expect(i18n.options.supportedLngs).toContain("ar");
+    // Also ensure i18n has Arabic resources available
+    expect(i18n.hasResourceBundle("ar", "translation")).toBe(true);
   });
 
   test("changeLanguage persists to localStorage", async () => {
@@ -38,7 +53,10 @@ describe("FE-02 i18n + direction", () => {
     expect(localStorage.getItem("mhami.locale")).toBe("ar");
   });
 
-  test("translations return the expected key set in English", () => {
+  test("translations return the expected key set in English", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
     expect(i18n.t("common.login")).toBe("Sign in");
     expect(i18n.t("nav.tasks")).toBe("Tasks");
     expect(i18n.t("reviews.approve")).toBe("Approve");
@@ -53,9 +71,18 @@ describe("FE-02 i18n + direction", () => {
     expect(i18n.t("reviews.approve")).toBe("اعتماد");
   });
 
-  test("useDirection flips document dir/lang for Arabic", async () => {
+  test("Arabic and English expose the same translation keys", () => {
+    expect(translationKeys(ar).sort()).toEqual(translationKeys(en).sort());
+  });
+
+  test("useDirection flips document dir/lang for en -> ar -> en", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
     const { rerender, unmount } = render(<DirectionProbe />);
     expect(document.documentElement.dir).toBe("ltr");
+    expect(document.documentElement.lang).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
 
     await act(async () => {
       await i18n.changeLanguage("ar");
@@ -63,6 +90,13 @@ describe("FE-02 i18n + direction", () => {
     rerender(<DirectionProbe />);
     expect(document.documentElement.dir).toBe("rtl");
     expect(document.documentElement.lang).toBe("ar");
+
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+    rerender(<DirectionProbe />);
+    expect(document.documentElement.dir).toBe("ltr");
+    expect(document.documentElement.lang).toBe("en");
 
     unmount();
   });

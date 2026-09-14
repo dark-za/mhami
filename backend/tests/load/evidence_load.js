@@ -23,7 +23,6 @@ export function setup() {
   const login = http.post(
     `${BASE}/api/v1/auth/login`,
     JSON.stringify({
-      company_code: "load-owner",
       login_id: "load-owner-0",
       password: "P@ssw0rd!",
     }),

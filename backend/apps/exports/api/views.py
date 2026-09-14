@@ -16,21 +16,20 @@ from ..serializers import (
     ExportRequestListSerializer,
     ExportRequestSerializer,
 )
-from ..services import complete_export_request, export_download_response, prepare_export_request
+from ..services import complete_export_request, export_download_response, export_policy_for_company, prepare_export_request
 
 
 class ExportPolicyView(TenantAPIView):
-    # BE-01: Export policy is a management view; OWNER + MONITOR.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=ExportBoundaryPolicySerializer)
     def get(self, request):
-        return Response(ExportBoundaryPolicySerializer({}).data)
+        policy = export_policy_for_company(self.get_tenant().company)
+        return Response(ExportBoundaryPolicySerializer(policy).data)
 
 
 class ExportRequestListView(TenantAPIView):
-    # BE-01: Listing export requests is a management view; OWNER + MONITOR.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=ExportRequestListSerializer)
     def get(self, request):
@@ -46,10 +45,7 @@ class ExportRequestListView(TenantAPIView):
 
 
 class ExportRequestView(TenantAPIView):
-    # H-07: OWNERs can export any branch, MONITORs can export only the
-    # branches in their active scope. The branch-scope check below is
-    # the service-layer enforcement that matches the test contract.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(request=ExportRequestCreateSerializer, responses={201: ExportRequestSerializer})
     @platform_service_call
@@ -77,8 +73,7 @@ class ExportRequestView(TenantAPIView):
 
 
 class ExportDownloadView(TenantAPIView):
-    # BE-01: Downloading export artefacts is a management view; OWNER + MONITOR.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses={200: OpenApiResponse(description="Export artifact stream.")})
     def get(self, request, token):

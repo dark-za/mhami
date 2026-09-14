@@ -14,5 +14,5 @@ Backup/restore status is observable via the API system-status endpoint
 
 No backup automation exists in this environment, and there is no second backup
 destination wired. Restore proof against a production-equivalent topology is
-required before the first external tenant is admitted (Phase 13). Restore and
+required before the first external organization is admitted (Phase 13). Restore and
 incident runbooks must be validated in staging, not here.

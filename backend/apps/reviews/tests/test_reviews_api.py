@@ -126,9 +126,12 @@ def test_review_dashboard_reports_company_trend(
     session["company_id"] = str(company.id)
     session.save()
 
-    response = client.get("/api/v1/reviews/dashboard")
+    response = client.get("/api/v1/reviews/dashboard?period=week")
     assert response.status_code == 200
     assert response.json()["summary"]["completed_today"] >= 1
+    assert response.json()["period"] == "week"
+    assert response.json()["summary"]["branches"] == 2
+    assert len(response.json()["trend"]) == 8
 
 
 def test_monitor_cannot_decision_unassigned_branch(

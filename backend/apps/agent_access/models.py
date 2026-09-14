@@ -78,6 +78,9 @@ class AgentGrant(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="agent_grants")
     client_name = models.CharField(max_length=160)
     client_fingerprint = models.CharField(max_length=128)
+    # The raw secret is issued once to the owner and never stored. Empty values
+    # belong to pre-secret grants and are intentionally unusable until reissued.
+    secret_hash = models.CharField(max_length=128, blank=True)
     scopes = models.JSONField(default=list)
     status = models.CharField(max_length=32, choices=AgentGrantStatus.choices, default=AgentGrantStatus.ACTIVE)
     expires_at = models.DateTimeField()
@@ -98,7 +101,12 @@ class AgentGrant(models.Model):
 
     @property
     def active(self) -> bool:
-        return self.status == AgentGrantStatus.ACTIVE and self.revoked_at is None and self.expires_at > timezone.now()
+        return (
+            bool(self.secret_hash)
+            and self.status == AgentGrantStatus.ACTIVE
+            and self.revoked_at is None
+            and self.expires_at > timezone.now()
+        )
 
 
 class AgentActionLog(models.Model):

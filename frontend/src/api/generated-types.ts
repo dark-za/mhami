@@ -17,7 +17,7 @@ export interface paths {
          *     - YAML: application/vnd.oai.openapi
          *     - JSON: application/vnd.oai.openapi+json
          */
-        get: operations["api_schema_retrieve"];
+        get: operations["schema_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -189,7 +189,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_agent_mcp_create"];
+        post: operations["v1_agent_mcp_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -221,7 +221,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_agent_scopes_retrieve"];
+        get: operations["v1_agent_scopes_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -257,7 +257,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_ai_analysis_create"];
+        post: operations["v1_ai_analysis_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -289,7 +289,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_ai_criteria_retrieve"];
+        get: operations["v1_ai_criteria_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -309,7 +309,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_ai_criteria_create"];
+        post: operations["v1_ai_criteria_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -341,7 +341,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_ai_provider_retrieve"];
+        get: operations["v1_ai_provider_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -365,7 +365,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        patch: operations["api_v1_ai_provider_partial_update"];
+        patch: operations["v1_ai_provider_partial_update"];
         trace?: never;
     };
     "/api/v1/ai/shadow": {
@@ -393,7 +393,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_ai_shadow_retrieve"];
+        get: operations["v1_ai_shadow_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -429,7 +429,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_auth_company_acceptances_create"];
+        post: operations["v1_auth_company_acceptances_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -463,7 +463,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_auth_company_branch_memberships_create"];
+        post: operations["v1_auth_company_branch_memberships_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -495,62 +495,10 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_auth_company_members_retrieve"];
+        get: operations["v1_auth_company_members_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/company/support": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        post: operations["api_v1_auth_company_support_create"];
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        delete: operations["api_v1_auth_company_support_destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -583,7 +531,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_auth_company_users_create"];
+        post: operations["v1_auth_company_users_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -599,7 +547,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_auth_login_create"];
+        post: operations["v1_auth_login_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -615,7 +563,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_auth_logout_create"];
+        post: operations["v1_auth_logout_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -647,57 +595,9 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_auth_me_retrieve"];
+        get: operations["v1_auth_me_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/mfa/enroll": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["api_v1_auth_mfa_enroll_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/mfa/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["api_v1_auth_mfa_verify_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["api_v1_auth_register_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -729,7 +629,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_backups_download_retrieve"];
+        get: operations["v1_backups_download_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -763,7 +663,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_backups_policy_retrieve"];
+        get: operations["v1_backups_policy_retrieve"];
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
          *
@@ -782,7 +682,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        put: operations["api_v1_backups_policy_update"];
+        put: operations["v1_backups_policy_update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -817,7 +717,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_backups_restore_create"];
+        post: operations["v1_backups_restore_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -851,7 +751,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_backups_runs_create"];
+        post: operations["v1_backups_runs_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -883,7 +783,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_backups_runs_list_retrieve"];
+        get: operations["v1_backups_runs_list_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -899,7 +799,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_bootstrap_retrieve"];
+        get: operations["v1_bootstrap_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -915,7 +815,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_bootstrap_legacy_retrieve"];
+        get: operations["v1_bootstrap_legacy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -940,7 +840,7 @@ export interface paths {
          *       authenticated user in the active tenant; the public DSR form
          *       uses an unauthenticated path that bypasses ``TenantAPIView``.
          */
-        get: operations["api_v1_compliance_dsr_list"];
+        get: operations["v1_compliance_dsr_list"];
         put?: never;
         /**
          * @description Tenant-scoped Data Subject Rights request list and intake.
@@ -951,7 +851,7 @@ export interface paths {
          *       authenticated user in the active tenant; the public DSR form
          *       uses an unauthenticated path that bypasses ``TenantAPIView``.
          */
-        post: operations["api_v1_compliance_dsr_create"];
+        post: operations["v1_compliance_dsr_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -967,23 +867,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description State-machine transitions for a single :class:`DSRRequest`.
-         *
-         *     The view is dispatched through ``as_view(action="...")`` in the URL
-         *     config; the ``action`` kwarg becomes a class attribute on the
-         *     view instance and the request handler reads it from ``self``.
-         *
-         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
-         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
-         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
-         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
-         *
-         *     All endpoints require an authenticated owner; the DPO can be
-         *     wired through ``apps.identity`` when the platform user role is
-         *     extended.
-         */
-        post: operations["api_v1_compliance_dsr_complete_create"];
+        /** @description The type of the None singleton. */
+        post: operations["v1_compliance_dsr_complete_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -999,23 +884,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description State-machine transitions for a single :class:`DSRRequest`.
-         *
-         *     The view is dispatched through ``as_view(action="...")`` in the URL
-         *     config; the ``action`` kwarg becomes a class attribute on the
-         *     view instance and the request handler reads it from ``self``.
-         *
-         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
-         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
-         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
-         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
-         *
-         *     All endpoints require an authenticated owner; the DPO can be
-         *     wired through ``apps.identity`` when the platform user role is
-         *     extended.
-         */
-        post: operations["api_v1_compliance_dsr_reject_create"];
+        /** @description The type of the None singleton. */
+        post: operations["v1_compliance_dsr_reject_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1031,23 +901,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description State-machine transitions for a single :class:`DSRRequest`.
-         *
-         *     The view is dispatched through ``as_view(action="...")`` in the URL
-         *     config; the ``action`` kwarg becomes a class attribute on the
-         *     view instance and the request handler reads it from ``self``.
-         *
-         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
-         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
-         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
-         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
-         *
-         *     All endpoints require an authenticated owner; the DPO can be
-         *     wired through ``apps.identity`` when the platform user role is
-         *     extended.
-         */
-        post: operations["api_v1_compliance_dsr_start_create"];
+        /** @description The type of the None singleton. */
+        post: operations["v1_compliance_dsr_start_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1063,23 +918,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description State-machine transitions for a single :class:`DSRRequest`.
-         *
-         *     The view is dispatched through ``as_view(action="...")`` in the URL
-         *     config; the ``action`` kwarg becomes a class attribute on the
-         *     view instance and the request handler reads it from ``self``.
-         *
-         *     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
-         *     * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
-         *     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
-         *     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
-         *
-         *     All endpoints require an authenticated owner; the DPO can be
-         *     wired through ``apps.identity`` when the platform user role is
-         *     extended.
-         */
-        post: operations["api_v1_compliance_dsr_verify_create"];
+        /** @description The type of the None singleton. */
+        post: operations["v1_compliance_dsr_verify_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1094,7 +934,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Read-only list of currently published legal documents. */
-        get: operations["api_v1_compliance_legal_documents_list"];
+        get: operations["v1_compliance_legal_documents_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1111,7 +951,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Public, read-only list of published ROPA rows. */
-        get: operations["api_v1_compliance_ropa_list"];
+        get: operations["v1_compliance_ropa_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1145,7 +985,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_connectors_enrollment_retrieve"];
+        get: operations["v1_connectors_enrollment_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -1165,7 +1005,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_connectors_enrollment_create"];
+        post: operations["v1_connectors_enrollment_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1197,7 +1037,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_connectors_health_retrieve"];
+        get: operations["v1_connectors_health_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1215,7 +1055,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_connectors_heartbeat_create"];
+        post: operations["v1_connectors_heartbeat_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1249,7 +1089,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_connectors_revoke_create"];
+        post: operations["v1_connectors_revoke_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1283,7 +1123,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_evidence_capture_sessions_create"];
+        post: operations["v1_evidence_capture_sessions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1315,7 +1155,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_evidence_health_media_retrieve"];
+        get: operations["v1_evidence_health_media_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1351,7 +1191,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_evidence_issues_create"];
+        post: operations["v1_evidence_issues_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1383,7 +1223,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_evidence_issues_messages_retrieve"];
+        get: operations["v1_evidence_issues_messages_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -1403,7 +1243,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_evidence_issues_messages_create"];
+        post: operations["v1_evidence_issues_messages_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1435,7 +1275,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_evidence_items_media_retrieve"];
+        get: operations["v1_evidence_items_media_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1471,7 +1311,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_evidence_submit_create"];
+        post: operations["v1_evidence_submit_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1503,7 +1343,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_evidence_tasks_retrieve"];
+        get: operations["v1_evidence_tasks_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1520,10 +1360,10 @@ export interface paths {
             cookie?: never;
         };
         /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
-        get: operations["api_v1_exit_decisions_list"];
+        get: operations["v1_exit_decisions_list"];
         put?: never;
         /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
-        post: operations["api_v1_exit_decisions_create"];
+        post: operations["v1_exit_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1555,7 +1395,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_exports_download_retrieve"];
+        get: operations["v1_exports_download_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1589,7 +1429,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_exports_policy_retrieve"];
+        get: operations["v1_exports_policy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1625,7 +1465,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_exports_requests_create"];
+        post: operations["v1_exports_requests_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1657,7 +1497,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_exports_requests_list_retrieve"];
+        get: operations["v1_exports_requests_list_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1793,7 +1633,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_organizations_branches_retrieve"];
+        get: operations["v1_organizations_branches_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -1813,7 +1653,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_organizations_branches_create"];
+        post: operations["v1_organizations_branches_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1845,7 +1685,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_organizations_job_roles_retrieve"];
+        get: operations["v1_organizations_job_roles_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -1865,7 +1705,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_organizations_job_roles_create"];
+        post: operations["v1_organizations_job_roles_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1897,7 +1737,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_organizations_memberships_retrieve"];
+        get: operations["v1_organizations_memberships_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1931,7 +1771,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_organizations_weekly_shifts_retrieve"];
+        get: operations["v1_organizations_weekly_shifts_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -1951,349 +1791,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_organizations_weekly_shifts_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pilot/change-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        get: operations["api_v1_pilot_change_requests_retrieve"];
-        put?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        post: operations["api_v1_pilot_change_requests_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pilot/change-requests/{change_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        patch: operations["api_v1_pilot_change_requests_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/pilot/charter": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description PILOT-01: read or sign the pilot charter.
-         *
-         *     - ``GET`` returns the most recent signed charter (404 if none).
-         *     - ``POST`` signs a new charter; only OWNERs may sign. The charter is
-         *       HMAC-signed over the canonical payload and the audit event
-         *       ``PILOT_CHARTER_SIGNED`` is recorded.
-         */
-        get: operations["api_v1_pilot_charter_retrieve"];
-        put?: never;
-        /**
-         * @description PILOT-01: read or sign the pilot charter.
-         *
-         *     - ``GET`` returns the most recent signed charter (404 if none).
-         *     - ``POST`` signs a new charter; only OWNERs may sign. The charter is
-         *       HMAC-signed over the canonical payload and the audit event
-         *       ``PILOT_CHARTER_SIGNED`` is recorded.
-         */
-        post: operations["api_v1_pilot_charter_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pilot/dashboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        get: operations["api_v1_pilot_dashboard_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pilot/issues": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        get: operations["api_v1_pilot_issues_retrieve"];
-        put?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        post: operations["api_v1_pilot_issues_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pilot/issues/{issue_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        patch: operations["api_v1_pilot_issues_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/pilot/program": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        get: operations["api_v1_pilot_program_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        patch: operations["api_v1_pilot_program_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/pilot/weekly-reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        get: operations["api_v1_pilot_weekly_reports_retrieve"];
-        put?: never;
-        /**
-         * @description Base view that injects a ``TenantContext`` for the active request.
-         *
-         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
-         *     enforce a role check before the view method runs. The cached tenant is
-         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
-         *     ``[IsAuthenticated]``; override it for public views (login, register).
-         *
-         *     Example::
-         *
-         *         class CaptureSessionView(TenantAPIView):
-         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
-         *
-         *             def post(self, request):
-         *                 context = self.get_tenant()
-         *                 company = context.company
-         *                 ...
-         */
-        post: operations["api_v1_pilot_weekly_reports_create"];
+        post: operations["v1_organizations_weekly_shifts_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2307,7 +1805,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_platform_bootstrap_retrieve"];
+        get: operations["v1_platform_bootstrap_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2323,7 +1821,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_platform_bootstrap_legacy_retrieve"];
+        get: operations["v1_platform_bootstrap_legacy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2340,10 +1838,10 @@ export interface paths {
             cookie?: never;
         };
         /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
-        get: operations["api_v1_platform_exit_decisions_list"];
+        get: operations["v1_platform_exit_decisions_list"];
         put?: never;
         /** @description C-06: sign a phase exit decision. Restricted to platform administrators. */
-        post: operations["api_v1_platform_exit_decisions_create"];
+        post: operations["v1_platform_exit_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2375,7 +1873,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_reviews_dashboard_retrieve"];
+        get: operations["v1_reviews_dashboard_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2411,7 +1909,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_reviews_decisions_create"];
+        post: operations["v1_reviews_decisions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2443,7 +1941,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_reviews_policy_retrieve"];
+        get: operations["v1_reviews_policy_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2467,7 +1965,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        patch: operations["api_v1_reviews_policy_partial_update"];
+        patch: operations["v1_reviews_policy_partial_update"];
         trace?: never;
     };
     "/api/v1/reviews/queue": {
@@ -2495,9 +1993,26 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_reviews_queue_retrieve"];
+        get: operations["v1_reviews_queue_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create the first owner only while the installation is empty. */
+        post: operations["v1_setup_initialize_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2529,7 +2044,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_tasks_instances_retrieve"];
+        get: operations["v1_tasks_instances_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2565,7 +2080,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_instances_cancel_create"];
+        post: operations["v1_tasks_instances_cancel_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2599,7 +2114,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_instances_claim_create"];
+        post: operations["v1_tasks_instances_claim_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2633,7 +2148,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_instances_complete_create"];
+        post: operations["v1_tasks_instances_complete_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2667,7 +2182,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_instances_start_create"];
+        post: operations["v1_tasks_instances_start_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2701,7 +2216,76 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_instances_transfers_create"];
+        post: operations["v1_tasks_instances_transfers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Employee requests for a task exception, reassignment, or suggestion. */
+        get: operations["v1_tasks_requests_retrieve"];
+        put?: never;
+        /** @description Employee requests for a task exception, reassignment, or suggestion. */
+        post: operations["v1_tasks_requests_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/requests/{task_request_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Base view that injects a ``TenantContext`` for the active request.
+         *
+         *     Subclasses can declare ``required_roles`` (a tuple of role codes) to
+         *     enforce a role check before the view method runs. The cached tenant is
+         *     exposed via :meth:`get_tenant`. The default ``permission_classes`` is
+         *     ``[IsAuthenticated]``; override it for public views (login, register).
+         *
+         *     Example::
+         *
+         *         class CaptureSessionView(TenantAPIView):
+         *             required_roles = ("EMPLOYEE", "OWNER", "MONITOR")
+         *
+         *             def post(self, request):
+         *                 context = self.get_tenant()
+         *                 company = context.company
+         *                 ...
+         */
+        post: operations["v1_tasks_requests_resolve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/scheduled-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create a named-user template, first version, and schedule atomically. */
+        post: operations["v1_tasks_scheduled_tasks_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2735,7 +2319,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_scheduler_run_create"];
+        post: operations["v1_tasks_scheduler_run_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2767,7 +2351,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_tasks_schedules_retrieve"];
+        get: operations["v1_tasks_schedules_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -2787,7 +2371,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_schedules_create"];
+        post: operations["v1_tasks_schedules_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2819,7 +2403,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_tasks_templates_retrieve"];
+        get: operations["v1_tasks_templates_retrieve"];
         put?: never;
         /**
          * @description Base view that injects a ``TenantContext`` for the active request.
@@ -2839,7 +2423,42 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_templates_create"];
+        post: operations["v1_tasks_templates_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/templates/{template_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Create immutable task instructions before a schedule can generate work. */
+        get: operations["v1_tasks_templates_versions_retrieve"];
+        put?: never;
+        /** @description Create immutable task instructions before a schedule can generate work. */
+        post: operations["v1_tasks_templates_versions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/transfer-recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return only employees eligible to receive one visible task. */
+        get: operations["v1_tasks_transfer_recipients_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2871,7 +2490,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        get: operations["api_v1_tasks_transfers_retrieve"];
+        get: operations["v1_tasks_transfers_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2907,7 +2526,7 @@ export interface paths {
          *                 company = context.company
          *                 ...
          */
-        post: operations["api_v1_tasks_transfers_resolve_create"];
+        post: operations["v1_tasks_transfers_resolve_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3054,7 +2673,7 @@ export interface components {
             /** Format: uuid */
             user: string;
             client_name: string;
-            client_fingerprint: string;
+            readonly client_fingerprint: string;
             scopes?: unknown;
             status?: components["schemas"]["AgentGrantStatusEnum"];
             readonly active: boolean;
@@ -3075,6 +2694,29 @@ export interface components {
             scopes: components["schemas"]["ScopesEnum"][];
             /** Format: date-time */
             expires_at: string;
+        };
+        /** @description Grant metadata plus the one-time secret returned only at issuance. */
+        AgentGrantCreateResponse: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            company: string;
+            /** Format: uuid */
+            user: string;
+            client_name: string;
+            readonly client_fingerprint: string;
+            scopes?: unknown;
+            status?: components["schemas"]["AgentGrantStatusEnum"];
+            readonly active: boolean;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            revoked_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly secret: string;
         };
         AgentGrantList: {
             grants: components["schemas"]["AgentGrant"][];
@@ -3137,6 +2779,16 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        BackupPolicyUpdate: {
+            destination_name?: string;
+            encrypted?: boolean;
+            schedule_cron?: string;
+            rpo_hours?: number;
+            rto_hours?: number;
+            includes_private_media?: boolean;
+            includes_configuration?: boolean;
+            includes_tenant_state?: boolean;
+        };
         BackupRun: {
             /** Format: uuid */
             readonly id: string;
@@ -3167,6 +2819,7 @@ export interface components {
         BackupStatusEnum: "requested" | "completed" | "failed" | "restored";
         Bootstrap: {
             current_user: components["schemas"]["BootstrapCurrentUser"];
+            installation: components["schemas"]["BootstrapInstallation"];
             company: components["schemas"]["BootstrapCompany"] | null;
             permissions: string[];
             branches: components["schemas"]["BootstrapBranch"][];
@@ -3198,6 +2851,9 @@ export interface components {
             login_id: string | null;
             display_name: string | null;
             role?: string | null;
+        };
+        BootstrapInstallation: {
+            setup_required: boolean;
         };
         Branch: {
             /** Format: uuid */
@@ -3262,6 +2918,12 @@ export interface components {
          * @enum {string}
          */
         CaptureSessionStatusEnum: "active" | "used" | "expired" | "revoked";
+        /**
+         * @description * `tasks` - tasks
+         *     * `evidence` - evidence
+         * @enum {string}
+         */
+        CategoriesEnum: "tasks" | "evidence";
         /**
          * @description * `healthy` - Healthy
          *     * `degraded` - Degraded
@@ -3483,7 +3145,7 @@ export interface components {
         ExportRequestCreate: {
             export_type: components["schemas"]["ExportTypeEnum"];
             branch_ids?: string[];
-            categories?: string[];
+            categories: components["schemas"]["CategoriesEnum"][];
             /** Format: date */
             start_date?: string;
             /** Format: date */
@@ -3507,20 +3169,44 @@ export interface components {
          * @enum {string}
          */
         ExportTypeEnum: "csv" | "zip" | "pdf";
-        /**
-         * @description * `restaurants_cafes` - Restaurants and Cafes
-         *     * `retail` - Retail
-         *     * `logistics` - Logistics
-         *     * `other` - Other
-         * @enum {string}
-         */
-        IndustryEnum: "restaurants_cafes" | "retail" | "logistics" | "other";
+        InitialSetup: {
+            organization_name: string;
+            owner_login_id: string;
+            owner_display_name?: string;
+            password: string;
+            setup_token: string;
+        };
         JobRole: {
             /** Format: uuid */
             readonly id: string;
             name: string;
             code: string;
             active?: boolean;
+        };
+        /**
+         * @description * `consent` - Consent
+         *     * `contract` - Contract performance
+         *     * `legal_obligation` - Legal obligation
+         *     * `vital_interests` - Vital interests
+         *     * `public_task` - Public task
+         *     * `legitimate_interests` - Legitimate interests
+         * @enum {string}
+         */
+        LawfulBasisEnum: "consent" | "contract" | "legal_obligation" | "vital_interests" | "public_task" | "legitimate_interests";
+        LegalDocument: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["LegalDocumentKindEnum"];
+            readonly version: string;
+            readonly content_path: string;
+            readonly summary: string;
+            /** Format: date */
+            readonly effective_date: string;
+            readonly supersedes_version: string;
+            /** Format: date-time */
+            readonly published_at: string;
+            /** @default false */
+            readonly is_current: boolean;
         };
         /**
          * @description * `terms` - Terms of Use
@@ -3535,79 +3221,20 @@ export interface components {
          *     * `ropa` - Record of Processing Activities
          * @enum {string}
          */
-        KindEnum: "terms" | "privacy" | "ai_transfer" | "employee_privacy" | "data_processing" | "retention" | "support_access" | "dpia" | "breach_response" | "ropa";
-        /**
-         * @description * `consent` - Consent
-         *     * `contract` - Contract performance
-         *     * `legal_obligation` - Legal obligation
-         *     * `vital_interests` - Vital interests
-         *     * `public_task` - Public task
-         *     * `legitimate_interests` - Legitimate interests
-         * @enum {string}
-         */
-        LawfulBasisEnum: "consent" | "contract" | "legal_obligation" | "vital_interests" | "public_task" | "legitimate_interests";
-        LegalDocument: {
-            /** Format: uuid */
-            readonly id: string;
-            readonly kind: components["schemas"]["KindEnum"];
-            readonly version: string;
-            readonly content_path: string;
-            readonly summary: string;
-            /** Format: date */
-            readonly effective_date: string;
-            readonly supersedes_version: string;
-            /** Format: date-time */
-            readonly published_at: string;
-            /** @default false */
-            readonly is_current: boolean;
-        };
+        LegalDocumentKindEnum: "terms" | "privacy" | "ai_transfer" | "employee_privacy" | "data_processing" | "retention" | "support_access" | "dpia" | "breach_response" | "ropa";
         Login: {
-            company_code: string;
             login_id: string;
             password: string;
-            mfa_code?: string;
         };
         MemberCreate: {
             login_id: string;
             password: string;
             display_name?: string;
             role: components["schemas"]["RoleEnum"];
-        };
-        /**
-         * @description * `totp` - TOTP
-         *     * `passkey` - Passkey
-         * @enum {string}
-         */
-        MethodTypeEnum: "totp" | "passkey";
-        MfaEnrollRequest: {
-            method_type: components["schemas"]["MethodTypeEnum"];
-            label?: string;
-        };
-        MfaEnrollment: {
-            readonly id: number;
-            method_type: components["schemas"]["MethodTypeEnum"];
-            label?: string;
-            credential_id?: string;
-            public_key?: string;
-            /** Format: date-time */
-            readonly verified_at: string | null;
-            active?: boolean;
-        };
-        MfaEnrollmentCreate: {
-            readonly id: number;
-            method_type: components["schemas"]["MethodTypeEnum"];
-            label?: string;
-            credential_id?: string;
-            public_key?: string;
-            /** Format: date-time */
-            readonly verified_at: string | null;
-            active?: boolean;
-            readonly secret: string;
-        };
-        MfaVerify: {
             /** Format: uuid */
-            enrollment_id: string;
-            code: string;
+            branch_id?: string;
+            /** Format: uuid */
+            job_role_id?: string;
         };
         Notification: {
             /** Format: uuid */
@@ -3643,28 +3270,6 @@ export interface components {
             monthly_cost_limit?: string;
             enabled?: boolean;
         };
-        PatchedPilotChangeRequestUpdate: {
-            status?: string;
-            rationale?: string;
-        };
-        PatchedPilotIssueUpdate: {
-            status?: string;
-            details?: string;
-        };
-        PatchedPilotProgramUpdate: {
-            status?: string;
-            branch_count_target?: number;
-            employee_count_target?: number;
-            chrome_device_count?: number;
-            ai_provider_name?: string;
-            connector_owner?: string;
-            test_environment?: string;
-            success_measures?: string[];
-            escalation_contacts?: string[];
-            operating_checklist?: string[];
-            weekly_metrics_goal?: unknown;
-            notes?: string;
-        };
         PatchedReviewPolicyUpdate: {
             employee_score_visibility?: components["schemas"]["EmployeeScoreVisibilityEnum"];
             historical_report_restatement?: boolean;
@@ -3673,208 +3278,6 @@ export interface components {
             extra_evidence_required?: boolean;
             owner_alerts_enabled?: boolean;
             approved_task_weight_cap?: number;
-        };
-        PilotChangeRequest: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            pilot_program: string;
-            title: string;
-            rationale?: string;
-            status?: string;
-            /** Format: uuid */
-            approved_by?: string | null;
-            /** Format: uuid */
-            created_by: string;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        PilotChangeRequestCreate: {
-            title: string;
-            rationale?: string;
-        };
-        PilotChangeRequestList: {
-            change_requests: components["schemas"]["PilotChangeRequest"][];
-        };
-        PilotCharter: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            pilot_program: string;
-            /** Format: uuid */
-            company: string;
-            decision: components["schemas"]["PilotCharterDecisionEnum"];
-            rationale: string;
-            conditions?: string;
-            /** Format: date */
-            observation_start?: string | null;
-            /** Format: date */
-            observation_end?: string | null;
-            success_measures?: unknown;
-            /** Format: uuid */
-            signed_by: string;
-            /** Format: date-time */
-            readonly signed_at: string;
-            signature_hmac?: string;
-            readonly signature_valid: boolean;
-            metadata?: unknown;
-        };
-        PilotCharterCreate: {
-            decision: components["schemas"]["PilotCharterDecisionEnum"];
-            rationale: string;
-            conditions?: string;
-            /** Format: date */
-            observation_start?: string | null;
-            /** Format: date */
-            observation_end?: string | null;
-            success_measures?: string[];
-            metadata?: unknown;
-        };
-        /**
-         * @description * `authorize` - Authorize
-         *     * `decline` - Decline
-         *     * `withdraw` - Withdraw
-         * @enum {string}
-         */
-        PilotCharterDecisionEnum: "authorize" | "decline" | "withdraw";
-        PilotCharterSummary: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            pilot_program: string;
-            decision: string;
-            rationale: string;
-            conditions: string;
-            /** Format: date */
-            observation_start: string | null;
-            /** Format: date */
-            observation_end: string | null;
-            success_measures: string[];
-            /** Format: uuid */
-            signed_by: string;
-            /** Format: date-time */
-            signed_at: string;
-            signature_valid: boolean;
-        };
-        PilotDashboard: {
-            program: components["schemas"]["PilotDashboardProgram"];
-            summary: components["schemas"]["PilotDashboardSummary"];
-            counts: components["schemas"]["PilotDashboardCounts"];
-            charter: components["schemas"]["PilotCharterSummary"] | null;
-            /** Format: uuid */
-            program_id: string;
-        };
-        PilotDashboardCounts: {
-            issues: number;
-            change_requests: number;
-            reports: number;
-        };
-        PilotDashboardProgram: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            company: string;
-            status: string;
-            branch_count_target: number;
-            employee_count_target: number;
-            chrome_device_count: number;
-            ai_provider_name: string;
-            connector_owner: string;
-            test_environment: string;
-            success_measures: string[];
-            escalation_contacts: string[];
-            operating_checklist: string[];
-            weekly_metrics_goal: unknown;
-            notes: string;
-        };
-        PilotDashboardSummary: {
-            evidence_items_week: number;
-            image_evidence_week: number;
-            face_blurred_week: number;
-            ai_runs_week: number;
-            /** Format: decimal */
-            ai_agreement_rate: string;
-            backup_completed: boolean;
-            connector_status: string;
-            connector_health: string;
-            exports_completed: number;
-            reviews_created: number;
-        };
-        PilotIssue: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            pilot_program: string;
-            title: string;
-            severity?: string;
-            status?: string;
-            details?: string;
-            /** Format: uuid */
-            created_by: string;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        PilotIssueCreate: {
-            title: string;
-            /** @default medium */
-            severity: string;
-            details?: string;
-        };
-        PilotIssueList: {
-            issues: components["schemas"]["PilotIssue"][];
-        };
-        PilotProgram: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            company: string;
-            status?: string;
-            branch_count_target?: number;
-            employee_count_target?: number;
-            chrome_device_count?: number;
-            ai_provider_name?: string;
-            connector_owner?: string;
-            test_environment?: string;
-            success_measures?: unknown;
-            escalation_contacts?: unknown;
-            operating_checklist?: unknown;
-            weekly_metrics_goal?: unknown;
-            notes?: string;
-            /** Format: uuid */
-            updated_by?: string | null;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
-        };
-        PilotWeeklyReport: {
-            /** Format: uuid */
-            readonly id: string;
-            /** Format: uuid */
-            pilot_program: string;
-            /** Format: date */
-            week_ending: string;
-            metrics?: unknown;
-            /** Format: decimal */
-            ai_agreement_rate?: string;
-            error_analysis?: string;
-            capacity_findings?: string;
-            /** Format: uuid */
-            created_by: string;
-            /** Format: date-time */
-            readonly created_at: string;
-        };
-        PilotWeeklyReportCreate: {
-            /** Format: date */
-            week_ending: string;
-            metrics?: unknown;
-            /** Format: decimal */
-            ai_agreement_rate?: string;
-            error_analysis?: string;
-            capacity_findings?: string;
-        };
-        PilotWeeklyReportList: {
-            reports: components["schemas"]["PilotWeeklyReport"][];
         };
         /** @description Serializer for :class:`ProcessingActivity` rows. */
         ProcessingActivity: {
@@ -3904,25 +3307,6 @@ export interface components {
          * @enum {string}
          */
         RecurrenceTypeEnum: "daily_fixed" | "weekly_fixed" | "shift_relative";
-        Register: {
-            company_name: string;
-            company_code: string;
-            industry: components["schemas"]["IndustryEnum"];
-            owner_login_id: string;
-            owner_password: string;
-            owner_display_name?: string;
-            /** Format: email */
-            contact_email?: string;
-            contact_phone?: string;
-        };
-        RegisterResponse: {
-            company: {
-                [key: string]: unknown;
-            };
-            owner: {
-                [key: string]: unknown;
-            };
-        };
         /**
          * @description * `access` - Right to Access
          *     * `rectification` - Right to Rectification
@@ -4033,6 +3417,32 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "owner" | "monitor" | "employee";
+        ScheduledTaskCreate: {
+            /** Format: uuid */
+            branch_id: string;
+            slug?: string;
+            name: string;
+            description?: string;
+            /** Format: uuid */
+            assigned_user_id: string;
+            instructions: string;
+            checklist_definition?: unknown[];
+            evidence_requirements?: unknown[];
+            reference_instructions?: string;
+            risk_level?: components["schemas"]["RiskLevelEnum"];
+            task_weight?: number;
+            recurrence_type: components["schemas"]["RecurrenceTypeEnum"];
+            /** Format: time */
+            scheduled_time?: string | null;
+            weekday?: number | null;
+            /** @default 0 */
+            shift_offset_minutes: number;
+        };
+        ScheduledTaskCreateResponse: {
+            template: components["schemas"]["TaskTemplate"];
+            version: components["schemas"]["TaskTemplateVersion"];
+            schedule: components["schemas"]["TaskSchedule"];
+        };
         /**
          * @description * `admin:full` - admin:full
          *     * `read:reports` - read:reports
@@ -4050,19 +3460,6 @@ export interface components {
          * @enum {string}
          */
         SeverityEnum: "info" | "success" | "warning" | "danger";
-        SupportAuthorization: {
-            readonly id: number;
-            /** Format: uuid */
-            support_user: string;
-            /** Format: date-time */
-            readonly granted_at: string;
-            /** Format: date-time */
-            expires_at: string;
-            /** Format: date-time */
-            revoked_at?: string | null;
-            reason: string;
-            active?: boolean;
-        };
         TaskDiscussionCreate: {
             /** Format: uuid */
             task_instance_id: string;
@@ -4094,6 +3491,9 @@ export interface components {
         TaskInstance: {
             /** Format: uuid */
             readonly id: string;
+            readonly name: string;
+            readonly branch_name: string;
+            readonly assigned_user_name: string;
             /** Format: uuid */
             company: string;
             /** Format: uuid */
@@ -4157,6 +3557,61 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        TaskRequest: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            company: string;
+            /** Format: uuid */
+            branch: string;
+            /** Format: uuid */
+            task_instance?: string | null;
+            /** Format: uuid */
+            requested_by: string;
+            /** Format: uuid */
+            requested_to?: string | null;
+            kind: components["schemas"]["TaskRequestKindEnum"];
+            reason: string;
+            status?: components["schemas"]["TaskRequestStatusEnum"];
+            decision_reason?: string;
+            /** Format: uuid */
+            decided_by?: string | null;
+            /** Format: date-time */
+            decided_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        TaskRequestCreate: {
+            /** Format: uuid */
+            branch_id: string;
+            /** Format: uuid */
+            task_instance_id?: string | null;
+            /** Format: uuid */
+            requested_to_id?: string | null;
+            kind: components["schemas"]["TaskRequestKindEnum"];
+            reason: string;
+        };
+        TaskRequestDecision: {
+            approved: boolean;
+            decision_reason?: string;
+        };
+        /**
+         * @description * `cancellation` - Cancellation
+         *     * `unable_to_complete` - Unable to complete
+         *     * `task_suggestion` - Task suggestion
+         *     * `transfer` - Transfer
+         * @enum {string}
+         */
+        TaskRequestKindEnum: "cancellation" | "unable_to_complete" | "task_suggestion" | "transfer";
+        /**
+         * @description * `pending` - Pending
+         *     * `approved` - Approved
+         *     * `rejected` - Rejected
+         * @enum {string}
+         */
+        TaskRequestStatusEnum: "pending" | "approved" | "rejected";
         TaskSchedule: {
             /** Format: uuid */
             readonly id: string;
@@ -4222,29 +3677,54 @@ export interface components {
             risk_level?: components["schemas"]["RiskLevelEnum"];
             task_weight?: number;
         };
+        TaskTemplateVersion: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            template: string;
+            version_number: number;
+            instructions: string;
+            checklist_definition?: unknown;
+            evidence_requirements?: unknown;
+            reference_instructions?: string;
+            risk_level?: components["schemas"]["RiskLevelEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        TaskTemplateVersionCreate: {
+            instructions: string;
+            checklist_definition?: unknown[];
+            evidence_requirements?: unknown[];
+            reference_instructions?: string;
+            risk_level?: components["schemas"]["RiskLevelEnum"];
+        };
+        TaskTransferRecipient: {
+            /** Format: uuid */
+            id: string;
+            display_name: string;
+        };
+        TaskTransferRecipientList: {
+            recipients: components["schemas"]["TaskTransferRecipient"][];
+        };
         TaskTransferRequest: {
             /** Format: uuid */
             readonly id: string;
+            readonly task_name: string;
             /** Format: uuid */
             task_instance: string;
             /** Format: uuid */
             requested_by: string;
+            readonly requested_by_name: string;
             /** Format: uuid */
             requested_to: string;
-            status?: components["schemas"]["TaskTransferRequestStatusEnum"];
+            readonly requested_to_name: string;
+            status?: components["schemas"]["TaskRequestStatusEnum"];
             reason?: string;
             /** Format: uuid */
             decided_by?: string | null;
             /** Format: date-time */
             decided_at?: string | null;
         };
-        /**
-         * @description * `pending` - Pending
-         *     * `approved` - Approved
-         *     * `rejected` - Rejected
-         * @enum {string}
-         */
-        TaskTransferRequestStatusEnum: "pending" | "approved" | "rejected";
         TaskTransition: {
             reason?: string;
             /** Format: uuid */
@@ -4334,7 +3814,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    api_schema_retrieve: {
+    schema_retrieve: {
         parameters: {
             query?: {
                 format?: "json" | "yaml";
@@ -4406,7 +3886,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AgentGrant"];
+                    "application/json": components["schemas"]["AgentGrantCreateResponse"];
                 };
             };
         };
@@ -4478,7 +3958,7 @@ export interface operations {
             };
         };
     };
-    api_v1_agent_mcp_create: {
+    v1_agent_mcp_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4512,7 +3992,7 @@ export interface operations {
             };
         };
     };
-    api_v1_agent_scopes_retrieve: {
+    v1_agent_scopes_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4531,7 +4011,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_analysis_create: {
+    v1_ai_analysis_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4556,7 +4036,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_criteria_retrieve: {
+    v1_ai_criteria_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4574,7 +4054,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_criteria_create: {
+    v1_ai_criteria_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4599,7 +4079,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_provider_retrieve: {
+    v1_ai_provider_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4618,7 +4098,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_provider_partial_update: {
+    v1_ai_provider_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4643,7 +4123,7 @@ export interface operations {
             };
         };
     };
-    api_v1_ai_shadow_retrieve: {
+    v1_ai_shadow_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4661,7 +4141,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_company_acceptances_create: {
+    v1_auth_company_acceptances_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4689,7 +4169,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_company_branch_memberships_create: {
+    v1_auth_company_branch_memberships_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4717,7 +4197,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_company_members_retrieve: {
+    v1_auth_company_members_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4735,44 +4215,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_company_support_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupportAuthorization"];
-                };
-            };
-        };
-    };
-    api_v1_auth_company_support_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_auth_company_users_create: {
+    v1_auth_company_users_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4800,7 +4243,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_login_create: {
+    v1_auth_login_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4825,7 +4268,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_logout_create: {
+    v1_auth_logout_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4843,7 +4286,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_me_retrieve: {
+    v1_auth_me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4861,82 +4304,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_mfa_enroll_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MfaEnrollRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["MfaEnrollRequest"];
-                "multipart/form-data": components["schemas"]["MfaEnrollRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MfaEnrollmentCreate"];
-                };
-            };
-        };
-    };
-    api_v1_auth_mfa_verify_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MfaVerify"];
-                "application/x-www-form-urlencoded": components["schemas"]["MfaVerify"];
-                "multipart/form-data": components["schemas"]["MfaVerify"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MfaEnrollment"];
-                };
-            };
-        };
-    };
-    api_v1_auth_register_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Register"];
-                "application/x-www-form-urlencoded": components["schemas"]["Register"];
-                "multipart/form-data": components["schemas"]["Register"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RegisterResponse"];
-                };
-            };
-        };
-    };
-    api_v1_backups_download_retrieve: {
+    v1_backups_download_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4956,7 +4324,7 @@ export interface operations {
             };
         };
     };
-    api_v1_backups_policy_retrieve: {
+    v1_backups_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4974,7 +4342,7 @@ export interface operations {
             };
         };
     };
-    api_v1_backups_policy_update: {
+    v1_backups_policy_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4983,9 +4351,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["BackupCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["BackupCreate"];
-                "multipart/form-data": components["schemas"]["BackupCreate"];
+                "application/json": components["schemas"]["BackupPolicyUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BackupPolicyUpdate"];
+                "multipart/form-data": components["schemas"]["BackupPolicyUpdate"];
             };
         };
         responses: {
@@ -4999,7 +4367,7 @@ export interface operations {
             };
         };
     };
-    api_v1_backups_restore_create: {
+    v1_backups_restore_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5024,7 +4392,7 @@ export interface operations {
             };
         };
     };
-    api_v1_backups_runs_create: {
+    v1_backups_runs_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5049,7 +4417,7 @@ export interface operations {
             };
         };
     };
-    api_v1_backups_runs_list_retrieve: {
+    v1_backups_runs_list_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5067,7 +4435,7 @@ export interface operations {
             };
         };
     };
-    api_v1_bootstrap_retrieve: {
+    v1_bootstrap_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5086,7 +4454,7 @@ export interface operations {
             };
         };
     };
-    api_v1_bootstrap_legacy_retrieve: {
+    v1_bootstrap_legacy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5105,7 +4473,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_list: {
+    v1_compliance_dsr_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -5124,7 +4492,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_create: {
+    v1_compliance_dsr_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5149,7 +4517,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_complete_create: {
+    v1_compliance_dsr_complete_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5176,7 +4544,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_reject_create: {
+    v1_compliance_dsr_reject_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5203,7 +4571,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_start_create: {
+    v1_compliance_dsr_start_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5230,7 +4598,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_dsr_verify_create: {
+    v1_compliance_dsr_verify_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5257,7 +4625,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_legal_documents_list: {
+    v1_compliance_legal_documents_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -5276,7 +4644,7 @@ export interface operations {
             };
         };
     };
-    api_v1_compliance_ropa_list: {
+    v1_compliance_ropa_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -5295,7 +4663,7 @@ export interface operations {
             };
         };
     };
-    api_v1_connectors_enrollment_retrieve: {
+    v1_connectors_enrollment_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5313,7 +4681,7 @@ export interface operations {
             };
         };
     };
-    api_v1_connectors_enrollment_create: {
+    v1_connectors_enrollment_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5338,7 +4706,7 @@ export interface operations {
             };
         };
     };
-    api_v1_connectors_health_retrieve: {
+    v1_connectors_health_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5356,7 +4724,7 @@ export interface operations {
             };
         };
     };
-    api_v1_connectors_heartbeat_create: {
+    v1_connectors_heartbeat_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5381,7 +4749,7 @@ export interface operations {
             };
         };
     };
-    api_v1_connectors_revoke_create: {
+    v1_connectors_revoke_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5406,7 +4774,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_capture_sessions_create: {
+    v1_evidence_capture_sessions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5431,7 +4799,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_health_media_retrieve: {
+    v1_evidence_health_media_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5449,7 +4817,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_issues_create: {
+    v1_evidence_issues_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5474,7 +4842,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_issues_messages_retrieve: {
+    v1_evidence_issues_messages_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5494,7 +4862,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_issues_messages_create: {
+    v1_evidence_issues_messages_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5521,7 +4889,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_items_media_retrieve: {
+    v1_evidence_items_media_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5541,7 +4909,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_submit_create: {
+    v1_evidence_submit_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5565,7 +4933,7 @@ export interface operations {
             };
         };
     };
-    api_v1_evidence_tasks_retrieve: {
+    v1_evidence_tasks_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5585,7 +4953,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exit_decisions_list: {
+    v1_exit_decisions_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -5606,7 +4974,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exit_decisions_create: {
+    v1_exit_decisions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5633,7 +5001,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exports_download_retrieve: {
+    v1_exports_download_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5653,7 +5021,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exports_policy_retrieve: {
+    v1_exports_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5672,7 +5040,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exports_requests_create: {
+    v1_exports_requests_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5697,7 +5065,7 @@ export interface operations {
             };
         };
     };
-    api_v1_exports_requests_list_retrieve: {
+    v1_exports_requests_list_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5779,7 +5147,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_branches_retrieve: {
+    v1_organizations_branches_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5797,7 +5165,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_branches_create: {
+    v1_organizations_branches_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5822,7 +5190,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_job_roles_retrieve: {
+    v1_organizations_job_roles_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5840,7 +5208,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_job_roles_create: {
+    v1_organizations_job_roles_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5865,7 +5233,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_memberships_retrieve: {
+    v1_organizations_memberships_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5883,7 +5251,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_weekly_shifts_retrieve: {
+    v1_organizations_weekly_shifts_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -5901,7 +5269,7 @@ export interface operations {
             };
         };
     };
-    api_v1_organizations_weekly_shifts_create: {
+    v1_organizations_weekly_shifts_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5926,300 +5294,7 @@ export interface operations {
             };
         };
     };
-    api_v1_pilot_change_requests_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotChangeRequestList"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_change_requests_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PilotChangeRequestCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PilotChangeRequestCreate"];
-                "multipart/form-data": components["schemas"]["PilotChangeRequestCreate"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotChangeRequest"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_change_requests_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                change_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedPilotChangeRequestUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPilotChangeRequestUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedPilotChangeRequestUpdate"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotChangeRequest"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_charter_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotCharter"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_charter_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PilotCharterCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PilotCharterCreate"];
-                "multipart/form-data": components["schemas"]["PilotCharterCreate"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotCharter"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_dashboard_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotDashboard"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_issues_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotIssueList"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_issues_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PilotIssueCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PilotIssueCreate"];
-                "multipart/form-data": components["schemas"]["PilotIssueCreate"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotIssue"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_issues_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                issue_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedPilotIssueUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPilotIssueUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedPilotIssueUpdate"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotIssue"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_program_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotProgram"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_program_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedPilotProgramUpdate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedPilotProgramUpdate"];
-                "multipart/form-data": components["schemas"]["PatchedPilotProgramUpdate"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotProgram"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_weekly_reports_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotWeeklyReportList"];
-                };
-            };
-        };
-    };
-    api_v1_pilot_weekly_reports_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PilotWeeklyReportCreate"];
-                "application/x-www-form-urlencoded": components["schemas"]["PilotWeeklyReportCreate"];
-                "multipart/form-data": components["schemas"]["PilotWeeklyReportCreate"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PilotWeeklyReport"];
-                };
-            };
-        };
-    };
-    api_v1_platform_bootstrap_retrieve: {
+    v1_platform_bootstrap_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6238,7 +5313,7 @@ export interface operations {
             };
         };
     };
-    api_v1_platform_bootstrap_legacy_retrieve: {
+    v1_platform_bootstrap_legacy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6257,7 +5332,7 @@ export interface operations {
             };
         };
     };
-    api_v1_platform_exit_decisions_list: {
+    v1_platform_exit_decisions_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -6278,7 +5353,7 @@ export interface operations {
             };
         };
     };
-    api_v1_platform_exit_decisions_create: {
+    v1_platform_exit_decisions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6305,7 +5380,7 @@ export interface operations {
             };
         };
     };
-    api_v1_reviews_dashboard_retrieve: {
+    v1_reviews_dashboard_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6323,7 +5398,7 @@ export interface operations {
             };
         };
     };
-    api_v1_reviews_decisions_create: {
+    v1_reviews_decisions_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6348,7 +5423,7 @@ export interface operations {
             };
         };
     };
-    api_v1_reviews_policy_retrieve: {
+    v1_reviews_policy_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6367,7 +5442,7 @@ export interface operations {
             };
         };
     };
-    api_v1_reviews_policy_partial_update: {
+    v1_reviews_policy_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -6392,7 +5467,7 @@ export interface operations {
             };
         };
     };
-    api_v1_reviews_queue_retrieve: {
+    v1_reviews_queue_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6410,7 +5485,32 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_retrieve: {
+    v1_setup_initialize_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitialSetup"];
+                "application/x-www-form-urlencoded": components["schemas"]["InitialSetup"];
+                "multipart/form-data": components["schemas"]["InitialSetup"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSession"];
+                };
+            };
+        };
+    };
+    v1_tasks_instances_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6428,7 +5528,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_cancel_create: {
+    v1_tasks_instances_cancel_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6455,7 +5555,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_claim_create: {
+    v1_tasks_instances_claim_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6476,7 +5576,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_complete_create: {
+    v1_tasks_instances_complete_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6497,7 +5597,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_start_create: {
+    v1_tasks_instances_start_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6518,7 +5618,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_instances_transfers_create: {
+    v1_tasks_instances_transfers_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6545,7 +5645,102 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_scheduler_run_create: {
+    v1_tasks_requests_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Task requests within the active user's scope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_tasks_requests_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskRequestCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["TaskRequestCreate"];
+                "multipart/form-data": components["schemas"]["TaskRequestCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRequest"];
+                };
+            };
+        };
+    };
+    v1_tasks_requests_resolve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskRequestDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["TaskRequestDecision"];
+                "multipart/form-data": components["schemas"]["TaskRequestDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRequest"];
+                };
+            };
+        };
+    };
+    v1_tasks_scheduled_tasks_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduledTaskCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ScheduledTaskCreate"];
+                "multipart/form-data": components["schemas"]["ScheduledTaskCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledTaskCreateResponse"];
+                };
+            };
+        };
+    };
+    v1_tasks_scheduler_run_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6567,7 +5762,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_schedules_retrieve: {
+    v1_tasks_schedules_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6585,7 +5780,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_schedules_create: {
+    v1_tasks_schedules_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6610,7 +5805,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_templates_retrieve: {
+    v1_tasks_templates_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6628,7 +5823,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_templates_create: {
+    v1_tasks_templates_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6653,7 +5848,73 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_transfers_retrieve: {
+    v1_tasks_templates_versions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versions for a task template. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_tasks_templates_versions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskTemplateVersionCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["TaskTemplateVersionCreate"];
+                "multipart/form-data": components["schemas"]["TaskTemplateVersionCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskTemplateVersion"];
+                };
+            };
+        };
+    };
+    v1_tasks_transfer_recipients_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskTransferRecipientList"];
+                };
+            };
+        };
+    };
+    v1_tasks_transfers_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6671,7 +5932,7 @@ export interface operations {
             };
         };
     };
-    api_v1_tasks_transfers_resolve_create: {
+    v1_tasks_transfers_resolve_create: {
         parameters: {
             query?: never;
             header?: never;

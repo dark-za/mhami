@@ -10,8 +10,9 @@ pytestmark = pytest.mark.django_db
 
 
 def test_company_operational_state(make_user, make_company):
-    """TRIAL companies are operational; SUSPENDED companies are not."""
+    """ACTIVE companies are operational; SUSPENDED companies are not."""
     company = make_company()
     assert company.is_operational() is True
+    assert company.status == CompanyStatus.ACTIVE
     company.status = CompanyStatus.SUSPENDED
     assert company.is_operational() is False

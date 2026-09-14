@@ -28,7 +28,7 @@ x-backend-defaults: &backend_defaults
       max-size: "10m"
       max-file: "3"
   healthcheck:
-    test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health/live"]
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')"]
     interval: 30s
     timeout: 5s
     retries: 3
@@ -40,7 +40,6 @@ x-backend-prod-env: &backend_prod_env
   DJANGO_DEBUG: "false"
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
   DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Set DJANGO_ALLOWED_HOSTS in .env}
-  MFA_ENCRYPTION_KEYS: ${MFA_ENCRYPTION_KEYS:?Set MFA_ENCRYPTION_KEYS in .env}
   POSTGRES_DB: ${POSTGRES_DB:-platform}
   POSTGRES_USER: ${POSTGRES_USER:-platform}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
@@ -50,7 +49,7 @@ x-backend-prod-env: &backend_prod_env
   # fast here is what prevents the ImproperlyConfigured error at runtime
   # and keeps the audit chain's HMAC defense line non-bypassable.
   AUDIT_HMAC_SECRET: ${AUDIT_HMAC_SECRET:?Set AUDIT_HMAC_SECRET in .env}
-  MCP_INTERNAL_HMAC_SECRET: ${MCP_INTERNAL_HMAC_SECRET:?Set MCP_INTERNAL_HMAC_SECRET in .env}
+  METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env}
 
 # Production-only runtime hardening: read-only root filesystem, bounded
 # tmpfs, restart policy, and the writable media volume that Django needs.
@@ -86,11 +85,10 @@ services:
     command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3}"]
     environment:
       <<: *backend_prod_env
-      METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
-      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
-      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
-      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:-}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:-}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:-}
       BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
       BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
       BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
@@ -102,7 +100,7 @@ services:
     <<: *backend_restart
 
   worker:
-    <<: [*backend_defaults, *backend_restart]
+    <<: *backend_restart
     command:
       [
         "celery",
@@ -119,9 +117,9 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
-      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
-      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
-      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:-}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:-}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:-}
       BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
       BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
       BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
@@ -145,7 +143,7 @@ services:
       start_period: 20s
 
   beat:
-    <<: [*backend_defaults, *backend_restart]
+    <<: *backend_restart
     command:
       [
         "celery",
@@ -160,9 +158,9 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in .env}
-      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:?Set BACKUP_EXTERNAL_URI in .env}
-      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:?Set BACKUP_EXTERNAL_KEY_ID in .env}
-      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:?Set BACKUP_EXTERNAL_KEYS in .env}
+      BACKUP_EXTERNAL_URI: ${BACKUP_EXTERNAL_URI:-}
+      BACKUP_EXTERNAL_KEY_ID: ${BACKUP_EXTERNAL_KEY_ID:-}
+      BACKUP_EXTERNAL_KEYS: ${BACKUP_EXTERNAL_KEYS:-}
       BACKUP_EXTERNAL_REGION: ${BACKUP_EXTERNAL_REGION:-}
       BACKUP_EXTERNAL_ENDPOINT: ${BACKUP_EXTERNAL_ENDPOINT:-}
       BACKUP_EXTERNAL_SSE: ${BACKUP_EXTERNAL_SSE:-AES256}
@@ -201,8 +199,8 @@ services:
       start_period: 20s
 
   # ---- INFRA-05: Let's Encrypt certbot --------------------------------
-  # Webroot issuance + renewal; the ``certbot-renew`` sidecar takes over
-  # the daily renew loop once issuance has succeeded.
+  # Webroot issuance + renewal. Certificates are shared with Nginx through
+  # the same named volume and stable certificate name.
   certbot:
     image: certbot/certbot
     user: "0:0"
@@ -219,47 +217,29 @@ services:
         trap exit TERM
         while :; do
           certbot certonly \
+            --config-dir=/etc/nginx/certs \
+            --work-dir=/tmp/certbot-work \
+            --logs-dir=/tmp/certbot-logs \
+            --cert-name mhami \
             --webroot \
             --webroot-path=/var/www/certbot \
             --email $${LETSENCRYPT_EMAIL:?Set LETSENCRYPT_EMAIL in .env} \
             --agree-tos \
             --no-eff-email \
+            --non-interactive \
+            --keep-until-expiring \
             -d $${LETSENCRYPT_DOMAIN:?Set LETSENCRYPT_DOMAIN in .env}
           sleep 12h
         done
     volumes:
-      - certs:/etc/letsencrypt
+      - certs:/etc/nginx/certs
       - certbot-webroot:/var/www/certbot
+    environment:
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      LETSENCRYPT_DOMAIN: ${LETSENCRYPT_DOMAIN:-}
     depends_on:
       frontend:
         condition: service_started
-    restart: unless-stopped
-    profiles:
-      - certbot
-
-  certbot-renew:
-    image: certbot/certbot
-    user: "0:0"
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    mem_limit: 128m
-    pids_limit: 50
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        while :; do
-          certbot renew --webroot --webroot-path=/var/www/certbot
-          sleep 24h
-        done
-    volumes:
-      - certs:/etc/letsencrypt
-      - certbot-webroot:/var/www/certbot
-    depends_on:
-      certbot:
-        condition: service_completed_successfully
     restart: unless-stopped
     profiles:
       - certbot

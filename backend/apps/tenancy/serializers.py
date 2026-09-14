@@ -4,45 +4,46 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from apps.identity.models import MfaEnrollment, MfaMethodType
 from apps.organizations.models import Branch, CompanyMembership, CompanyRole, JobRole
 
-from .models import Company, IndustryChoice, LegalAcceptance, LegalDocumentType, SupportAuthorization
-
-
-class RegisterSerializer(serializers.Serializer):
-    company_name = serializers.CharField(max_length=255)
-    company_code = serializers.CharField(max_length=64)
-    industry = serializers.ChoiceField(choices=IndustryChoice.choices)
-    owner_login_id = serializers.CharField(max_length=150)
-    owner_password = serializers.CharField(min_length=12, write_only=True)
-    owner_display_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
-    contact_email = serializers.EmailField(required=False, allow_blank=True)
-    contact_phone = serializers.CharField(required=False, allow_blank=True)
-
-    def validate_owner_password(self, value: str) -> str:
-        try:
-            validate_password(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(list(exc.messages)) from exc
-        return value
-
-
-class RegisterResponseSerializer(serializers.Serializer):
-    company = serializers.DictField()
-    owner = serializers.DictField()
+from .models import Company, LegalAcceptance, LegalDocumentType
 
 
 class LoginSerializer(serializers.Serializer):
-    company_code = serializers.CharField(max_length=64)
     login_id = serializers.CharField(max_length=150)
-    password = serializers.CharField(write_only=True)
-    mfa_code = serializers.CharField(required=False, allow_blank=True)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        rejected = set(self.initial_data) - {"login_id", "password"}
+        if rejected:
+            raise serializers.ValidationError(
+                {f: "This field is not accepted." for f in sorted(rejected)}
+            )
+        return attrs
 
 
 class AuthSessionSerializer(serializers.Serializer):
     user = serializers.DictField()
     company = serializers.DictField()
+
+
+class InitialSetupSerializer(serializers.Serializer):
+    organization_name = serializers.CharField(max_length=255)
+    owner_login_id = serializers.CharField(max_length=150)
+    owner_display_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    password = serializers.CharField(min_length=12, write_only=True, trim_whitespace=False)
+    setup_token = serializers.CharField(min_length=16, max_length=512, write_only=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        accepted = {"organization_name", "owner_login_id", "owner_display_name", "password", "setup_token"}
+        rejected = set(self.initial_data) - accepted
+        if rejected:
+            raise serializers.ValidationError({field: "This field is not accepted." for field in sorted(rejected)})
+        try:
+            validate_password(attrs["password"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
+        return attrs
 
 
 class UserSerializer(serializers.Serializer):
@@ -60,9 +61,7 @@ class CompanySerializer(serializers.ModelSerializer):
             "code",
             "industry",
             "status",
-            "trial_ends_at",
-            "read_only_until",
-            "deletion_due_at",
+            "suspended_at",
         ]
 
 
@@ -94,47 +93,13 @@ class LegalAcceptanceSerializer(serializers.ModelSerializer):
         fields = ["document_type", "document_version", "accepted_at"]
 
 
-class SupportAuthorizationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SupportAuthorization
-        fields = ["id", "support_user", "granted_at", "expires_at", "revoked_at", "reason", "active"]
-
-
-class SupportAuthorizationCreateSerializer(serializers.Serializer):
-    support_user_id = serializers.UUIDField()
-    reason = serializers.CharField(max_length=255, trim_whitespace=True)
-    expires_at = serializers.DateTimeField()
-
-
-class MfaEnrollmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MfaEnrollment
-        fields = ["id", "method_type", "label", "credential_id", "public_key", "verified_at", "active"]
-        read_only_fields = ["verified_at"]
-
-
-class MfaEnrollmentCreateSerializer(MfaEnrollmentSerializer):
-    secret = serializers.CharField(read_only=True)
-
-    class Meta(MfaEnrollmentSerializer.Meta):
-        fields = [*MfaEnrollmentSerializer.Meta.fields, "secret"]
-
-
-class MfaEnrollRequestSerializer(serializers.Serializer):
-    method_type = serializers.ChoiceField(choices=MfaMethodType.choices)
-    label = serializers.CharField(max_length=120, required=False, allow_blank=True)
-
-
-class MfaVerifySerializer(serializers.Serializer):
-    enrollment_id = serializers.UUIDField()
-    code = serializers.CharField(max_length=16)
-
-
 class MemberCreateSerializer(serializers.Serializer):
     login_id = serializers.CharField(max_length=150)
-    password = serializers.CharField(min_length=12, write_only=True)
+    password = serializers.CharField(min_length=12, write_only=True, trim_whitespace=False)
     display_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     role = serializers.ChoiceField(choices=CompanyRole.choices)
+    branch_id = serializers.UUIDField(required=False)
+    job_role_id = serializers.UUIDField(required=False)
 
     def validate_password(self, value: str) -> str:
         try:

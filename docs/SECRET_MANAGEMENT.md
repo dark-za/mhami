@@ -18,7 +18,6 @@ missing or empty value prevents the stack from booting.
 |---|---|---|
 | `DJANGO_SECRET_KEY` | `api`, `worker`, `beat` | Long random string, never "change-me". Rotating invalidates all Django sessions. |
 | `DJANGO_ALLOWED_HOSTS` | `api` | Comma-separated hostnames. Misconfiguration leads to 400 responses in browsers. |
-| `MFA_ENCRYPTION_KEYS` | `api` | Comma-separated Fernet keys. See MFA section below. |
 | `AUDIT_HMAC_SECRET` | `api`, `worker`, `beat` | Independent of `DJANGO_SECRET_KEY`. Protects the audit chain HMAC. |
 | `METRICS_TOKEN` | `api` | Bearer token for the metrics endpoint. Rotate quarterly. |
 | `BACKUP_EXTERNAL_URI` | `api`, `worker`, `beat` | URL of the encrypted off-site backup destination. |
@@ -43,20 +42,10 @@ step asserts that `AUDIT_HMAC_SECRET` is declared in both compose files.
    secret manager that supplies the `.env` file.
 2. Redeploy the affected services (`api`, `worker`, `beat`) so the new
    value takes effect.
-3. Run the smoke-test suite (login, audit verification, MFA challenge,
-   backup dry-run) and confirm a green run.
+3. Run the smoke-test suite (login, audit verification, backup dry-run) and
+   confirm a green run.
 4. Record the rotation in the change log with operator name and date.
 5. Revoke the old value only after step 3 succeeds.
-
-## MFA encryption keys
-
-- `MFA_ENCRYPTION_KEYS` is mandatory in production and must be independent from `DJANGO_SECRET_KEY`.
-- Keys use the Fernet URL-safe base64 format. Generate a key with
-  `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
-- The first comma-separated key encrypts new values. Remaining keys are decrypt-only rotation keys.
-- To rotate, prepend the new key, deploy, run `python manage.py rotate_mfa_secrets`, verify MFA login,
-  then remove retired keys in a later controlled deployment.
-- Never remove an old key before the rotation command and MFA verification complete.
 
 ## Audit chain HMAC
 

@@ -103,15 +103,6 @@ class TestTaskIsolation:
         owner_a = make_user(login_id="owner-a")
         company_a = make_company(owner=owner_a, code="tpl-a")
         make_membership(user=owner_a, company=company_a, role=CompanyRole.OWNER)
-        # Owner needs MFA for non-bypass endpoints (BE-06); enroll and
-        # verify it before exercising the tenant boundary.
-        from apps.identity.models import MfaEnrollment, MfaMethodType
-        MfaEnrollment.objects.create(
-            user=owner_a,
-            method_type=MfaMethodType.TOTP,
-            verified_at=__import__("django.utils.timezone", fromlist=["now"]).now(),
-            active=True,
-        )
         company_b = make_company(code="tpl-b")
         make_template(company=company_b, slug="leaky")
 

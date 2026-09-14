@@ -10,7 +10,6 @@ export * from "./connectors";
 export * from "./evidence";
 export * from "./exports";
 export * from "./notifications";
-export * from "./pilot";
 export * from "./reviews";
 export * from "./routing";
 export * from "./tasks";

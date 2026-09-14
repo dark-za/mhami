@@ -1,13 +1,18 @@
 /**
  * Evidence workflow E2E — the page is only reachable when a task is
  * selected. Without a task, the shell still mounts the route guard.
+ *
+ * Note: This test uses mocked bootstrap to avoid relying on localStorage
+ * role overrides and provides deterministic behavior.
  */
 import { test, expect } from "@playwright/test";
-import { setActiveRole, setLocale } from "./fixtures";
+import { installNetworkStubs } from "./bootstrap.js";
+import { setLocale, setBootstrapRole } from "./fixtures";
 
 test.describe("FE-06 evidence", () => {
   test.beforeEach(async ({ page }) => {
-    await setActiveRole(page, "owner");
+    await installNetworkStubs(page);
+    await setBootstrapRole(page, "owner");
     await setLocale(page, "en");
   });
 

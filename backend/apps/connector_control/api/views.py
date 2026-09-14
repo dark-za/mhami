@@ -28,10 +28,7 @@ def _owner_or_400(company, user):
 
 
 class ConnectorEnrollmentView(TenantAPIView):
-    # BE-01: Connector enrollment is a management surface. OWNER + MONITOR
-    # can read; the in-method ``_owner_or_400`` keeps the POST as
-    # OWNER-only.
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="Current tenant connector enrollment."))
 
@@ -63,8 +60,7 @@ class ConnectorEnrollmentView(TenantAPIView):
 
 
 class ConnectorHealthView(TenantAPIView):
-    # BE-01: Health is a management view (mirrors ``ConnectorEnrollmentView``).
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="Tenant connector health status."))
 

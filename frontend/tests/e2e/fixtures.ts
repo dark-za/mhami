@@ -1,15 +1,8 @@
 /**
- * Shared Playwright helpers. The E2E specs only target the live
- * bootstrap surface so the helpers focus on booting the shell, switching
- * the role, and toggling the locale.
+ * Shared browser/UI helpers. Role fixtures stub bootstrap responses to exercise
+ * shell rendering and navigation; they do not authenticate against a backend.
  */
-import { expect, type Page, type BrowserContext } from "@playwright/test";
-
-export async function setActiveRole(page: Page, role: "owner" | "monitor" | "employee" | "platform_admin") {
-  await page.addInitScript((nextRole) => {
-    window.localStorage.setItem("mhami.activeRole", nextRole);
-  }, role);
-}
+import { expect, type Page } from "@playwright/test";
 
 export async function setLocale(page: Page, locale: "en" | "ar") {
   await page.addInitScript((nextLocale) => {
@@ -17,12 +10,32 @@ export async function setLocale(page: Page, locale: "en" | "ar") {
   }, locale);
 }
 
-export async function expectDirection(page: Page, dir: "ltr" | "rtl") {
-  await expect(page.locator("html")).toHaveAttribute("dir", dir);
+export async function setBootstrapRole(page: Page, role: "owner" | "monitor" | "employee") {
+  const enabledModules =
+    role === "employee"
+      ? ["tasks", "evidence"]
+      : role === "monitor"
+        ? ["dashboard", "operations", "tasks", "evidence", "people", "reviews"]
+        : ["dashboard", "operations", "tasks", "evidence", "people", "reviews", "admin", "agent_access"];
+
+  await page.unroute("**/api/v1/bootstrap");
+  await page.route("**/api/v1/bootstrap", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        installation: { setup_required: false },
+        company: { id: "acme", name: "Acme", locale: "en" },
+        current_user: { id: "user-1", role, display_name: "Test User", login_id: "test", is_authenticated: true },
+        permissions: role === "owner" ? ["users.manage"] : role === "monitor" ? ["reviews.manage"] : ["tasks.execute"],
+        enabled_modules: enabledModules,
+        branches: [],
+        branch_scope: [],
+      }),
+    });
+  });
 }
 
-export async function gotoShell(context: BrowserContext, path = "/") {
-  const page = await context.newPage();
-  await page.goto(path);
-  return page;
+export async function expectDirection(page: Page, dir: "ltr" | "rtl") {
+  await expect(page.locator("html")).toHaveAttribute("dir", dir);
 }

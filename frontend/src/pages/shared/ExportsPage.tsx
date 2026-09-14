@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import { Panel } from "../../shell/ui";
@@ -26,6 +27,7 @@ const REQUEST_DRAFT_DEFAULT = {
 };
 
 export function ExportsPage() {
+  const { t } = useTranslation();
   const [policy, setPolicy] = useState<ExportPolicy | null>(null);
   const [requests, setRequests] = useState<ExportRequestItem[]>([]);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -50,9 +52,9 @@ export function ExportsPage() {
 
   useEffect(() => {
     let active = true;
-    void refresh().catch((error: unknown) => {
+    void refresh().catch((_error: unknown) => {
       if (active) {
-        setExportError(error instanceof Error ? error.message : "Export data failed.");
+        setExportError(t("operations.load_failed"));
       }
     });
     return () => {
@@ -84,9 +86,9 @@ export function ExportsPage() {
         },
       });
       setPolicy(payload);
-      setExportMessage("Export policy updated.");
-    } catch (error: unknown) {
-      setExportError(error instanceof Error ? error.message : "Policy update failed.");
+      setExportMessage(t("operations.policy_updated"));
+    } catch (_error: unknown) {
+      setExportError(t("operations.policy_update_failed"));
     } finally {
       setExportLoading(null);
     }
@@ -111,21 +113,21 @@ export function ExportsPage() {
         },
       });
       setRequests((current) => [payload, ...current]);
-      setExportMessage("Export generated.");
-    } catch (error: unknown) {
-      setExportError(error instanceof Error ? error.message : "Export request failed.");
+      setExportMessage(t("operations.export_generated"));
+    } catch (_error: unknown) {
+      setExportError(t("operations.export_request_failed"));
     } finally {
       setExportLoading(null);
     }
   }
 
   return (
-    <Panel eyebrow="Exports" title="Policy and download requests">
+    <Panel eyebrow={t("operations.exports")} title={t("operations.exports_workspace")}>
       {exportError ? <p className="status status-danger">{exportError}</p> : null}
       {exportMessage ? <p className="status status-success">{exportMessage}</p> : null}
       <form className="form-stack" onSubmit={savePolicy}>
         <label>
-          <span>Future notification boundaries</span>
+          <span>{t("operations.future_notification_boundaries")}</span>
           <input
             value={policyDraft.futureNotificationBoundaries}
             onChange={(event) =>
@@ -137,7 +139,7 @@ export function ExportsPage() {
           />
         </label>
         <label>
-          <span>External storage boundaries</span>
+          <span>{t("operations.external_storage_boundaries")}</span>
           <input
             value={policyDraft.externalStorageBoundaries}
             onChange={(event) =>
@@ -149,7 +151,7 @@ export function ExportsPage() {
           />
         </label>
         <label>
-          <span>Provider review checklist</span>
+          <span>{t("operations.provider_review_checklist")}</span>
           <input
             value={policyDraft.providerReviewChecklist}
             onChange={(event) =>
@@ -161,13 +163,13 @@ export function ExportsPage() {
           />
         </label>
         <button className="primary-button" type="submit" disabled={exportLoading === "policy"}>
-          Save export policy
+          {t("operations.save_export_policy")}
         </button>
       </form>
       <form className="form-stack" onSubmit={createExport}>
         <div className="form-grid">
           <label>
-            <span>Export type</span>
+            <span>{t("operations.export_type")}</span>
             <select
               value={requestDraft.exportType}
               onChange={(event) =>
@@ -180,18 +182,18 @@ export function ExportsPage() {
             </select>
           </label>
           <label>
-            <span>Branch IDs</span>
+            <span>{t("operations.branch_ids")}</span>
             <input
               value={requestDraft.branchIds}
               onChange={(event) =>
                 setRequestDraft((current) => ({ ...current, branchIds: event.target.value }))
               }
-              placeholder="Leave empty for accessible branches"
+              placeholder={t("operations.branch_ids_hint")}
             />
           </label>
         </div>
         <label>
-          <span>Categories</span>
+          <span>{t("operations.categories")}</span>
           <input
             value={requestDraft.categories}
             onChange={(event) =>
@@ -201,9 +203,11 @@ export function ExportsPage() {
         </label>
         <div className="form-grid">
           <label>
-            <span>Start date</span>
+            <span>{t("operations.start_date")}</span>
             <input
               type="date"
+              className="bidi-ltr"
+              dir="ltr"
               value={requestDraft.startDate}
               onChange={(event) =>
                 setRequestDraft((current) => ({ ...current, startDate: event.target.value }))
@@ -211,9 +215,11 @@ export function ExportsPage() {
             />
           </label>
           <label>
-            <span>End date</span>
+            <span>{t("operations.end_date")}</span>
             <input
               type="date"
+              className="bidi-ltr"
+              dir="ltr"
               value={requestDraft.endDate}
               onChange={(event) =>
                 setRequestDraft((current) => ({ ...current, endDate: event.target.value }))
@@ -222,33 +228,32 @@ export function ExportsPage() {
           </label>
         </div>
         <button className="ghost-button" type="submit" disabled={exportLoading === "request"}>
-          Create export
+          {t("operations.create_export")}
         </button>
       </form>
       <div className="notification-list">
         {requests.map((request) => (
           <div key={request.id} className="notification-item">
-            <strong>{request.export_type.toUpperCase()}</strong>
+            <strong>{t(`operations.export_type_value.${request.export_type}`, { defaultValue: request.export_type.toUpperCase() })}</strong>
             <p>
-              {request.status} · expires {request.expires_at}
+              <bdi>{t(`operations.export_status.${request.status}`, { defaultValue: request.status })}</bdi> · {t("operations.expires")} <bdi>{request.expires_at}</bdi>
             </p>
-            <small>{request.categories.join(", ") || "all categories"}</small>
+            <small><bdi>{request.categories.join(", ") || t("operations.all_categories")}</bdi></small>
             <div className="inline-actions">
               <a
                 className="ghost-button"
                 href={`/api/v1/exports/download/${request.download_token}`}
               >
-                Download
+                {t("operations.download")}
               </a>
             </div>
           </div>
         ))}
-        {requests.length === 0 ? <p className="muted">No exports yet.</p> : null}
+        {requests.length === 0 ? <p className="muted">{t("operations.no_exports")}</p> : null}
       </div>
       {policy ? (
         <p className="muted">
-          Boundary policy loaded for {policy.future_notification_boundaries.length} notification
-          targets.
+          {t("operations.policy_loaded", { count: policy.future_notification_boundaries.length })}
         </p>
       ) : null}
     </Panel>

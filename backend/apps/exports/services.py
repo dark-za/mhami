@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import secrets
 import zipfile
@@ -32,7 +33,8 @@ def export_storage_root() -> Path:
 
 
 def accessible_branch_ids(company: Company, user: User) -> list[str]:
-    return accessible_company_branch_ids(company, user, include_support=True)
+    """Resolve export scope from the user's role and branch assignments only."""
+    return accessible_company_branch_ids(company, user)
 
 
 def export_policy_for_company(company: Company) -> ExportBoundaryPolicy:
@@ -125,8 +127,19 @@ def _pdf_bytes(title: str, lines: list[str]) -> bytes:
     return b"%PDF-1.4\n" + body + b"".join(line + b"\n" for line in xref) + trailer
 
 
-def _artifact_bytes(company: Company, branch_ids: list[str], export_type: str, start_date, end_date) -> tuple[bytes, str]:
-    rows = _request_rows(company, branch_ids, start_date, end_date) + _evidence_rows(company, branch_ids, start_date, end_date)
+def _artifact_bytes(
+    company: Company,
+    branch_ids: list[str],
+    categories: list[str],
+    export_type: str,
+    start_date,
+    end_date,
+) -> tuple[bytes, str]:
+    rows: list[dict[str, Any]] = []
+    if "tasks" in categories:
+        rows.extend(_request_rows(company, branch_ids, start_date, end_date))
+    if "evidence" in categories:
+        rows.extend(_evidence_rows(company, branch_ids, start_date, end_date))
     if export_type == ExportType.CSV:
         return _csv_bytes(rows), "export.csv"
     if export_type == ExportType.PDF:
@@ -172,6 +185,7 @@ def complete_export_request(export_request_id: str) -> ExportRequest:
     data, file_name = _artifact_bytes(
         export_request.company,
         export_request.branch_ids,
+        export_request.categories,
         export_request.export_type,
         export_request.start_date,
         export_request.end_date,
@@ -251,6 +265,6 @@ def export_download_response(company: Company, user: User, token: str) -> FileRe
         target_id=str(export_request.id),
         actor_id=str(user.id),
         branch_id="",
-        metadata={"token": token},
+        metadata={"token_fingerprint": hashlib.sha256(token.encode("utf-8")).hexdigest()[:16]},
     )
     return FileResponse(path.open("rb"), as_attachment=True, filename=path.name)

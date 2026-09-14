@@ -1,8 +1,7 @@
 /** FE-06: Playwright E2E configuration.
  *
- * The configuration points the tests at the local Vite dev server
- * and uses a dedicated ``mhami-e2e`` workspace so the test runs
- * never pollute the production data store.
+ * Tests target a local Vite server and stub API responses in their fixtures.
+ * This configuration does not provision an isolated backend or database.
  */
 
 import { defineConfig, devices } from "@playwright/test";

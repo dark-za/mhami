@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import pytest
 from django.test import Client
-from django.utils import timezone
 
 from apps.identity.models import User
 from apps.platform_core.models import ExitDecision
@@ -105,95 +104,15 @@ def test_revocation_creates_superseding_decision():
     assert latest.decision == "rejected"
 
 
-# ---------------------------------------------------------------------------
-# PILOT-01: phase12 exit decisions require a signed authorize-charter.
-# ---------------------------------------------------------------------------
-
-
-def test_phase12_decision_requires_pilot_program_metadata():
-    from apps.pilot.services import sign_charter
-    from apps.organizations.models import CompanyRole
-    from apps.pilot.models import PilotCharter
-
+def test_phase12_decision_no_longer_requires_pilot_program():
     admin = _make_platform_admin("p12-admin")
-    # Build a pilot company + program with a signed charter.
-    from apps.identity.models import User
-    from apps.tenancy.models import Company
-    from apps.pilot.models import PilotProgram
-
-    owner = User.objects.create_user(login_id="p12-owner", password="Mha!mi-Test-2026#")
-    company = Company.objects.create(
-        name="P12 Co",
-        code="p12co",
-        industry="other",
-        owner=owner,
-        trial_ends_at=timezone.now(),
-    )
-    from apps.organizations.models import CompanyMembership
-    CompanyMembership.objects.create(company=company, user=owner, role=CompanyRole.OWNER)
-    program = PilotProgram.objects.create(company=company, status="active")
-    sign_charter(
-        company=company,
-        user=owner,
-        payload={
-            "decision": PilotCharter.Decision.AUTHORIZE,
-            "rationale": "PILOT-01 test charter.",
-        },
-    )
-
     client = Client()
     client.force_login(admin, backend="django.contrib.auth.backends.ModelBackend")
 
-    # Missing metadata.pilot_program_id → 400
+    # Phase12 no longer requires pilot_program_id — succeeds without it
     response = client.post(
         "/api/v1/platform/exit-decisions/phase12",
-        data={"decision": "approved", "rationale": "All gates green and pilot evidence complete."},
-        content_type="application/json",
-    )
-    assert response.status_code == 400
-
-    # Bogus pilot_program_id → 400
-    response = client.post(
-        "/api/v1/platform/exit-decisions/phase12",
-        data={
-            "decision": "approved",
-            "rationale": "All gates green and pilot evidence complete.",
-            "metadata": {"pilot_program_id": "00000000-0000-0000-0000-000000000000"},
-        },
-        content_type="application/json",
-    )
-    assert response.status_code == 400
-
-    # Unsigned program → 400 (build a program with no charter)
-    other_owner = User.objects.create_user(login_id="p12-owner-2", password="Mha!mi-Test-2026#")
-    other_company = Company.objects.create(
-        name="Other Co",
-        code="otherco",
-        industry="other",
-        owner=other_owner,
-        trial_ends_at=timezone.now(),
-    )
-    CompanyMembership.objects.create(company=other_company, user=other_owner, role=CompanyRole.OWNER)
-    other_program = PilotProgram.objects.create(company=other_company, status="active")
-    response = client.post(
-        "/api/v1/platform/exit-decisions/phase12",
-        data={
-            "decision": "approved",
-            "rationale": "All gates green and pilot evidence complete.",
-            "metadata": {"pilot_program_id": str(other_program.id)},
-        },
-        content_type="application/json",
-    )
-    assert response.status_code == 400
-
-    # Signed charter → 201
-    response = client.post(
-        "/api/v1/platform/exit-decisions/phase12",
-        data={
-            "decision": "approved",
-            "rationale": "All gates green and pilot evidence complete.",
-            "metadata": {"pilot_program_id": str(program.id)},
-        },
+        data={"decision": "approved", "rationale": "All gates green and evidence complete."},
         content_type="application/json",
     )
     assert response.status_code == 201, response.content

@@ -5,15 +5,17 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { AppRoutes } from "../routes";
+import i18n from "../i18n";
 
 vi.mock("../hooks/useActiveRole", () => ({
   useActiveRole: () => "owner",
 }));
 
-beforeEach(() => {
+beforeEach(async () => {
+  await i18n.changeLanguage("ar");
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -50,7 +52,7 @@ describe("C-14 authenticated routing", () => {
     expect(container).not.toBeNull();
   });
 
-  test("/ renders the workspace shell", async () => {
+  test("/ fails closed to the standalone login page without a live bootstrap", async () => {
     let container: HTMLElement | null = null;
     await act(async () => {
       const result = render(
@@ -60,6 +62,8 @@ describe("C-14 authenticated routing", () => {
       );
       container = result.container;
     });
-    expect(container).not.toBeNull();
+    await waitFor(() => {
+      expect(container?.textContent).toContain("تسجيل الدخول إلى مساحة العمل");
+    });
   });
 });

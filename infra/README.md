@@ -8,9 +8,9 @@ in `backend/Dockerfile` and `frontend/Dockerfile`.
 
 | Compose file | Intended use |
 | --- | --- |
-| `../compose.yml` | Base services shared by dev and prod (db, redis, api, frontend). |
+| `../compose.yml` | Base services shared by dev and prod (db, redis, api, worker, beat, frontend). |
 | `../compose.dev.yml` | Local development: hot-reload API (runserver), Vite dev server on 5173. |
-| `../compose.prod.yml` | Production: migrate + Gunicorn, Celery worker/beat services, TLS-terminating NGINX, read-only API with writable media volume. Use a separate project name for staging/validation. |
+| `../compose.prod.yml` | Production overrides layered on top of `compose.yml`: migrate + Gunicorn, read-only filesystem, TLS-terminating NGINX, writable media volume, and Let's Encrypt certbot. Use a separate project name for staging/validation. |
 
 ## Key paths (must match Django settings)
 

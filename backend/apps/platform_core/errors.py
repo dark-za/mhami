@@ -72,11 +72,6 @@ def platform_exception_handler(exc: Exception, context: dict[str, object]) -> Re
     return response
 
 
-# Exceptions that the service layer is expected to raise and that we want to
-# pass through as ``PlatformAPIException`` without losing their ``str(exc)``
-# message. Anything else is treated as an unexpected error and gets a
-# generic, non-leaky message.
-_SERVICE_ERRORS: tuple[type[BaseException], ...] = (ValueError, KeyError, TypeError)
 _UNEXPECTED_MESSAGE = "The action could not be completed."
 
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -97,9 +92,10 @@ def platform_service_call(view_method: _F) -> _F:
 
     * ``PlatformAPIException`` and its subclasses re-raise untouched so
       explicit 4xx handling keeps its status code.
-    * ``ValueError`` / ``KeyError`` / ``TypeError`` raised by the service
-      layer are converted to ``PlatformAPIException(400)`` with the original
-      message — these are the "expected business" errors.
+    * Explicit ``ValueError`` instances are converted to
+      ``PlatformAPIException(400)`` with the original business-rule message.
+      ``KeyError`` and ``TypeError`` are treated as unexpected defects because
+      their text can expose internal field names or service contracts.
     * Any other ``Exception`` is logged with ``exc_info=True`` and re-raised
       as a generic ``PlatformAPIException`` so we never leak traceback
       details to the client.
@@ -113,8 +109,11 @@ def platform_service_call(view_method: _F) -> _F:
             raise
         except DjangoPermissionDenied as exc:
             raise PlatformPermissionException(str(exc)) from exc
-        except _SERVICE_ERRORS as exc:
+        except ValueError as exc:
             raise PlatformAPIException(str(exc)) from exc
+        except (KeyError, TypeError) as exc:
+            logger.exception("Unexpected service contract error in %s", view_method.__qualname__)
+            raise PlatformAPIException(_UNEXPECTED_MESSAGE) from exc
         except Exception as exc:
             logger.exception("Unexpected error in %s", view_method.__qualname__)
             raise PlatformAPIException(_UNEXPECTED_MESSAGE) from exc

@@ -13,6 +13,8 @@
  * callers can branch on ``error.code`` instead of inspecting strings.
  */
 
+import { SESSION_RECHECK_EVENT } from "./session";
+
 export class ApiError extends Error {
   public readonly code: string;
   public readonly status: number;
@@ -120,6 +122,12 @@ export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
   if (!response.ok) {
     const parsed = await response.json().catch(() => null);
     const code = parsed?.error?.code ?? (parsed?.detail ? "DRF_VALIDATION" : "UNKNOWN");
+    if (
+      typeof window !== "undefined" && path !== "/api/v1/bootstrap" &&
+      (response.status === 401 || (response.status === 403 && code === "NOT_AUTHENTICATED"))
+    ) {
+      window.dispatchEvent(new Event(SESSION_RECHECK_EVENT));
+    }
     const message =
       parsed?.error?.message ??
       parsed?.detail ??

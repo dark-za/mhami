@@ -2,13 +2,13 @@
 
 ## Root Areas
 
-- `backend/`: future Django modular monolith.
-- `frontend/`: future React browser application.
-- `connector/`: future tenant AI connector.
-- `infra/`: future deployment and operational assets.
-- `scripts/`: future reviewed helper scripts.
-- `docs/`: project source of truth and phase documents.
+- `backend/`: Django modular monolith and REST API.
+- `frontend/`: React browser application.
+- `connector/`: optional local AI connector.
+- `infra/`: deployment and operational assets.
+- `scripts/`: reviewed helper scripts.
+- `docs/`: current product, operation, and contribution documentation.
 
 ## Rule
 
-Each area must remain aligned with the phase that authorizes implementation in that area.
+Each area must remain aligned with the current architecture, tests, and public documentation.

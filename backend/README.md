@@ -13,7 +13,6 @@ The backend is a Django 5.2 modular monolith with Django REST Framework APIs, Po
 - `apps/exports` - export request creation and tokenized downloads.
 - `apps/backups` - encrypted backup, external upload, and restore workflows.
 - `apps/compliance` - ROPA, DSR, legal document versions, and compliance services.
-- `apps/pilot` - pilot program, charter, weekly reports, issues, and change requests.
 - `apps/platform_core` - health, metrics, audit/outbox helpers, registry, and exit decisions.
 
 ## Local Commands

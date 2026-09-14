@@ -18,8 +18,9 @@ const GENERATED = resolve(HERE, "..", "src", "api", "generated-types.ts");
 const REQUIRED_PATHS = [
   "/api/v1/bootstrap",
   "/api/v1/auth/login",
-  "/api/v1/auth/register",
   "/api/v1/tasks/instances",
+  "/api/v1/tasks/templates/{template_id}/versions",
+  "/api/v1/tasks/requests",
   "/api/v1/evidence/submit",
   "/api/v1/reviews/queue",
   "/api/v1/reviews/dashboard",

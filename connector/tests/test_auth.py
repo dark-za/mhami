@@ -16,7 +16,8 @@ from src.auth import (
 
 def test_signature_roundtrip():
     secret = "test-secret"
-    ts = "1700000000"
+    now = int(time.time())
+    ts = str(now)
     nonce = "abc"
     body = b"{\"x\":1}"
     sig = compute_signature(secret, timestamp=ts, nonce=nonce, body=body)

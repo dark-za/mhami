@@ -34,7 +34,6 @@ export interface ReviewDashboardCompany {
   name: string;
   code: string;
   status: string;
-  trial_days_left: number;
 }
 
 export interface ReviewDashboardSummary {
@@ -43,6 +42,13 @@ export interface ReviewDashboardSummary {
   quality_exceptions: number;
   open_issues: number;
   pending_review: number;
+  employees: number;
+  monitors: number;
+  branches: number;
+  completed_in_period: number;
+  pending: number;
+  in_progress: number;
+  cancelled: number;
 }
 
 export interface ReviewDashboardBranch {
@@ -51,10 +57,15 @@ export interface ReviewDashboardBranch {
   completed_today: number;
   overdue: number;
   quality_exceptions: number;
+  completed_in_period: number;
+  pending: number;
+  cancelled: number;
 }
 
 export interface ReviewDashboard {
   company: ReviewDashboardCompany;
   summary: ReviewDashboardSummary;
   branches: ReviewDashboardBranch[];
+  period: string;
+  trend: Array<{ date: string; completed: number; created: number }>;
 }

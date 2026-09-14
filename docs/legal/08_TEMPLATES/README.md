@@ -20,6 +20,5 @@ For each `vX.Y.md` document, the template should include:
    `LegalDocumentType` and which API endpoint).
 5. **Review and change log** — pointer to the per-directory
    `CHANGELOG.md`.
-6. **Annexes** — DPIA (`09_DPIA`), breach response
-   (`10_BREACH_RESPONSE`), and ROPA (`11_ROPA`) are kept at the
-   `docs/legal/` level and referenced, not duplicated, here.
+6. **Annexes** — add any organization-specific privacy, breach-response, or
+   processing-record material required for the deployment.

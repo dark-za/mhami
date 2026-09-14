@@ -22,7 +22,7 @@ x-backend-defaults: &backend_defaults
       max-size: "10m"
       max-file: "3"
   healthcheck:
-    test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health/live"]
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')"]
     interval: 30s
     timeout: 5s
     retries: 3
@@ -32,13 +32,12 @@ x-backend-defaults: &backend_defaults
     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
     DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,api}
-    MFA_ENCRYPTION_KEYS: ${MFA_ENCRYPTION_KEYS:-}
+    INITIAL_SETUP_TOKEN: ${INITIAL_SETUP_TOKEN:-}
     # INFRA-01: AUDIT_HMAC_SECRET is mandatory in every environment so the
     # audit chain is never computed with a default value, even in dev. The
     # prod override below enforces the same variable with the fail-fast
     # syntax to ensure the value is non-empty when DJANGO_DEBUG=false.
     AUDIT_HMAC_SECRET: ${AUDIT_HMAC_SECRET:?Set AUDIT_HMAC_SECRET in .env}
-    MCP_INTERNAL_HMAC_SECRET: ${MCP_INTERNAL_HMAC_SECRET:?Set MCP_INTERNAL_HMAC_SECRET in .env}
     POSTGRES_DB: ${POSTGRES_DB:-platform}
     POSTGRES_USER: ${POSTGRES_USER:-platform}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
@@ -100,6 +99,54 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  worker:
+    <<: *backend_defaults
+    command:
+      [
+        "celery",
+        "-A",
+        "config.celery",
+        "worker",
+        "--loglevel=${CELERY_LOG_LEVEL:-INFO}",
+        "--concurrency=${CELERY_WORKER_CONCURRENCY:-2}",
+        "--queues=default,media,ai",
+        "--hostname=worker@%h",
+      ]
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config.celery inspect ping --timeout=5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  beat:
+    <<: *backend_defaults
+    command:
+      [
+        "celery",
+        "-A",
+        "config.celery",
+        "beat",
+        "--loglevel=${CELERY_LOG_LEVEL:-INFO}",
+        "--schedule=/tmp/celerybeat-schedule",
+      ]
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/celerybeat-schedule"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   frontend:
     build:

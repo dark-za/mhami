@@ -1,6 +1,5 @@
 // k6 load scenario — auth bootstrap and the most-trafficked read paths.
-// Mirrors the production traffic mix observed in the pilot evidence
-// (login + bootstrap + me).
+// Exercises the representative login, bootstrap, and read-path traffic mix.
 
 import http from "k6/http";
 import { check, sleep } from "k6";
@@ -26,7 +25,6 @@ export default function () {
   const loginRes = http.post(
     `${BASE}/api/v1/auth/login`,
     JSON.stringify({
-      company_code: "load-owner",
       login_id: `load-owner-${roleIndex}`,
       password: "P@ssw0rd!",
     }),

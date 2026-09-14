@@ -192,7 +192,9 @@ def _server_detect_face(image: Image.Image) -> dict[str, object]:
         else:
             sample = image
         rgb = sample.convert("RGB")
-        pixels = list(rgb.getdata())
+        # RGB conversion guarantees three integer channels per pixel; Pillow's
+        # general return annotation also covers scalar and other image modes.
+        pixels = cast(list[tuple[int, int, int]], list(rgb.get_flattened_data()))
         if not pixels:
             return {"detected": False, "confidence": 0, "reason": "empty"}
         skin_pixels = 0

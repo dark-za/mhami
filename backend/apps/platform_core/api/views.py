@@ -92,31 +92,7 @@ class ExitDecisionView(APIView):
             )
         serializer = ExitDecisionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # PILOT-01: phase12 decisions must reference a PilotProgram that has
-        # at least one signed authorize-charter. This is the system-level
-        # guard that turns the markdown template into verifiable evidence.
         metadata = dict(serializer.validated_data.get("metadata") or {})
-        if phase == "phase12":
-            pilot_program_id = metadata.get("pilot_program_id")
-            if not pilot_program_id:
-                return Response(
-                    {"error": {"code": "PILOT-CHARTER-002", "message": "metadata.pilot_program_id is required for phase12 exit decisions."}},
-                    status=400,
-                )
-            from apps.pilot.models import PilotCharter, PilotProgram
-            program = PilotProgram.objects.filter(id=pilot_program_id).first()
-            if program is None:
-                return Response(
-                    {"error": {"code": "PILOT-CHARTER-003", "message": "Pilot program not found."}},
-                    status=400,
-                )
-            if not PilotCharter.objects.filter(
-                pilot_program=program, decision=PilotCharter.Decision.AUTHORIZE
-            ).exists():
-                return Response(
-                    {"error": {"code": "PILOT-CHARTER-004", "message": "Pilot program has no signed authorize-charter."}},
-                    status=400,
-                )
         supersedes = None
         supersedes_id = serializer.validated_data.get("supersedes")
         if supersedes_id:

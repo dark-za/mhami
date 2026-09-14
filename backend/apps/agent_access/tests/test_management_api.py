@@ -4,6 +4,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
 from apps.agent_access.models import AgentActionLog, AgentGrant
@@ -41,12 +42,14 @@ def test_owner_can_create_list_and_revoke_agent_grant(
 
     assert created.status_code == 201
     grant_id = created.json()["id"]
+    assert created.json()["secret"]
     assert created.json()["active"] is True
     assert AuditEvent.objects.filter(event_type="MCP_AGENT_GRANT_CREATED", target_id=grant_id).exists()
 
     listed = client.get("/api/v1/agent/grants")
     assert listed.status_code == 200
     assert [grant["id"] for grant in listed.json()["grants"]] == [grant_id]
+    assert "secret" not in listed.json()["grants"][0]
 
     revoked = client.post(
         f"/api/v1/agent/grants/{grant_id}/revoke",
@@ -103,7 +106,7 @@ def test_owner_cannot_create_grant_for_external_user(
     assert response.status_code == 403
 
 
-def test_owner_and_monitor_can_read_agent_logs(
+def test_only_owner_can_read_agent_logs(
     force_login_company,
     make_company,
     make_membership,
@@ -119,6 +122,7 @@ def test_owner_and_monitor_can_read_agent_logs(
         user=owner,
         client_name="Owner MCP",
         client_fingerprint=CLIENT_FINGERPRINT,
+        secret_hash=make_password("test-grant-secret"),
         scopes=["read:tasks"],
         expires_at=timezone.now() + timedelta(days=1),
     )
@@ -136,9 +140,8 @@ def test_owner_and_monitor_can_read_agent_logs(
     monitor_response = force_login_company(monitor, company).get("/api/v1/agent/logs")
 
     assert owner_response.status_code == 200
-    assert monitor_response.status_code == 200
+    assert monitor_response.status_code == 403
     assert owner_response.json()["logs"][0]["id"] == str(log.id)
-    assert monitor_response.json()["logs"][0]["id"] == str(log.id)
 
 
 def test_scope_catalog_is_readable_by_management_roles(

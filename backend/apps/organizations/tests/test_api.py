@@ -6,25 +6,31 @@ from django.test import Client
 pytestmark = pytest.mark.django_db
 
 
-def _register(client: Client):
-    return client.post(
-        "/api/v1/auth/register",
-        data={
-            "company_name": "Acme",
-            "company_code": "acme2",
-            "industry": "retail",
-            "owner_login_id": "owner2",
-            "owner_password": "Mha!mi-Test-2026#",
-        },
+def _provision(client: Client):
+    from django.core.management import call_command
+
+    call_command(
+        "provision_owner",
+        organization_name="Acme",
+        owner_login_id="owner2",
+        owner_display_name="Owner2",
+        password="Mha!mi-Test-2026#",
+    )
+    from apps.identity.models import User
+
+    owner = User.objects.get(login_id="owner2")
+    client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner2", "password": "Mha!mi-Test-2026#"},
         content_type="application/json",
     )
+    return owner
 
 
 def test_create_branch_and_weekly_shift():
     client = Client()
-    register_response = _register(client)
-    assert register_response.status_code == 201
-    owner_id = register_response.json()["owner"]["id"]
+    owner = _provision(client)
+    owner_id = str(owner.id)
     branch = client.post(
         "/api/v1/organizations/branches",
         data={

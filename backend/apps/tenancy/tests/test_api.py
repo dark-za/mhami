@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-from datetime import time, timedelta
-from types import SimpleNamespace
+from datetime import timedelta
 
 import pytest
 from django.core.cache import cache
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import Client
 from django.test import override_settings
 from django.utils import timezone
-from freezegun import freeze_time
-
 from apps.audit.models import AuditEvent
-from apps.evidence.services import can_access_media
-from apps.identity.models import MfaEnrollment
 from apps.identity.models import User
-from apps.organizations.models import Branch, CompanyMembership, CompanyRole
-from apps.tenancy.api.views import _totp_token
-from apps.tenancy.models import Company, CompanyStatus, SupportAuthorization
-from apps.tenancy.services import enroll_totp, process_lifecycle_expirations
+from apps.organizations.models import CompanyMembership, CompanyRole
+from apps.tenancy.models import Company, CompanyStatus, InstallationState
+from apps.tenancy.services import initial_setup_required
 
 pytestmark = pytest.mark.django_db
 
@@ -29,30 +25,197 @@ STRICT_THROTTLE_SETTINGS = {
         "registration_ip": "2/hour",
         "login_ip": "10/minute",
         "login_account": "2/minute",
-        "mfa_user": "2/minute",
     },
 }
 
 
-def _register_payload(code: str = "acme") -> dict[str, object]:
-    return {
-        "company_name": "Acme",
-        "company_code": code,
-        "industry": "restaurants_cafes",
-        "owner_login_id": "owner",
-        "owner_password": "Mha!mi-Test-2026#",
-        "owner_display_name": "Owner",
-        "contact_email": "owner@example.com",
-    }
+@pytest.fixture(autouse=True)
+def _clear_auth_throttle_cache():
+    cache.clear()
+    yield
+    cache.clear()
 
 
-def test_register_login_and_logout_flow():
+def _provision_owner(
+    company_name: str = "Acme",
+    owner_login_id: str = "owner",
+    owner_display_name: str = "Owner",
+    password: str = "Mha!mi-Test-2026#",
+) -> Company:
+    call_command(
+        "provision_owner",
+        organization_name=company_name,
+        owner_login_id=owner_login_id,
+        owner_display_name=owner_display_name,
+        password=password,
+    )
+    return Company.objects.get()
+
+
+def test_provision_owner_creates_sole_organization_and_owner_membership():
+    company = _provision_owner()
+    assert Company.objects.count() == 1
+    assert company.name == "Acme"
+    assert company.status == CompanyStatus.ACTIVE
+    owner = User.objects.get(login_id="owner")
+    assert CompanyMembership.objects.filter(company=company, user=owner, role=CompanyRole.OWNER, active=True).exists()
+    assert company.owner_id == owner.id
+    assert InstallationState.objects.get(pk=1).is_configured is True
+
+
+def test_provision_owner_fails_if_any_organization_already_exists():
+    _provision_owner()
+    with pytest.raises(CommandError, match="already exists"):
+        call_command(
+            "provision_owner",
+            organization_name="Second",
+            owner_login_id="owner2",
+            owner_display_name="Owner2",
+            password="Mha!mi-Test-2026#",
+        )
+    assert Company.objects.count() == 1
+
+
+def test_provision_owner_never_replaces_data_or_creates_second_org():
+    _provision_owner(company_name="First", owner_login_id="owner1", password="Mha!mi-Test-2026#")
+    first_id = Company.objects.get().id
+    try:
+        call_command(
+            "provision_owner",
+            organization_name="Second",
+            owner_login_id="owner2",
+            owner_display_name="Owner2",
+            password="Mha!mi-Test-2026#",
+        )
+    except CommandError:
+        pass
+    assert Company.objects.count() == 1
+    assert Company.objects.get().id == first_id
+    assert not User.objects.filter(login_id="owner2").exists()
+
+
+def test_register_endpoint_is_absent():
     client = Client()
-    register_response = client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    assert register_response.status_code == 201
+    response = client.post("/api/v1/auth/register", data={}, content_type="application/json")
+    assert response.status_code == 404
+
+
+def _csrf_client() -> Client:
+    client = Client(enforce_csrf_checks=True)
+    response = client.get("/api/v1/bootstrap")
+    assert response.status_code == 200
+    return client
+
+
+def _setup_payload(**overrides: str) -> dict[str, str]:
+    payload = {
+        "organization_name": "Browser Setup Organization",
+        "owner_login_id": "browser-owner",
+        "owner_display_name": "Browser Owner",
+        "password": "Mha!mi-Test-2026#",
+        "setup_token": "setup-token-for-tests-2026",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_bootstrap_reports_first_setup_without_disclosing_configuration():
+    response = Client().get("/api/v1/bootstrap")
+    assert response.status_code == 200
+    assert response.json()["installation"] == {"setup_required": True}
+    assert "setup_token" not in response.content.decode()
+
+
+def test_browser_setup_never_reopens_after_a_configured_installation_is_damaged():
+    state = InstallationState.objects.get(pk=1)
+    state.configured_at = timezone.now()
+    state.save(update_fields=["configured_at"])
+    assert initial_setup_required() is False
+
+
+@override_settings(INITIAL_SETUP_TOKEN="setup-token-for-tests-2026")
+def test_browser_setup_requires_csrf_and_the_server_setup_token():
+    client = Client(enforce_csrf_checks=True)
+    blocked = client.post(
+        "/api/v1/setup/initialize",
+        data=_setup_payload(),
+        content_type="application/json",
+    )
+    assert blocked.status_code == 403
+    assert Company.objects.count() == 0
+
+    client = _csrf_client()
+    invalid = client.post(
+        "/api/v1/setup/initialize",
+        data=_setup_payload(setup_token="wrong-setup-token-2026"),
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert invalid.status_code == 400
+    assert Company.objects.count() == 0
+
+
+@override_settings(INITIAL_SETUP_TOKEN="setup-token-for-tests-2026")
+@pytest.mark.parametrize("missing_state", [False, True])
+def test_browser_setup_creates_owner_logs_in_and_closes_permanently(missing_state):
+    if missing_state:
+        User.objects.all().delete()
+        AuditEvent.objects.all().delete()
+        InstallationState.objects.all().delete()
+    assert initial_setup_required() is True
+    client = _csrf_client()
+    response = client.post(
+        "/api/v1/setup/initialize",
+        data=_setup_payload(),
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert response.status_code == 201
+    assert Company.objects.count() == 1
+    assert InstallationState.objects.get(pk=1).is_configured is True
+    assert response.json()["user"]["login_id"] == "browser-owner"
+    assert client.get("/api/v1/auth/me").status_code == 200
+    assert AuditEvent.objects.filter(event_type="INSTALLATION_INITIALIZED").exists()
+
+    second = client.post(
+        "/api/v1/setup/initialize",
+        data=_setup_payload(owner_login_id="second-owner"),
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert second.status_code == 400
+    assert Company.objects.count() == 1
+    assert not User.objects.filter(login_id="second-owner").exists()
+
+
+@pytest.mark.parametrize("retained_data", ["user", "audit"])
+def test_missing_installation_state_with_retained_data_fails_closed(retained_data):
+    InstallationState.objects.all().delete()
+    if retained_data == "user":
+        User.objects.create_user(login_id="retained-user", password="Mha!mi-Test-2026#")
+    else:
+        from apps.audit.services import record_audit_event
+
+        record_audit_event(event_type="INSTALLATION_INITIALIZED", target_type="company", target_id="former-company")
+    assert initial_setup_required() is False
+    with pytest.raises(CommandError, match="operator recovery"):
+        _provision_owner()
+    assert not Company.objects.exists()
+    assert not InstallationState.objects.exists()
+
+
+def test_mfa_endpoints_are_absent():
+    client = Client()
+    assert client.post("/api/v1/auth/mfa/enroll", data={}, content_type="application/json").status_code == 404
+    assert client.post("/api/v1/auth/mfa/verify", data={}, content_type="application/json").status_code == 404
+
+
+def test_login_and_logout_flow_with_local_credentials():
+    _provision_owner()
+    client = Client()
     login_response = client.post(
         "/api/v1/auth/login",
-        data={"company_code": "acme", "login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
         content_type="application/json",
     )
     assert login_response.status_code == 200
@@ -63,50 +226,241 @@ def test_register_login_and_logout_flow():
     assert logout_response.status_code == 204
 
 
-def test_active_company_is_taken_from_the_authorized_session_scope(make_user):
-    user = make_user(login_id="multi-company-owner", password="Mha!mi-Test-2026#")
-    company_a = Company.objects.create(
-        name="Company A",
-        code="company-a",
-        owner=user,
-        trial_ends_at=timezone.now() + timedelta(days=30),
-    )
-    company_b = Company.objects.create(
-        name="Company B",
-        code="company-b",
-        owner=user,
-        trial_ends_at=timezone.now() + timedelta(days=30),
-    )
-    CompanyMembership.objects.create(company=company_a, user=user, role=CompanyRole.OWNER)
-    CompanyMembership.objects.create(company=company_b, user=user, role=CompanyRole.OWNER)
+def test_login_uses_only_login_id_and_password():
+    _provision_owner()
     client = Client()
-    client.force_login(user, backend="django.contrib.auth.backends.ModelBackend")
-    session = client.session
-    session["company_id"] = str(company_a.id)
-    session.save()
+    # Valid login without company_code
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    # Retired company_code field is rejected with 400 validation error
+    client.post("/api/v1/auth/logout")
+    response2 = client.post(
+        "/api/v1/auth/login",
+        data={"company_code": "ignored", "login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response2.status_code == 400
+    assert "company_code" in response2.content.decode()
+    mfa_response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#", "mfa_code": "123456"},
+        content_type="application/json",
+    )
+    assert mfa_response.status_code == 400
+    assert "mfa_code" in mfa_response.content.decode()
 
-    response_a = client.get("/api/v1/auth/me")
-    session = client.session
-    session["company_id"] = str(company_b.id)
-    session.save()
-    response_b = client.get("/api/v1/auth/me")
 
-    assert response_a.status_code == 200
-    assert response_a.json()["company"]["id"] == str(company_a.id)
-    assert response_b.status_code == 200
-    assert response_b.json()["company"]["id"] == str(company_b.id)
-    assert len(response_b.json()["memberships"]) == 1
+def test_disabled_user_cannot_login_with_valid_password():
+    company = _provision_owner()
+    owner = company.owner
+    owner.is_active = False
+    owner.save(update_fields=["is_active"])
+    response = Client().post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert not AuditEvent.objects.filter(event_type="USER_LOGIN").exists()
+
+
+def test_authentication_backend_does_not_restore_disabled_user():
+    from apps.tenancy.auth_backends import LocalInstallationBackend
+
+    company = _provision_owner()
+    owner = company.owner
+    backend = LocalInstallationBackend()
+    assert backend.get_user(owner.id) == owner
+    owner.is_active = False
+    owner.save(update_fields=["is_active"])
+    assert backend.get_user(owner.id) is None
+
+
+def test_cli_password_with_surrounding_spaces_logs_in_without_normalization():
+    password = "  Mha!mi-Test-2026#  "
+    _provision_owner(password=password)
+    client = Client()
+    response = client.post(
+        "/api/v1/auth/login", data={"login_id": "owner", "password": password}, content_type="application/json",
+    )
+    assert response.status_code == 200
+    assert client.post("/api/v1/auth/logout").status_code == 204
+    rejected = client.post(
+        "/api/v1/auth/login", data={"login_id": "owner", "password": password.strip()}, content_type="application/json",
+    )
+    assert rejected.status_code == 400
+
+
+@override_settings(INITIAL_SETUP_TOKEN="setup-token-for-tests-2026")
+def test_browser_setup_preserves_password_exactly():
+    password = "  Mha!mi-Test-2026#  "
+    client = _csrf_client()
+    response = client.post(
+        "/api/v1/setup/initialize", data=_setup_payload(password=password), content_type="application/json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert response.status_code == 201
+    owner = User.objects.get(login_id="browser-owner")
+    assert owner.check_password(password)
+    assert not owner.check_password(password.strip())
+
+
+def test_member_creation_preserves_password_exactly():
+    company = _provision_owner()
+    client = Client()
+    client.force_login(company.owner, backend="apps.tenancy.auth_backends.LocalInstallationBackend")
+    session = client.session
+    session["company_id"] = str(company.id)
+    session.save()
+    password = "  Mha!mi-Test-2026#  "
+    response = client.post(
+        "/api/v1/auth/company/users",
+        data={"login_id": "new-employee", "password": password, "role": "employee"},
+        content_type="application/json",
+    )
+    assert response.status_code == 201
+    user = User.objects.get(login_id="new-employee")
+    assert user.check_password(password)
+    assert not user.check_password(password.strip())
+
+
+@pytest.mark.parametrize("protection", ["missing", "wrong_token", "foreign_origin", "valid"])
+def test_login_enforces_csrf_before_creating_a_session(protection):
+    _provision_owner()
+    client = Client(enforce_csrf_checks=True)
+    headers = {}
+    if protection != "missing":
+        assert client.get("/api/v1/bootstrap").status_code == 200
+        csrf_token = client.cookies["csrftoken"].value
+        headers["HTTP_X_CSRFTOKEN"] = "x" * 32 if protection == "wrong_token" else csrf_token
+    if protection == "foreign_origin":
+        headers["HTTP_ORIGIN"] = "https://untrusted.invalid"
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+        **headers,
+    )
+    if protection == "valid":
+        assert response.status_code == 200
+        assert client.get("/api/v1/auth/me").status_code == 200
+        assert client.cookies["csrftoken"].value != csrf_token
+    else:
+        assert response.status_code == 403
+        assert "_auth_user_id" not in client.session
+        assert not AuditEvent.objects.filter(event_type="USER_LOGIN").exists()
+
+
+@pytest.mark.parametrize("termination", ["expired", "logout"])
+def test_terminated_session_rejects_another_client_and_bootstrap_is_anonymous(termination):
+    from django.contrib.sessions.models import Session
+
+    _provision_owner()
+    first = Client()
+    signed_in = first.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert signed_in.status_code == 200
+    other_tab = Client()
+    other_tab.cookies.update(first.cookies)
+    assert other_tab.get("/api/v1/auth/me").status_code == 200
+    if termination == "expired":
+        Session.objects.filter(session_key=first.session.session_key).update(
+            expire_date=timezone.now() - timedelta(seconds=1)
+        )
+    else:
+        assert first.post("/api/v1/auth/logout").status_code == 204
+    denied = other_tab.get("/api/v1/auth/me")
+    assert denied.status_code == 403
+    assert denied.json()["error"]["code"] == "NOT_AUTHENTICATED"
+    bootstrap = other_tab.get("/api/v1/bootstrap").json()
+    assert bootstrap["current_user"]["is_authenticated"] is False
+    assert bootstrap["company"] is None
+    assert bootstrap["permissions"] == []
+
+
+def test_login_fails_closed_if_no_organization():
+    client = Client()
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert AuditEvent.objects.filter(event_type="LOGIN_FAILED", metadata__reason="no_organization").exists()
+
+
+def test_login_fails_closed_if_multiple_organizations(make_user):
+    _provision_owner()
+    # Forge second company directly (simulating corrupted state)
+    other_owner = make_user(login_id="other-owner", password="Mha!mi-Test-2026#")
+    Company.objects.create(
+        name="Other",
+        code="other",
+        owner=other_owner,
+        status=CompanyStatus.ACTIVE,
+    )
+    client = Client()
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+
+
+def test_login_fails_for_inactive_organization():
+    company = _provision_owner()
+    company.status = CompanyStatus.SUSPENDED
+    company.save(update_fields=["status"])
+    client = Client()
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+
+
+def test_login_fails_for_unknown_user_bad_password_and_no_membership(make_user):
+    _provision_owner()
+    client = Client()
+    unknown = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "ghost", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert unknown.status_code == 400
+    bad = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "wrong-password-long-enough"},
+        content_type="application/json",
+    )
+    assert bad.status_code == 400
+    make_user(login_id="outsider", password="Mha!mi-Test-2026#")
+    outsider_no_membership = client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "outsider", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert outsider_no_membership.status_code == 400
 
 
 def test_forged_company_session_is_rejected(make_user, make_company, make_membership):
-    owner = make_user(login_id="real-owner", password="Mha!mi-Test-2026#")
+    _provision_owner()
+    sole = Company.objects.get()
+    # Ensure owner already has membership; attacker is not member of sole org
     attacker = make_user(login_id="tenant-attacker", password="Mha!mi-Test-2026#")
-    company = make_company(name="Protected Company", code="protected-company", owner=owner)
-    make_membership(user=owner, company=company)
     client = Client()
     client.force_login(attacker, backend="django.contrib.auth.backends.ModelBackend")
     session = client.session
-    session["company_id"] = str(company.id)
+    session["company_id"] = str(sole.id)
     session.save()
 
     response = client.get("/api/v1/auth/me")
@@ -115,14 +469,12 @@ def test_forged_company_session_is_rejected(make_user, make_company, make_member
 
 
 @override_settings(REST_FRAMEWORK=STRICT_THROTTLE_SETTINGS)
-def test_login_is_throttled_by_account_without_revealing_account_existence(make_user, make_company, make_membership):
+def test_login_is_throttled_by_account_without_revealing_account_existence(make_user):
     cache.clear()
-    owner = make_user(login_id="throttled-owner", password="Mha!mi-Test-2026#")
-    company = make_company(name="Throttle Company", code="throttle-company", owner=owner)
-    make_membership(user=owner, company=company)
+    _provision_owner()
+    owner = User.objects.get(login_id="owner")
     client = Client()
     payload = {
-        "company_code": company.code,
         "login_id": owner.login_id,
         "password": "wrong-password",
     }
@@ -132,7 +484,7 @@ def test_login_is_throttled_by_account_without_revealing_account_existence(make_
     blocked = client.post("/api/v1/auth/login", data=payload, content_type="application/json")
     unknown = Client().post(
         "/api/v1/auth/login",
-        data={**payload, "company_code": "unknown-company", "login_id": "unknown-user"},
+        data={"login_id": "unknown-user", "password": "wrong-password"},
         content_type="application/json",
         REMOTE_ADDR="198.51.100.10",
     )
@@ -143,75 +495,14 @@ def test_login_is_throttled_by_account_without_revealing_account_existence(make_
     assert unknown.status_code == 400
 
 
-@override_settings(REST_FRAMEWORK=STRICT_THROTTLE_SETTINGS)
-def test_registration_and_mfa_verification_are_throttled():
-    cache.clear()
-    client = Client()
-    for index in range(2):
-        response = client.post(
-            "/api/v1/auth/register",
-            data={
-                **_register_payload(code=f"limited-{index}"),
-                "owner_login_id": f"limited-owner-{index}",
-            },
-            content_type="application/json",
-        )
-        assert response.status_code == 201
-        client.post("/api/v1/auth/logout")
-
-    blocked_registration = client.post(
-        "/api/v1/auth/register",
-        data={
-            **_register_payload(code="limited-blocked"),
-            "owner_login_id": "limited-owner-blocked",
-        },
-        content_type="application/json",
-    )
-    assert blocked_registration.status_code == 429
-
-    cache.clear()
-    mfa_client = Client()
-    mfa_client.post(
-        "/api/v1/auth/register",
-        data={**_register_payload(code="mfa-limited"), "owner_login_id": "mfa-limited-owner"},
-        content_type="application/json",
-        REMOTE_ADDR="198.51.100.20",
-    )
-    enrollment = mfa_client.post(
-        "/api/v1/auth/mfa/enroll",
-        data={"method_type": "totp", "label": "phone"},
-        content_type="application/json",
-    ).json()
-    invalid_payload = {"enrollment_id": enrollment["id"], "code": "000000"}
-    first = mfa_client.post(
-        "/api/v1/auth/mfa/verify",
-        data=invalid_payload,
-        content_type="application/json",
-    )
-    blocked = mfa_client.post(
-        "/api/v1/auth/mfa/verify",
-        data=invalid_payload,
-        content_type="application/json",
-    )
-
-    assert first.status_code == 400
-    assert blocked.status_code == 429
-
-
-def test_registration_rejects_weak_or_common_passwords():
-    response = Client().post(
-        "/api/v1/auth/register",
-        data={**_register_payload(), "owner_password": "password123"},
-        content_type="application/json",
-    )
-
-    assert response.status_code == 400
-    assert not Company.objects.filter(code="acme").exists()
-
-
 def test_owner_can_create_branch_and_membership():
+    _provision_owner()
     client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
+    client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
     branch_response = client.post(
         "/api/v1/organizations/branches",
         data={
@@ -234,7 +525,7 @@ def test_owner_can_create_branch_and_membership():
         content_type="application/json",
     )
     assert role_response.status_code == 201
-    company = Company.objects.get(code="acme")
+    company = Company.objects.get()
     branch = company.branches.get(code="main")
     role = company.job_roles.get(code="cashier")
     branch_membership_response = client.post(
@@ -250,296 +541,92 @@ def test_owner_can_create_branch_and_membership():
     assert branch_membership_response.status_code == 201
 
 
-def test_totp_enrollment_and_verification():
+def test_suspended_company_blocks_writes_and_login():
+    company = _provision_owner()
+    company.status = CompanyStatus.SUSPENDED
+    company.save(update_fields=["status"])
     client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    enroll_response = client.post(
-        "/api/v1/auth/mfa/enroll",
-        data={"method_type": "totp", "label": "phone"},
-        content_type="application/json",
-    )
-    assert enroll_response.status_code == 201
-    enrollment_id = enroll_response.json()["id"]
-    enrollment = MfaEnrollment.objects.get(id=enrollment_id)
-    verify_response = client.post(
-        "/api/v1/auth/mfa/verify",
-        data={"enrollment_id": enrollment_id, "code": _totp_token(enrollment.secret)},
-        content_type="application/json",
-    )
-    assert verify_response.status_code == 200
-    assert enroll_response.json()["secret"] == enrollment.secret
-    assert "secret" not in verify_response.json()
-
-
-def test_login_requires_mfa_code_after_totp_verified():
-    client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    enroll_response = client.post(
-        "/api/v1/auth/mfa/enroll",
-        data={"method_type": "totp", "label": "phone"},
-        content_type="application/json",
-    )
-    assert enroll_response.status_code == 201
-    enrollment = MfaEnrollment.objects.get(id=enroll_response.json()["id"])
-    with freeze_time("2020-01-01 00:00:00"):
-        verify_response = client.post(
-            "/api/v1/auth/mfa/verify",
-            data={"enrollment_id": enrollment.id, "code": _totp_token(enrollment.secret)},
-            content_type="application/json",
-        )
-    assert verify_response.status_code == 200
-
-    denied = client.post(
+    # Login must fail for suspended company
+    login_response = client.post(
         "/api/v1/auth/login",
-        data={"company_code": "acme", "login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
         content_type="application/json",
     )
-    assert denied.status_code == 400
+    assert login_response.status_code == 400
+    # ensure_company_operational also blocks mutations
+    from apps.tenancy.services import ensure_company_operational
 
-    accepted = client.post(
-        "/api/v1/auth/login",
-        data={"company_code": "acme", "login_id": "owner", "password": "Mha!mi-Test-2026#", "mfa_code": _totp_token(enrollment.secret)},
-        content_type="application/json",
-    )
-    assert accepted.status_code == 200
-    client.post("/api/v1/auth/logout")
+    with pytest.raises(ValueError, match="read-only"):
+        ensure_company_operational(company)
+    # is_operational is False for suspended
+    assert company.is_operational() is False
+    # company serializer exposes suspended_at (may be None) but no trial fields
+    from apps.tenancy.serializers import CompanySerializer
+
+    data = CompanySerializer(company).data
+    assert "trial_ends_at" not in data
+    assert "read_only_until" not in data
+    assert "deletion_due_at" not in data
+    assert "suspended_at" in data
 
 
-def test_totp_verification_code_cannot_be_reused_for_login():
+def test_no_support_endpoints_or_login_capability(make_user):
+    _provision_owner()
     client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    enrollment = enroll_totp(User.objects.get(login_id="owner"), label="verification-replay-test")
-    code = _totp_token(enrollment.secret)
-
-    verify_response = client.post(
-        "/api/v1/auth/mfa/verify",
-        data={"enrollment_id": enrollment.id, "code": code},
-        content_type="application/json",
-    )
-    client.post("/api/v1/auth/logout")
-    replay = client.post(
+    client.post(
         "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "owner",
-            "password": "Mha!mi-Test-2026#",
-            "mfa_code": code,
-        },
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
         content_type="application/json",
     )
-
-    assert verify_response.status_code == 200
-    assert replay.status_code == 400
-
-
-def test_totp_code_cannot_be_replayed_for_a_second_login():
-    client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    enrollment = enroll_totp(User.objects.get(login_id="owner"), label="replay-test")
-    enrollment.verified_at = timezone.now()
-    enrollment.save(update_fields=["verified_at"])
-    code = _totp_token(enrollment.secret)
-    client.post("/api/v1/auth/logout")
-
-    first = client.post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "owner",
-            "password": "Mha!mi-Test-2026#",
-            "mfa_code": code,
-        },
-        content_type="application/json",
-    )
-    client.post("/api/v1/auth/logout")
-    replay = client.post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "owner",
-            "password": "Mha!mi-Test-2026#",
-            "mfa_code": code,
-        },
-        content_type="application/json",
-    )
-
-    assert first.status_code == 200
-    assert replay.status_code == 400
-
-
-def test_unimplemented_passkey_enrollment_is_rejected_without_creating_a_record():
-    client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-
-    response = client.post(
-        "/api/v1/auth/mfa/enroll",
-        data={"method_type": "passkey", "label": "unsupported"},
-        content_type="application/json",
-    )
-
-    assert response.status_code == 400
-    assert not MfaEnrollment.objects.filter(method_type="passkey").exists()
-
-
-def test_expired_trial_is_read_only_then_pending_deletion_and_blocks_writes():
-    client = Client()
-    client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    company = Company.objects.get(code="acme")
-    now = timezone.now()
-    company.trial_ends_at = now - timedelta(seconds=1)
-    company.save(update_fields=["trial_ends_at"])
-
-    assert process_lifecycle_expirations(at=now, dry_run=True) == {
-        "read_only": 1,
-        "pending_deletion": 0,
-        "support_expired": 0,
-    }
-    process_lifecycle_expirations(at=now)
-    company.refresh_from_db()
-    assert company.status == CompanyStatus.READ_ONLY
-    assert company.read_only_until == now + timedelta(days=90)
-    assert company.deletion_due_at == company.read_only_until
-    assert client.get("/api/v1/auth/me").json()["company"]["read_only_until"] is not None
-
-    read_response = client.get("/api/v1/organizations/branches")
-    write_response = client.post(
-        "/api/v1/organizations/branches",
-        data={
-            "name": "Blocked",
-            "code": "blocked",
-            "timezone": "Asia/Riyadh",
-            "operational_day_cutoff": "03:00:00",
-        },
-        content_type="application/json",
-    )
-    assert read_response.status_code == 200
-    assert write_response.status_code == 400
-
-    process_lifecycle_expirations(at=now + timedelta(days=90))
-    company.refresh_from_db()
-    assert company.status == CompanyStatus.PENDING_DELETION
-    assert AuditEvent.objects.filter(event_type="COMPANY_LIFECYCLE_TRANSITIONED", target_id=str(company.id)).count() == 2
-
-
-def test_support_grant_is_scoped_audited_expiring_and_revocable(make_user):
-    owner_client = Client()
-    owner_client.post("/api/v1/auth/register", data=_register_payload(), content_type="application/json")
-    company = Company.objects.get(code="acme")
-    support = make_user(login_id="support", password="supportpass")
-    enrollment = enroll_totp(support, label="support-test")
-    enrollment.verified_at = timezone.now()
-    enrollment.save(update_fields=["verified_at"])
-    expires_at = timezone.now() + timedelta(hours=1)
-    grant_response = owner_client.post(
+    support_user = make_user(login_id="support", password="SupportPass123!")
+    grant_response = client.post(
         "/api/v1/auth/company/support",
         data={
-            "support_user_id": str(support.id),
-            "reason": "Investigate export request",
-            "expires_at": expires_at.isoformat(),
-        },
-        content_type="application/json",
-    )
-    assert grant_response.status_code == 201
-    grant_id = grant_response.json()["id"]
-    enrollment.verified_at = None
-    enrollment.save(update_fields=["verified_at"])
-    denied_without_mfa = Client().post(
-        "/api/v1/auth/login",
-        data={"company_code": "acme", "login_id": "support", "password": "supportpass"},
-        content_type="application/json",
-    )
-    assert denied_without_mfa.status_code == 400
-    enrollment.verified_at = timezone.now()
-    enrollment.save(update_fields=["verified_at"])
-    support_client = Client()
-    login_response = support_client.post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "support",
-            "password": "supportpass",
-            "mfa_code": _totp_token(enrollment.secret),
-        },
-        content_type="application/json",
-    )
-    assert login_response.status_code == 200
-    assert AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_GRANTED", target_id=grant_id).exists()
-    assert AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_USED", target_id=grant_id).exists()
-
-    branch = Branch.objects.create(
-        company=company,
-        name="Private",
-        code="private",
-        operational_day_cutoff=time(3),
-    )
-    assert can_access_media(
-        support,
-        SimpleNamespace(submitted_by_id=company.owner_id, company=company, branch=branch),
-    ) is False
-
-    other_owner = make_user(login_id="other-owner", password="Mha!mi-Test-2026#")
-    other_company = Company.objects.create(
-        name="Other",
-        code="other",
-        owner=other_owner,
-        trial_ends_at=timezone.now() + timedelta(days=30),
-    )
-    denied_other_tenant = Client().post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": other_company.code,
-            "login_id": "support",
-            "password": "supportpass",
-            "mfa_code": _totp_token(enrollment.secret),
-        },
-        content_type="application/json",
-    )
-    assert denied_other_tenant.status_code == 400
-
-    revoke_response = owner_client.delete(
-        "/api/v1/auth/company/support",
-        data={"support_user_id": str(support.id)},
-        content_type="application/json",
-    )
-    assert revoke_response.status_code == 204
-    assert AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_REVOKED", target_id=grant_id).exists()
-    denied_revoked = Client().post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "support",
-            "password": "supportpass",
-            "mfa_code": _totp_token(enrollment.secret),
-        },
-        content_type="application/json",
-    )
-    assert denied_revoked.status_code == 400
-
-    expiring_response = owner_client.post(
-        "/api/v1/auth/company/support",
-        data={
-            "support_user_id": str(support.id),
-            "reason": "Temporary diagnostic session",
+            "support_user_id": str(support_user.id),
+            "reason": "Investigate",
             "expires_at": (timezone.now() + timedelta(hours=1)).isoformat(),
         },
         content_type="application/json",
     )
-    assert expiring_response.status_code == 201
-    expiring_grant_id = expiring_response.json()["id"]
-    SupportAuthorization.objects.filter(id=expiring_grant_id).update(
-        expires_at=timezone.now() - timedelta(seconds=1)
-    )
-    denied_expired = Client().post(
-        "/api/v1/auth/login",
-        data={
-            "company_code": "acme",
-            "login_id": "support",
-            "password": "supportpass",
-            "mfa_code": _totp_token(enrollment.secret),
-        },
+    assert grant_response.status_code == 404
+    delete_response = client.delete(
+        "/api/v1/auth/company/support",
+        data={"support_user_id": str(support_user.id)},
         content_type="application/json",
     )
-    assert denied_expired.status_code == 400
-    assert process_lifecycle_expirations()["support_expired"] == 1
-    assert SupportAuthorization.objects.get(id=expiring_grant_id).active is False
-    assert AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_EXPIRED", target_id=expiring_grant_id).exists()
+    assert delete_response.status_code == 404
+
+    denied = Client().post(
+        "/api/v1/auth/login",
+        data={"login_id": "support", "password": "SupportPass123!"},
+        content_type="application/json",
+    )
+    assert denied.status_code == 400
+    assert not AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_USED").exists()
+
+
+def test_login_does_not_emit_support_access_used_audit():
+    _provision_owner()
+    client = Client()
+    client.post(
+        "/api/v1/auth/login",
+        data={"login_id": "owner", "password": "Mha!mi-Test-2026#"},
+        content_type="application/json",
+    )
+    assert AuditEvent.objects.filter(event_type="USER_LOGIN").exists()
+    assert not AuditEvent.objects.filter(event_type="SUPPORT_ACCESS_USED").exists()
+
+
+def test_tenant_context_has_no_support_attribute(make_user):
+    from apps.tenancy.access import TenantContext
+    from apps.tenancy.models import Company
+
+    user = make_user()
+    company = Company.objects.create(
+        name="TenantCheck",
+        code="tenant-check",
+        owner=user,
+        status=CompanyStatus.ACTIVE,
+    )
+    ctx = TenantContext(company=company, role="owner", branch_ids=frozenset())
+    assert not hasattr(ctx, "is_support")

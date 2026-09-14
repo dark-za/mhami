@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-Report vulnerabilities through a private GitHub security advisory for this repository, or contact the project maintainer through the repository owner account. Do not open public issues for suspected vulnerabilities that expose exploit details, secrets, tenant data, or deployment information.
+Report vulnerabilities through a private GitHub security advisory for this repository, or contact the project maintainer through the repository owner account. Do not open public issues for suspected vulnerabilities that expose exploit details, secrets, organization data, or deployment information.
 
 Please include:
 

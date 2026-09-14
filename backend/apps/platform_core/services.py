@@ -24,7 +24,6 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "connectors.manage",
         "mcp.manage",
         "backups.manage",
-        "pilot.manage",
     ],
     "monitor": [
         "tasks.create",
@@ -32,7 +31,6 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "tasks.transfer",
         "reviews.manage",
         "exports.request",
-        "pilot.manage",
         "mcp.logs.read",
     ],
     "employee": [
@@ -65,7 +63,7 @@ def _workspace_modules(module_slugs: set[str]) -> list[str]:
         modules.append("people")
     if "reviews" in module_slugs:
         modules.append("reviews")
-    if {"exports", "pilot", "backups"} & module_slugs:
+    if {"exports", "backups"} & module_slugs:
         modules.append("operations")
     if {"ai_gateway", "connector_control"} & module_slugs:
         modules.append("admin")
@@ -87,6 +85,8 @@ def bootstrap_payload(user: object | None = None) -> dict[str, object]:
     branches: list[dict[str, object]] = []
     branch_scope: list[dict[str, object]] = []
     permissions: list[str] = []
+    from apps.tenancy.services import initial_setup_required
+
     if user is not None:
         is_authenticated = bool(getattr(user, "is_authenticated", False))
         current_user = {
@@ -112,8 +112,17 @@ def bootstrap_payload(user: object | None = None) -> dict[str, object]:
                     "status": company.status,
                     "industry": company.industry,
                 }
-                from apps.organizations.models import Branch
+                from apps.organizations.models import Branch, CompanyRole
 
+                scoped_ids = set(accessible_company_branch_ids(company, user))
+                if role == CompanyRole.OWNER:
+                    branch_qs = Branch.objects.filter(company=company, active=True)
+                else:
+                    # Least-privilege display: monitors/employees see only their accessible active branches.
+                    if not scoped_ids:
+                        branch_qs = Branch.objects.none()
+                    else:
+                        branch_qs = Branch.objects.filter(company=company, active=True, id__in=scoped_ids)
                 branches = [
                     {
                         "id": str(branch.id),
@@ -123,12 +132,12 @@ def bootstrap_payload(user: object | None = None) -> dict[str, object]:
                         "operational_day_cutoff": branch.operational_day_cutoff.isoformat(),
                         "active": branch.active,
                     }
-                    for branch in Branch.objects.filter(company=company, active=True)
+                    for branch in branch_qs
                 ]
-                scoped_ids = set(accessible_company_branch_ids(company, user))
                 branch_scope = [branch for branch in branches if branch["id"] in scoped_ids]
     return {
         "current_user": current_user,
+        "installation": {"setup_required": initial_setup_required()},
         "company": company_payload,
         "permissions": permissions,
         "branches": branches,

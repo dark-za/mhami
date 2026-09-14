@@ -27,6 +27,7 @@ dependencies = [
   "mypy==1.13.0",
   "drf-spectacular==0.28.0",
   "cryptography==50.0.1",
+  "types-PyYAML==6.0.12.20260815",
 ]
 
 [project.optional-dependencies]

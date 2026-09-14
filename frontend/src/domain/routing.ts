@@ -14,14 +14,14 @@ export type WorkspaceRoute =
   | "/agent-access";
 
 export const routePermissions: Record<Exclude<WorkspaceRoute, "/">, Role[]> = {
-  "/dashboard": ["platform_admin", "owner", "monitor"],
-  "/operations": ["platform_admin", "owner", "monitor"],
-  "/tasks": ["platform_admin", "owner", "monitor", "employee"],
-  "/evidence": ["platform_admin", "owner", "monitor", "employee"],
-  "/people": ["platform_admin", "owner", "monitor"],
-  "/reviews": ["platform_admin", "owner", "monitor"],
-  "/admin": ["platform_admin", "owner"],
-  "/agent-access": ["platform_admin", "owner"],
+  "/dashboard": ["owner", "monitor"],
+  "/operations": ["owner"],
+  "/tasks": ["owner", "monitor", "employee"],
+  "/evidence": ["owner", "monitor", "employee"],
+  "/people": ["owner", "monitor"],
+  "/reviews": ["owner", "monitor"],
+  "/admin": ["owner"],
+  "/agent-access": ["owner"],
 };
 
 export function getWorkspaceRoute(pathname: string): WorkspaceRoute {
@@ -50,11 +50,11 @@ export function routeTitle(locale: "ar" | "en", route: WorkspaceRoute): string {
 }
 
 export function defaultRouteForRole(role: Role | null | undefined): WorkspaceRoute | "/login" {
-  if (role === "owner" || role === "platform_admin") {
-    return "/people";
+  if (role === "owner") {
+    return "/dashboard";
   }
   if (role === "monitor") {
-    return "/reviews";
+    return "/dashboard";
   }
   if (role === "employee") {
     return "/tasks";

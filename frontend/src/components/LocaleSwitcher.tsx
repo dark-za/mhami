@@ -7,6 +7,7 @@
  */
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
+import type { Locale } from "../design-system/tokens";
 
 const LANGUAGES: Array<{ code: string; label: string }> = [
   { code: "en", label: "English" },
@@ -15,14 +16,20 @@ const LANGUAGES: Array<{ code: string; label: string }> = [
 
 export interface LocaleSwitcherProps {
   testId?: string;
+  onLocaleChange?: (locale: Locale) => void;
 }
 
-export function LocaleSwitcher({ testId = "locale-switcher" }: LocaleSwitcherProps) {
+export function LocaleSwitcher({ testId = "locale-switcher", onLocaleChange }: LocaleSwitcherProps) {
   const { i18n, t } = useTranslation();
   const current = (i18n.resolvedLanguage ?? i18n.language ?? "en").startsWith("ar") ? "ar" : "en";
 
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    void i18n.changeLanguage(event.target.value);
+    const locale = event.target.value as Locale;
+    if (onLocaleChange) {
+      onLocaleChange(locale);
+      return;
+    }
+    void i18n.changeLanguage(locale);
   };
 
   return (

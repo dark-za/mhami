@@ -63,7 +63,53 @@ def test_export_request_and_download(
     assert download.status_code == 200
 
 
-def test_monitor_cannot_export_unassigned_branch(
+def test_task_only_export_excludes_evidence_rows(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule, make_job_role, make_branch_membership,
+    make_evidence_item, force_login_company,
+):
+    owner, _monitor, company, branch = _context(
+        make_user, make_company, make_membership, make_branch,
+        make_job_role, make_branch_membership,
+        make_template, make_template_version, make_schedule,
+    )
+    evidence = make_evidence_item(company=company, branch=branch, submitted_by=owner)
+    client = force_login_company(owner, company)
+
+    response = client.post(
+        "/api/v1/exports/requests",
+        data={"export_type": "csv", "branch_ids": [str(branch.id)], "categories": ["tasks"]},
+        content_type="application/json",
+    )
+    assert response.status_code == 201
+
+    download = client.get(f"/api/v1/exports/download/{response.json()['download_token']}")
+    assert download.status_code == 200
+    assert str(evidence.id).encode() not in b"".join(download.streaming_content)
+
+
+def test_export_request_rejects_unknown_or_duplicate_categories(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule, make_job_role, make_branch_membership,
+    force_login_company,
+):
+    owner, _monitor, company, branch = _context(
+        make_user, make_company, make_membership, make_branch,
+        make_job_role, make_branch_membership,
+        make_template, make_template_version, make_schedule,
+    )
+    client = force_login_company(owner, company)
+
+    for categories in (["unknown"], ["tasks", "tasks"]):
+        response = client.post(
+            "/api/v1/exports/requests",
+            data={"export_type": "csv", "branch_ids": [str(branch.id)], "categories": categories},
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+
+
+def test_monitor_cannot_request_export_for_any_branch(
     make_user, make_company, make_membership, make_branch,
     make_template, make_template_version, make_schedule, make_job_role, make_branch_membership, force_login_company,
 ):
@@ -80,10 +126,10 @@ def test_monitor_cannot_export_unassigned_branch(
         data={"export_type": "csv", "branch_ids": [str(other_branch.id)], "categories": ["tasks"]},
         content_type="application/json",
     )
-    assert response.status_code == 400
+    assert response.status_code == 403
 
 
-def test_monitor_can_request_export_for_assigned_branch(
+def test_monitor_cannot_request_export_for_assigned_branch(
     make_user, make_company, make_membership, make_branch,
     make_template, make_template_version, make_schedule, make_job_role, make_branch_membership, force_login_company,
 ):
@@ -99,4 +145,4 @@ def test_monitor_can_request_export_for_assigned_branch(
         data={"export_type": "csv", "branch_ids": [str(branch.id)], "categories": ["tasks"]},
         content_type="application/json",
     )
-    assert response.status_code == 201
+    assert response.status_code == 403

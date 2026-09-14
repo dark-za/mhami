@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
-import type { BootstrapState } from "../../api/bootstrap";
+import { fetchBootstrap, type BootstrapState } from "../../api/bootstrap";
 import { EmptyState, Panel, SkeletonBlock } from "../../shell/ui";
-import { roleLabels } from "../../design-system/tokens";
 
 type Member = {
   user?: string;
@@ -46,6 +46,7 @@ const DEFAULT_BRANCH = {
 };
 
 export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
+  const { t } = useTranslation();
   const { company, currentUser } = bootstrap.snapshot;
   const [members, setMembers] = useState<Member[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -59,6 +60,8 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
     display_name: "",
     password: "",
     role: "employee",
+    branch_id: "",
+    job_role_id: "",
   });
   const [branchDraft, setBranchDraft] = useState(DEFAULT_BRANCH);
   const [jobRoleDraft, setJobRoleDraft] = useState({ name: "", code: "" });
@@ -69,7 +72,8 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
     membership_type: "primary",
   });
 
-  const isOwner = activeRole === "owner" || activeRole === "platform_admin";
+  const isOwner = activeRole === "owner";
+  const canManagePeople = isOwner || activeRole === "monitor";
   const activeMembers = useMemo(() => members.filter((member) => member.active !== false), [members]);
 
   async function refresh() {
@@ -90,14 +94,28 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
       branch_id: current.branch_id || nextBranches[0]?.id || "",
       job_role_id: current.job_role_id || nextRoles[0]?.id || "",
     }));
+    setMemberDraft((current) => ({
+      ...current,
+      branch_id: current.branch_id || nextBranches[0]?.id || "",
+      job_role_id: current.job_role_id || nextRoles[0]?.id || "",
+    }));
+  }
+
+  async function refreshAfterMutation(successMessage: string) {
+    const [peopleResult, bootstrapResult] = await Promise.allSettled([refresh(), fetchBootstrap()]);
+    if (bootstrapResult.status === "fulfilled") {
+      window.dispatchEvent(new CustomEvent("mhami.bootstrap.refreshed", { detail: bootstrapResult.value }));
+    }
+    const refreshFailed = peopleResult.status === "rejected" || bootstrapResult.status === "rejected";
+    setMessage(refreshFailed ? `${successMessage} ${t("people.refresh_notice")}` : successMessage);
   }
 
   useEffect(() => {
     let active = true;
     void refresh()
-      .catch((caught: unknown) => {
+      .catch((_caught: unknown) => {
         if (active) {
-          setError(caught instanceof Error ? caught.message : "People data failed to load.");
+          setError(t("people.load_failed"));
         }
       })
       .finally(() => {
@@ -116,12 +134,21 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
     setError(null);
     setMessage(null);
     try {
-      await api("/api/v1/auth/company/users", { method: "POST", body: memberDraft });
-      setMemberDraft({ login_id: "", display_name: "", password: "", role: "employee" });
-      await refresh();
-      setMessage("Company user created.");
-    } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "User creation failed.");
+      const { branch_id, job_role_id, ...account } = memberDraft;
+      await api("/api/v1/auth/company/users", {
+        method: "POST",
+        body: isOwner ? account : { ...account, branch_id, job_role_id },
+      });
+      setMemberDraft((current) => ({
+        ...current,
+        login_id: "",
+        display_name: "",
+        password: "",
+        role: "employee",
+      }));
+      await refreshAfterMutation(t("people.user_created"));
+    } catch (_caught: unknown) {
+      setError(t("people.user_create_failed"));
     } finally {
       setSaving(null);
     }
@@ -135,10 +162,9 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
     try {
       await api("/api/v1/organizations/branches", { method: "POST", body: branchDraft });
       setBranchDraft(DEFAULT_BRANCH);
-      await refresh();
-      setMessage("Branch created.");
-    } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Branch creation failed.");
+      await refreshAfterMutation(t("people.branch_created"));
+    } catch (_caught: unknown) {
+      setError(t("people.branch_create_failed"));
     } finally {
       setSaving(null);
     }
@@ -152,10 +178,9 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
     try {
       await api("/api/v1/organizations/job-roles", { method: "POST", body: jobRoleDraft });
       setJobRoleDraft({ name: "", code: "" });
-      await refresh();
-      setMessage("Job role created.");
-    } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Job role creation failed.");
+      await refreshAfterMutation(t("people.job_role_created"));
+    } catch (_caught: unknown) {
+      setError(t("people.job_role_create_failed"));
     } finally {
       setSaving(null);
     }
@@ -171,33 +196,32 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
         method: "POST",
         body: assignmentDraft,
       });
-      await refresh();
-      setMessage("Branch access assigned.");
-    } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Branch assignment failed.");
+      await refreshAfterMutation(t("people.branch_assigned"));
+    } catch (_caught: unknown) {
+      setError(t("people.branch_assignment_failed"));
     } finally {
       setSaving(null);
     }
   }
 
   return (
-    <Panel eyebrow="People" title="Company people and access">
+    <Panel eyebrow={t("people.title")} title={t("people.workspace")}>
       {error ? <p className="status status-danger">{error}</p> : null}
       {message ? <p className="status status-success">{message}</p> : null}
       {loading ? <SkeletonBlock rows={5} /> : null}
 
       <div className="token-grid">
         <div className="token-swatch">
-          <span>Company</span>
+          <span>{t("people.company")}</span>
           <strong>{company.name}</strong>
         </div>
         <div className="token-swatch">
-          <span>Active session</span>
+          <span>{t("people.active_session")}</span>
           <strong>{currentUser.displayName || currentUser.loginId}</strong>
         </div>
         <div className="token-swatch">
-          <span>Role</span>
-          <strong>{activeRole ? roleLabels[activeRole].en : "Signed out"}</strong>
+          <span>{t("people.platform_role")}</span>
+          <strong>{activeRole ? t(`people.role.${activeRole}`, { defaultValue: activeRole }) : t("people.signed_out")}</strong>
         </div>
       </div>
 
@@ -207,66 +231,97 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
             {activeMembers.map((member) => (
               <div key={member.user_id ?? member.user} className="notification-item">
                 <strong>{member.display_name || member.login_id || member.user}</strong>
-                <p>{member.login_id || "login id unavailable"}</p>
-                <small>{member.role || "role unset"}</small>
+                <p><bdi>{member.login_id || t("people.login_id_unavailable")}</bdi></p>
+                <small>{member.role ? t(`people.role.${member.role}`, { defaultValue: member.role }) : t("people.role_unset")}</small>
               </div>
             ))}
             {activeMembers.length === 0 ? (
-              <EmptyState title="No members" body="Members created by the owner will appear here." />
+              <EmptyState title={t("people.no_members")} body={t("people.no_members_body")} />
             ) : null}
           </div>
 
-          {isOwner ? (
+          {canManagePeople ? (
             <>
               <form className="form-stack" onSubmit={createMember}>
-                <h3>Create company user</h3>
+                <h3>{isOwner ? t("people.create_company_user") : t("people.create_employee")}</h3>
                 <div className="form-grid">
                   <label>
-                    <span>Login ID</span>
+                    <span>{t("people.login_id")}</span>
                     <input
                       required
                       value={memberDraft.login_id}
+                      dir="ltr"
                       onChange={(event) => setMemberDraft((current) => ({ ...current, login_id: event.target.value }))}
                     />
                   </label>
                   <label>
-                    <span>Display name</span>
+                    <span>{t("people.display_name")}</span>
                     <input
                       value={memberDraft.display_name}
                       onChange={(event) => setMemberDraft((current) => ({ ...current, display_name: event.target.value }))}
                     />
                   </label>
                   <label>
-                    <span>Password</span>
+                    <span>{t("people.password")}</span>
                     <input
                       required
                       type="password"
+                      dir="ltr"
                       value={memberDraft.password}
                       onChange={(event) => setMemberDraft((current) => ({ ...current, password: event.target.value }))}
                     />
                   </label>
-                  <label>
-                    <span>Platform role</span>
-                    <select
-                      value={memberDraft.role}
-                      onChange={(event) => setMemberDraft((current) => ({ ...current, role: event.target.value }))}
-                    >
-                      <option value="employee">Employee</option>
-                      <option value="monitor">Monitor</option>
-                      <option value="owner">Owner</option>
-                    </select>
-                  </label>
+                  {isOwner ? (
+                    <label>
+                      <span>{t("people.platform_role")}</span>
+                      <select
+                        value={memberDraft.role}
+                        onChange={(event) => setMemberDraft((current) => ({ ...current, role: event.target.value }))}
+                      >
+                        <option value="employee">{t("people.role.employee")}</option>
+                        <option value="monitor">{t("people.role.monitor")}</option>
+                        <option value="owner">{t("people.role.owner")}</option>
+                      </select>
+                    </label>
+                  ) : (
+                    <>
+                      <p className="muted">{t("people.monitor_employee_notice")}</p>
+                      <label>
+                        <span>{t("people.branch")}</span>
+                        <select
+                          required
+                          value={memberDraft.branch_id}
+                          onChange={(event) => setMemberDraft((current) => ({ ...current, branch_id: event.target.value }))}
+                        >
+                          <option value="">{t("people.select_branch")}</option>
+                          {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} - {branch.code}</option>)}
+                        </select>
+                      </label>
+                      <label>
+                        <span>{t("people.job_role")}</span>
+                        <select
+                          required
+                          value={memberDraft.job_role_id}
+                          onChange={(event) => setMemberDraft((current) => ({ ...current, job_role_id: event.target.value }))}
+                        >
+                          <option value="">{t("people.select_job_role")}</option>
+                          {jobRoles.map((role) => <option key={role.id} value={role.id}>{role.name} - {role.code}</option>)}
+                        </select>
+                      </label>
+                    </>
+                  )}
                 </div>
                 <button className="primary-button" type="submit" disabled={saving === "member"}>
-                  Create user
+                  {t("people.create_user")}
                 </button>
               </form>
 
+              {isOwner ? <>
               <form className="form-stack" onSubmit={createBranch}>
-                <h3>Create branch</h3>
+                <h3>{t("people.create_branch")}</h3>
                 <div className="form-grid">
                   <label>
-                    <span>Name</span>
+                    <span>{t("people.name")}</span>
                     <input
                       required
                       value={branchDraft.name}
@@ -274,26 +329,32 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                     />
                   </label>
                   <label>
-                    <span>Code</span>
+                    <span>{t("people.code")}</span>
                     <input
                       required
                       value={branchDraft.code}
+                      className="bidi-ltr"
+                      dir="ltr"
                       onChange={(event) => setBranchDraft((current) => ({ ...current, code: event.target.value }))}
                     />
                   </label>
                   <label>
-                    <span>Timezone</span>
+                    <span>{t("people.timezone")}</span>
                     <input
                       required
                       value={branchDraft.timezone}
+                      className="bidi-ltr"
+                      dir="ltr"
                       onChange={(event) => setBranchDraft((current) => ({ ...current, timezone: event.target.value }))}
                     />
                   </label>
                   <label>
-                    <span>Operational cutoff</span>
+                    <span>{t("people.operational_cutoff")}</span>
                     <input
                       required
                       type="time"
+                      className="bidi-ltr"
+                      dir="ltr"
                       step="1"
                       value={branchDraft.operational_day_cutoff}
                       onChange={(event) =>
@@ -303,15 +364,15 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                   </label>
                 </div>
                 <button className="ghost-button" type="submit" disabled={saving === "branch"}>
-                  Create branch
+                  {t("people.create_branch")}
                 </button>
               </form>
 
               <form className="form-stack" onSubmit={createJobRole}>
-                <h3>Create job role</h3>
+                <h3>{t("people.create_job_role")}</h3>
                 <div className="form-grid">
                   <label>
-                    <span>Name</span>
+                    <span>{t("people.name")}</span>
                     <input
                       required
                       value={jobRoleDraft.name}
@@ -319,30 +380,33 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                     />
                   </label>
                   <label>
-                    <span>Code</span>
+                    <span>{t("people.code")}</span>
                     <input
                       required
                       value={jobRoleDraft.code}
+                      className="bidi-ltr"
+                      dir="ltr"
                       onChange={(event) => setJobRoleDraft((current) => ({ ...current, code: event.target.value }))}
                     />
                   </label>
                 </div>
                 <button className="ghost-button" type="submit" disabled={saving === "job-role"}>
-                  Create job role
+                  {t("people.create_job_role")}
                 </button>
               </form>
+              </> : null}
 
               <form className="form-stack" onSubmit={assignBranch}>
-                <h3>Assign branch access</h3>
+                <h3>{t("people.assign_branch_access")}</h3>
                 <div className="form-grid">
                   <label>
-                    <span>User</span>
+                    <span>{t("people.user")}</span>
                     <select
                       required
                       value={assignmentDraft.user_id}
                       onChange={(event) => setAssignmentDraft((current) => ({ ...current, user_id: event.target.value }))}
                     >
-                      <option value="">Select user</option>
+                      <option value="">{t("people.select_user")}</option>
                       {activeMembers.map((member) => (
                         <option key={member.user_id ?? member.user} value={member.user_id ?? member.user}>
                           {member.display_name || member.login_id || member.user}
@@ -351,13 +415,13 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                     </select>
                   </label>
                   <label>
-                    <span>Branch</span>
+                    <span>{t("people.branch")}</span>
                     <select
                       required
                       value={assignmentDraft.branch_id}
                       onChange={(event) => setAssignmentDraft((current) => ({ ...current, branch_id: event.target.value }))}
                     >
-                      <option value="">Select branch</option>
+                      <option value="">{t("people.select_branch")}</option>
                       {branches.map((branch) => (
                         <option key={branch.id} value={branch.id}>
                           {branch.name} - {branch.code}
@@ -366,13 +430,13 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                     </select>
                   </label>
                   <label>
-                    <span>Job role</span>
+                    <span>{t("people.job_role")}</span>
                     <select
                       required
                       value={assignmentDraft.job_role_id}
                       onChange={(event) => setAssignmentDraft((current) => ({ ...current, job_role_id: event.target.value }))}
                     >
-                      <option value="">Select job role</option>
+                      <option value="">{t("people.select_job_role")}</option>
                       {jobRoles.map((role) => (
                         <option key={role.id} value={role.id}>
                           {role.name} - {role.code}
@@ -382,12 +446,12 @@ export function PeoplePage({ bootstrap, activeRole }: PeoplePageProps) {
                   </label>
                 </div>
                 <button className="primary-button" type="submit" disabled={saving === "assignment"}>
-                  Assign branch
+                  {t("people.assign_branch")}
                 </button>
               </form>
             </>
           ) : (
-            <p className="muted">Management actions are available to the company owner only.</p>
+            <p className="muted">{t("people.management_restricted")}</p>
           )}
         </>
       ) : null}

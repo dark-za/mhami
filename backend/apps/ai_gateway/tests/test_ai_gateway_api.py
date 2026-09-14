@@ -180,7 +180,7 @@ def test_provider_and_offline_connector_failure_leave_evidence_usable(
     assert evidence.status == EvidenceStatus.SUBMITTED
 
 
-def test_connector_shadow_summary_visible(
+def test_connector_shadow_summary_is_owner_only(
     make_user, make_company, make_membership, make_branch,
     make_template, make_template_version, make_schedule,
     make_capture_session, make_evidence_item,
@@ -197,4 +197,4 @@ def test_connector_shadow_summary_visible(
     session.save()
 
     summary = client.get("/api/v1/ai/shadow")
-    assert summary.status_code == 200
+    assert summary.status_code == 403

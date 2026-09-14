@@ -30,8 +30,13 @@ class BootstrapBranchSerializer(serializers.Serializer):
     active = serializers.BooleanField()
 
 
+class BootstrapInstallationSerializer(serializers.Serializer):
+    setup_required = serializers.BooleanField()
+
+
 class BootstrapSerializer(serializers.Serializer):
     current_user = BootstrapCurrentUserSerializer()
+    installation = BootstrapInstallationSerializer()
     company = BootstrapCompanySerializer(allow_null=True)
     permissions = serializers.ListField(child=serializers.CharField())
     branches = BootstrapBranchSerializer(many=True)

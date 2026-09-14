@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import io
+
 from django.http import FileResponse
 from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -15,6 +17,7 @@ from ..models import BackupRun
 from ..serializers import (
     BackupCreateSerializer,
     BackupPolicySerializer,
+    BackupPolicyUpdateSerializer,
     BackupRunSerializer,
     RestoreCreateSerializer,
     RestoreRunSerializer,
@@ -24,30 +27,34 @@ from ..services import (
     create_backup_run,
     download_backup_artifact,
     restore_backup_run,
+    update_backup_policy,
 )
 
 
 class BackupPolicyView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="Backup policy for the active company."))
     def get(self, request):
         company = self.get_tenant().company
         return Response(BackupPolicySerializer(backup_policy_for_company(company)).data)
 
-    @extend_schema(request=BackupCreateSerializer, responses=BackupPolicySerializer)
+    @extend_schema(request=BackupPolicyUpdateSerializer, responses=BackupPolicySerializer)
     @platform_service_call
     def put(self, request):
         company = self.get_tenant().company
         ensure_company_operational(company)
-        serializer = BackupCreateSerializer(data=request.data)
+        serializer = BackupPolicyUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Policy updates are read-only in the current implementation.
-        return Response(BackupPolicySerializer(backup_policy_for_company(company)).data)
+        try:
+            policy = update_backup_policy(company, request.user, serializer.validated_data)
+        except ValueError as exc:
+            raise PlatformAPIException(str(exc)) from exc
+        return Response(BackupPolicySerializer(policy).data)
 
 
 class BackupRunListView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="List of backup runs for the active company."))
     def get(self, request):
@@ -114,7 +121,7 @@ class BackupRestoreView(TenantAPIView):
 
 
 class BackupDownloadView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses={200: OpenApiResponse(description="Backup archive download.")})
     def get(self, request, backup_run_id):
@@ -122,4 +129,17 @@ class BackupDownloadView(TenantAPIView):
         path = download_backup_artifact(company, backup_run_id)
         if path is None:
             raise PlatformAPIException("Backup archive is unavailable.")
-        return FileResponse(open(path, "rb"), as_attachment=True, filename=path.name)
+        # Decrypt in-memory for encrypted artifacts to avoid persisting
+        # plaintext on disk. The on-disk artefact stays encrypted.
+        if path.suffix == ".enc":
+            from ..services import _decrypt_artifact
+            try:
+                decrypted_bytes = _decrypt_artifact(path.read_bytes())
+            except Exception as exc:
+                raise PlatformAPIException("Backup artifact is corrupted or tampered.") from exc
+            buffer = io.BytesIO(decrypted_bytes)
+            filename = path.stem  # remove .enc suffix
+        else:
+            buffer = open(path, "rb")
+            filename = path.name
+        return FileResponse(buffer, as_attachment=True, filename=filename)

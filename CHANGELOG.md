@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### Frontend Reliability
+
+- Report successful People, MCP access, task, and review changes even when the
+  follow-up refresh fails, with explicit stale-data warnings to prevent duplicate
+  submissions and preserve one-time MCP secrets.
+- Create scheduled tasks through a single backend endpoint so the task template,
+  first version, and schedule are persisted atomically.
+
+### Test Reliability
+
+- Force backend pytest runs onto `config.settings.test` and isolate auth throttle
+  cache state in tenancy API tests.
+
+### Documentation and Policy
+
+- Simplify legal policy documents for the self-hosted single-organization
+  release. The seed command now publishes six operator-facing notices and omits
+  the old remote-assistance/support authorization document.
+
+### Container Reliability
+
+- Include frontend validation scripts in Docker builds; CI also builds the
+  production frontend image.
+- Bind development ports to loopback and wait for API health during Compose
+  startup. Add resolved Compose contract tests for development/production.
+
+### Authentication Corrections
+
+- Disabled users are rejected during login and are no longer restored from sessions.
+- Owner-created accounts no longer submit hidden branch/job-role fields;
+  monitor-created employees retain their required scoped assignment fields.
+- Login, first-owner setup, and member creation preserve passwords exactly,
+  including surrounding whitespace, consistently with `provision_owner`.
+- Compatibility: passwords previously created through the API had surrounding
+  whitespace removed before hashing. Those existing hashes are unchanged; use
+  the previously stored password without the removed whitespace. No automatic
+  password rewrite or alternate trimmed-password login is performed.
+
 - Phase 01 governance and repository foundation documents added.
 
 ### Backend Hardening (Section 4)

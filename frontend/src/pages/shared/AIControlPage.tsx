@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import { Panel } from "../../shell/ui";
@@ -27,6 +28,7 @@ const CONNECTOR_DRAFT_DEFAULT = {
 };
 
 export function AIControlPage() {
+  const { t } = useTranslation();
   const [provider, setProvider] = useState<AIProviderConfig | null>(null);
   const [connector, setConnector] = useState<ConnectorEnrollment | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -55,9 +57,9 @@ export function AIControlPage() {
 
   useEffect(() => {
     let active = true;
-    void refresh().catch((error: unknown) => {
+    void refresh().catch((_error: unknown) => {
       if (active) {
-        setAiError(error instanceof Error ? error.message : "AI control data failed.");
+        setAiError(t("ai_control.load_failed"));
       }
     });
     return () => {
@@ -84,9 +86,9 @@ export function AIControlPage() {
         },
       });
       setProvider(payload);
-      setAiMessage("Provider configuration updated.");
-    } catch (error: unknown) {
-      setAiError(error instanceof Error ? error.message : "Provider save failed.");
+      setAiMessage(t("ai_control.provider_updated"));
+    } catch (_error: unknown) {
+      setAiError(t("ai_control.provider_save_failed"));
     } finally {
       setAiLoading(null);
     }
@@ -103,9 +105,9 @@ export function AIControlPage() {
         body: connectorDraft,
       });
       setConnector(payload);
-      setAiMessage("Connector enrolled.");
-    } catch (error: unknown) {
-      setAiError(error instanceof Error ? error.message : "Connector save failed.");
+      setAiMessage(t("ai_control.connector_enrolled"));
+    } catch (_error: unknown) {
+      setAiError(t("ai_control.connector_save_failed"));
     } finally {
       setAiLoading(null);
     }
@@ -121,22 +123,22 @@ export function AIControlPage() {
         body: { reason: "Revoked from shell" },
       });
       setConnector(payload);
-      setAiMessage("Connector revoked.");
-    } catch (error: unknown) {
-      setAiError(error instanceof Error ? error.message : "Connector revoke failed.");
+      setAiMessage(t("ai_control.connector_revoked"));
+    } catch (_error: unknown) {
+      setAiError(t("ai_control.connector_revoke_failed"));
     } finally {
       setAiLoading(null);
     }
   }
 
   return (
-    <Panel eyebrow="AI & Connector" title="Provider and enrollment">
+    <Panel eyebrow={t("ai_control.eyebrow")} title={t("ai_control.title")}>
       {aiError ? <p className="status status-danger">{aiError}</p> : null}
       {aiMessage ? <p className="status status-success">{aiMessage}</p> : null}
       <form className="form-stack" onSubmit={saveProvider}>
         <div className="form-grid">
           <label>
-            <span>Provider</span>
+            <span>{t("ai_control.provider")}</span>
             <input
               value={providerDraft.providerName}
               onChange={(event) =>
@@ -145,7 +147,7 @@ export function AIControlPage() {
             />
           </label>
           <label>
-            <span>Model</span>
+            <span>{t("ai_control.model")}</span>
             <input
               value={providerDraft.modelName}
               onChange={(event) =>
@@ -155,7 +157,7 @@ export function AIControlPage() {
           </label>
         </div>
         <label>
-          <span>Endpoint URL</span>
+          <span>{t("ai_control.endpoint_url")}</span>
           <input
             value={providerDraft.endpointUrl}
             onChange={(event) =>
@@ -164,7 +166,7 @@ export function AIControlPage() {
           />
         </label>
         <label>
-          <span>Credential reference</span>
+          <span>{t("ai_control.credential_reference")}</span>
           <input
             value={providerDraft.credentialReference}
             onChange={(event) =>
@@ -177,9 +179,11 @@ export function AIControlPage() {
         </label>
         <div className="form-grid">
           <label>
-            <span>Monthly token limit</span>
+            <span>{t("ai_control.monthly_token_limit")}</span>
             <input
               type="number"
+              className="bidi-ltr"
+              dir="ltr"
               min="1"
               value={providerDraft.monthlyTokenLimit}
               onChange={(event) =>
@@ -191,9 +195,11 @@ export function AIControlPage() {
             />
           </label>
           <label>
-            <span>Monthly cost limit</span>
+            <span>{t("ai_control.monthly_cost_limit")}</span>
             <input
               value={providerDraft.monthlyCostLimit}
+              className="bidi-ltr"
+              dir="ltr"
               onChange={(event) =>
                 setProviderDraft((current) => ({
                   ...current,
@@ -211,18 +217,20 @@ export function AIControlPage() {
               setProviderDraft((current) => ({ ...current, enabled: event.target.checked }))
             }
           />{" "}
-          Enabled
+          {t("ai_control.enabled")}
         </label>
         <button className="primary-button" type="submit" disabled={aiLoading === "provider"}>
-          Save provider
+          {t("ai_control.save_provider")}
         </button>
       </form>
       <form className="form-stack" onSubmit={saveConnector}>
         <div className="form-grid">
           <label>
-            <span>Connector version</span>
+            <span>{t("ai_control.connector_version")}</span>
             <input
               value={connectorDraft.connectorVersion}
+              className="bidi-ltr"
+              dir="ltr"
               onChange={(event) =>
                 setConnectorDraft((current) => ({
                   ...current,
@@ -232,9 +240,11 @@ export function AIControlPage() {
             />
           </label>
           <label>
-            <span>Secret fingerprint</span>
+            <span>{t("ai_control.secret_fingerprint")}</span>
             <input
               value={connectorDraft.sharedSecretFingerprint}
+              className="bidi-ltr"
+              dir="ltr"
               onChange={(event) =>
                 setConnectorDraft((current) => ({
                   ...current,
@@ -246,7 +256,7 @@ export function AIControlPage() {
         </div>
         <div className="inline-actions">
           <button className="ghost-button" type="submit" disabled={aiLoading === "connector"}>
-            Enroll connector
+            {t("ai_control.enroll_connector")}
           </button>
           <button
             className="ghost-button"
@@ -254,24 +264,23 @@ export function AIControlPage() {
             onClick={() => void revokeConnector()}
             disabled={aiLoading === "revoke" || !connector}
           >
-            Revoke connector
+            {t("ai_control.revoke_connector")}
           </button>
         </div>
       </form>
       <div className="notification-list">
         <div className="notification-item">
-          <strong>{provider?.provider_name ?? "No provider configured"}</strong>
-          <p>{provider?.model_name || "Model unset"}</p>
+          <strong>{provider?.provider_name ?? t("ai_control.no_provider")}</strong>
+          <p>{provider?.model_name || t("ai_control.model_unset")}</p>
           <small>
-            {provider?.enabled ? "enabled" : "disabled"} ·{" "}
-            {provider?.monthly_token_limit ?? 0} tokens
+            {provider?.enabled ? t("ai_control.enabled_status") : t("ai_control.disabled_status")} · {provider?.monthly_token_limit ?? 0} {t("ai_control.tokens")}
           </small>
         </div>
         <div className="notification-item">
-          <strong>{connector?.connector_version ?? "No connector enrolled"}</strong>
-          <p>{connector?.health_status ?? "offline"}</p>
+          <strong>{connector?.connector_version ?? t("ai_control.no_connector")}</strong>
+          <p>{connector?.health_status ? t(`ai_control.connector_health.${connector.health_status}`, { defaultValue: connector.health_status }) : t("ai_control.offline")}</p>
           <small>
-            {connector?.status ?? "pending"} · {connector?.compatibility_window ?? "n/a"}
+            {connector?.status ? t(`ai_control.connector_status.${connector.status}`, { defaultValue: connector.status }) : t("ai_control.pending")} · {connector?.compatibility_window ?? t("ai_control.not_available")}
           </small>
         </div>
       </div>

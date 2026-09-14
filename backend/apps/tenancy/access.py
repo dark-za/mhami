@@ -11,7 +11,6 @@ from apps.organizations.models import CompanyMembership, CompanyRole, UserBranch
 from apps.platform_core.errors import PlatformPermissionException
 
 from .models import Company
-from .services import current_support_authorization
 
 _T = TypeVar("_T", bound=Model)
 
@@ -140,12 +139,10 @@ def has_company_role(company: Company, user, *roles: str) -> bool:
     return company_role_for_user(company, user) in {str(role) for role in roles}
 
 
-def accessible_company_branch_ids(company: Company, user, *, include_support: bool = False) -> list[str]:
+def accessible_company_branch_ids(company: Company, user) -> list[str]:
     """Return branch IDs the user may access using active membership semantics."""
     role = company_role_for_user(company, user)
     if role == CompanyRole.OWNER:
-        return [str(branch_id) for branch_id in company.branches.filter(active=True).values_list("id", flat=True)]
-    if include_support and current_support_authorization(company, user) is not None:
         return [str(branch_id) for branch_id in company.branches.filter(active=True).values_list("id", flat=True)]
     return [
         str(branch_id)
@@ -170,7 +167,6 @@ class TenantContext:
     company: Company
     role: str | None
     branch_ids: frozenset[UUID]
-    is_support: bool = False
 
     def require_roles(self, *roles: str) -> None:
         if self.role not in roles:
@@ -198,20 +194,14 @@ def tenant_context(request: HttpRequest) -> TenantContext:
     if company is None:
         raise PlatformPermissionException("The active company is unavailable.")
 
-    now = timezone.now()
     membership = active_company_membership(company, user)
     owner_memberships_exist = CompanyMembership.objects.filter(company=company, user=user).exists()
     is_owner = company.owner_id == user.id and (membership is not None or not owner_memberships_exist)
-    support_grant = None if membership or is_owner else current_support_authorization(company, user)
-    if membership is None and not is_owner and support_grant is None:
+    if membership is None and not is_owner:
         raise PlatformPermissionException("You are not authorized for the active company.")
-    # C-08: respect the support grant's own expiry in addition to the
-    # ``active`` flag inside ``current_support_authorization``.
-    if support_grant is not None and not _is_active_at(support_grant.expires_at, now=now):
-        support_grant = None
 
     role = str(CompanyRole.OWNER) if is_owner else membership.role if membership else None
-    if role == CompanyRole.OWNER or support_grant is not None:
+    if role == CompanyRole.OWNER:
         branch_ids = frozenset(company.branches.filter(active=True).values_list("id", flat=True))
     else:
         branch_ids = frozenset(
@@ -229,7 +219,6 @@ def tenant_context(request: HttpRequest) -> TenantContext:
         company=company,
         role=role,
         branch_ids=branch_ids,
-        is_support=support_grant is not None,
     )
 
 

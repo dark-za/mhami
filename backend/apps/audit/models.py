@@ -5,6 +5,7 @@ import hmac
 import json
 import uuid
 from contextlib import contextmanager
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -105,6 +106,11 @@ class AuditEvent(models.Model):
                 previous = (
                     type(self).objects.select_for_update().order_by("-timestamp", "-id").first()
                 )
+                # A frozen clock or a fast burst can produce identical
+                # timestamps. Preserve append order so UUID ordering never
+                # changes the chain head under that condition.
+                if previous is not None and self.timestamp <= previous.timestamp:
+                    self.timestamp = previous.timestamp + timedelta(microseconds=1)
                 self.previous_hash = previous.event_hash if previous else ""
                 self.event_hash = calculate_event_hash(self, self.previous_hash)
                 self.integrity_hmac = calculate_event_hmac(self.event_hash)

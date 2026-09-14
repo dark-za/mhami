@@ -1,42 +1,43 @@
-/** useNotifications — poll ``/api/v1/notifications/`` once on mount.
-
-Falls back to ``null`` (sentinel for "unknown") if the backend errors out so
-the shell can render a seeded demo set instead of an empty list.
-*/
+/** Load notifications only for the current authenticated session. */
 
 import { useEffect, useState } from "react";
 
-import { api, ApiError } from "../api/client";
+import { api } from "../api/client";
 import type { LiveNotification } from "../domain";
 
-export function useNotifications() {
-  const [items, setItems] = useState<LiveNotification[] | null>(null);
-  const [error, setError] = useState(false);
+export function useNotifications(sessionKey: string | null) {
+  const [result, setResult] = useState<{
+    sessionKey: string | null;
+    items: LiveNotification[] | null;
+    error: boolean;
+  }>({ sessionKey: null, items: null, error: false });
 
   useEffect(() => {
+    setResult({ sessionKey, items: null, error: false });
+    if (sessionKey === null) return;
     let active = true;
+    const controller = new AbortController();
 
-    void api<{ notifications?: LiveNotification[] }>("/api/v1/notifications/")
+    void api<{ notifications?: LiveNotification[] }>("/api/v1/notifications/", { signal: controller.signal })
       .then((payload) => {
         if (active) {
-          setItems(payload.notifications ?? []);
+          setResult({ sessionKey, items: payload.notifications ?? [], error: false });
         }
       })
-      .catch((reason: unknown) => {
+      .catch(() => {
         if (!active) {
           return;
         }
-        if (reason instanceof ApiError) {
-          setError(true);
-        } else {
-          setError(true);
-        }
+        setResult({ sessionKey, items: null, error: true });
       });
 
     return () => {
       active = false;
+      controller.abort();
     };
-  }, []);
+  }, [sessionKey]);
 
-  return { items, error };
+  return sessionKey !== null && result.sessionKey === sessionKey
+    ? { items: result.items, error: result.error }
+    : { items: null, error: false };
 }

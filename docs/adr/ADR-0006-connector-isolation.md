@@ -6,14 +6,16 @@ Approved baseline.
 
 ## Context
 
-Tenant-specific AI providers may live in private or local networks. The shared SaaS runtime must not gain arbitrary network access to those environments.
+An organization’s AI provider may live in a private or local network. The
+Mhami installation must not gain arbitrary network access to that environment.
 
 ## Decision
 
-Use a tenant-owned Linux Docker connector with authenticated outbound communication for private or local AI connectivity.
+Use an organization-operated Linux Docker connector with authenticated outbound
+communication for private or local AI connectivity.
 
 ## Consequences
 
-- Private tenant networks remain isolated from the shared SaaS runtime.
+- Private organization networks remain isolated from the application runtime.
 - Connector enrollment, health, versioning, and revocation become explicit requirements.
-- Provider integration can vary by tenant without user-uploaded executable code.
+- Provider integration can vary by installation without user-uploaded executable code.

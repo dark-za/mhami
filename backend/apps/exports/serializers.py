@@ -5,6 +5,9 @@ from rest_framework import serializers
 from .models import ExportBoundaryPolicy, ExportRequest, ExportType
 
 
+EXPORT_CATEGORIES = ("tasks", "evidence")
+
+
 class ExportBoundaryPolicySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportBoundaryPolicy
@@ -57,6 +60,15 @@ class ExportRequestListSerializer(serializers.Serializer):
 class ExportRequestCreateSerializer(serializers.Serializer):
     export_type = serializers.ChoiceField(choices=ExportType.choices)
     branch_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
-    categories = serializers.ListField(child=serializers.CharField(), required=False)
+    categories = serializers.ListField(
+        child=serializers.ChoiceField(choices=EXPORT_CATEGORIES),
+        required=True,
+        allow_empty=False,
+    )
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
+
+    def validate_categories(self, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("Each export category may be selected only once.")
+        return value

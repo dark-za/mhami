@@ -4,6 +4,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -29,6 +30,7 @@ def agent_grant(make_company, make_user) -> AgentGrant:
         user=user,
         client_name="Mhami MCP",
         client_fingerprint="sha256:test-client",
+        secret_hash=make_password("test-grant-secret"),
         scopes=[AgentScope.READ_TASKS, AgentScope.WRITE_TASKS_TRANSFER],
         expires_at=timezone.now() + timedelta(days=1),
     )
@@ -145,7 +147,7 @@ def test_create_agent_grant_requires_company_owner(make_company, make_membership
     make_membership(user=owner, company=company, role=CompanyRole.OWNER)
     make_membership(user=employee, company=company, role=CompanyRole.EMPLOYEE)
 
-    grant = create_agent_grant(
+    grant, secret = create_agent_grant(
         owner_id=owner.id,
         company=company,
         user_id=owner.id,
@@ -156,6 +158,7 @@ def test_create_agent_grant_requires_company_owner(make_company, make_membership
     )
 
     assert grant.company == company
+    assert secret
     with pytest.raises(PermissionDenied):
         create_agent_grant(
             owner_id=employee.id,

@@ -1,11 +1,6 @@
-/** useBootstrap — hydrate :class:`BootstrapState` from ``/api/v1/bootstrap``.
+/** Hydrate bootstrap while discarding replies superseded by session changes. */
 
-Returns the live state plus ``loading`` and ``error`` flags. The hook
-internally tracks an ``active`` flag so the state updates are discarded when
-the component unmounts mid-flight.
-*/
-
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 
 import {
   createFallbackState,
@@ -14,8 +9,10 @@ import {
 } from "../api/bootstrap";
 import { bootstrapSnapshot } from "../design-system/tokens";
 import type { BootstrapApiResponse } from "../api/contract";
+import { SESSION_CHANGE_KEY, SESSION_RECHECK_EVENT } from "../api/session";
 
-function mergeBootstrap(state: BootstrapState, response: BootstrapApiResponse): BootstrapState {
+function mergeBootstrap(response: BootstrapApiResponse): BootstrapState {
+  const state = createFallbackState(bootstrapSnapshot);
   return {
     snapshot: {
       ...state.snapshot,
@@ -30,6 +27,7 @@ function mergeBootstrap(state: BootstrapState, response: BootstrapApiResponse): 
       company: response.company
         ? {
             ...state.snapshot.company,
+            id: response.company.id ?? state.snapshot.company.id,
             name: response.company.name ?? state.snapshot.company.name,
             code: response.company.code ?? state.snapshot.company.code,
             status: response.company.status ?? state.snapshot.company.status,
@@ -40,6 +38,7 @@ function mergeBootstrap(state: BootstrapState, response: BootstrapApiResponse): 
     },
     branches: response.branches,
     branchScope: response.branch_scope ?? [],
+    setupRequired: response.installation.setup_required,
     source: "live",
   };
 }
@@ -49,39 +48,49 @@ function isBootstrapResponse(value: unknown): value is BootstrapApiResponse {
 }
 
 export function useBootstrap() {
-  const [state, setState] = useState<BootstrapState>(() => createFallbackState(bootstrapSnapshot));
+  const [state, commitState] = useState<BootstrapState>(() => createFallbackState(bootstrapSnapshot));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const revision = useRef(0);
+
+  const setState = useCallback((next: SetStateAction<BootstrapState>) => {
+    // Logout invalidates requests issued under the previous session.
+    revision.current += 1;
+    commitState(next);
+    setLoading(false);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     let active = true;
+    let recheckPending = false;
 
-    const load = () => fetchBootstrap()
-      .then((response) => {
-        if (!active) {
-          return;
-        }
-        setState((current) => mergeBootstrap(current, response));
-        setError(null);
-      })
-      .catch((error: unknown) => {
-        if (!active) {
-          return;
-        }
-        setError(error instanceof Error ? error.message : "Bootstrap request failed.");
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
+    const load = () => {
+      const requestRevision = ++revision.current;
+      const isCurrent = () => active && requestRevision === revision.current;
+      return fetchBootstrap()
+        .then((response) => {
+          if (!isCurrent()) return;
+          commitState(mergeBootstrap(response));
+          setError(null);
+        })
+        .catch(() => {
+          if (!isCurrent()) return;
+          commitState(createFallbackState(bootstrapSnapshot));
+          setError("bootstrap_failed");
+        })
+        .finally(() => {
+          if (isCurrent()) setLoading(false);
+        });
+    };
 
     void load();
 
     const hydrateFromEvent = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail : null;
       if (isBootstrapResponse(detail)) {
-        setState((current) => mergeBootstrap(current, detail));
+        revision.current += 1;
+        commitState(mergeBootstrap(detail));
         setError(null);
         setLoading(false);
       } else {
@@ -89,11 +98,35 @@ export function useBootstrap() {
         void load();
       }
     };
+    const recheckSession = (hideWorkspace: boolean) => {
+      if (hideWorkspace) {
+        commitState(createFallbackState(bootstrapSnapshot));
+        setLoading(true);
+      }
+      if (recheckPending && !hideWorkspace) return;
+      recheckPending = true;
+      void load().finally(() => { recheckPending = false; });
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === SESSION_CHANGE_KEY) recheckSession(true);
+    };
+    const onSessionRejected = () => recheckSession(true);
+    const onFocus = () => {
+      if (document.visibilityState === "visible") recheckSession(false);
+    };
     window.addEventListener("mhami.bootstrap.refreshed", hydrateFromEvent);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(SESSION_RECHECK_EVENT, onSessionRejected);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
 
     return () => {
       active = false;
       window.removeEventListener("mhami.bootstrap.refreshed", hydrateFromEvent);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SESSION_RECHECK_EVENT, onSessionRejected);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
     };
   }, []);
 

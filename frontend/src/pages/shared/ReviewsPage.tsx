@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
+import type { Role } from "../../design-system/tokens";
 import { Panel } from "../../shell/ui";
 import type {
   AICriterionSummary,
@@ -32,7 +34,7 @@ const POLICY_DRAFT_DEFAULT = {
 };
 
 const CRITERIA_DRAFT_DEFAULT = {
-  title: "Shadow criteria",
+  title: "",
   criteriaJson: "{}",
   referenceMediaNames: "",
   shadowMode: true,
@@ -40,7 +42,13 @@ const CRITERIA_DRAFT_DEFAULT = {
   autoPassRiskThreshold: 70,
 };
 
-export function ReviewsPage() {
+export interface ReviewsPageProps {
+  activeRole: Role | null;
+}
+
+export function ReviewsPage({ activeRole }: ReviewsPageProps) {
+  const { t } = useTranslation();
+  const isOwner = activeRole === "owner";
   const [dashboard, setDashboard] = useState<ReviewDashboard | null>(null);
   const [queue, setQueue] = useState<ReviewQueueItem[]>([]);
   const [policy, setPolicy] = useState<ReviewPolicy | null>(null);
@@ -53,19 +61,26 @@ export function ReviewsPage() {
   const [criteriaDraft, setCriteriaDraft] = useState(CRITERIA_DRAFT_DEFAULT);
 
   async function refresh() {
-    const [dashboardPayload, queuePayload, policyPayload, criteriaPayload, shadowPayload] =
+    const [dashboardPayload, queuePayload, policyPayload] =
       await Promise.all([
         api<ReviewDashboard>("/api/v1/reviews/dashboard"),
         api<QueueResponse>("/api/v1/reviews/queue"),
         api<ReviewPolicy>("/api/v1/reviews/policy"),
-        api<CriteriaResponse>("/api/v1/ai/criteria"),
-        api<AIShadowSummary>("/api/v1/ai/shadow"),
       ]);
     setDashboard(dashboardPayload);
     setQueue(queuePayload.items ?? []);
     setPolicy(policyPayload);
-    setCriteria(criteriaPayload.criteria ?? []);
-    setShadowSummary(shadowPayload);
+    if (isOwner) {
+      const [criteriaPayload, shadowPayload] = await Promise.all([
+        api<CriteriaResponse>("/api/v1/ai/criteria"),
+        api<AIShadowSummary>("/api/v1/ai/shadow"),
+      ]);
+      setCriteria(criteriaPayload.criteria ?? []);
+      setShadowSummary(shadowPayload);
+    } else {
+      setCriteria([]);
+      setShadowSummary(null);
+    }
     setPolicyDraft({
       employeeScoreVisibility: policyPayload.employee_score_visibility ?? "summary",
       historicalReportRestatement: policyPayload.historical_report_restatement ?? false,
@@ -77,12 +92,21 @@ export function ReviewsPage() {
     });
   }
 
+  async function refreshAfterMutation(successMessage: string) {
+    setReviewMessage(successMessage);
+    try {
+      await refresh();
+    } catch {
+      setReviewMessage(`${successMessage} ${t("reviews.refresh_notice")}`);
+    }
+  }
+
   useEffect(() => {
     let active = true;
     void refresh()
-      .catch((error: unknown) => {
+      .catch((_error: unknown) => {
         if (active) {
-          setReviewError(error instanceof Error ? error.message : "Review data failed.");
+          setReviewError(t("reviews.load_failed"));
         }
       })
       .finally(() => {
@@ -110,10 +134,9 @@ export function ReviewsPage() {
           issue_report_id: item.issue_report_id,
         },
       });
-      await refresh();
-      setReviewMessage("Decision saved.");
-    } catch (error: unknown) {
-      setReviewError(error instanceof Error ? error.message : "Review decision failed.");
+      await refreshAfterMutation(t("reviews.decision_saved"));
+    } catch (_error: unknown) {
+      setReviewError(t("reviews.decision_failed"));
     } finally {
       setReviewLoading(null);
     }
@@ -138,9 +161,9 @@ export function ReviewsPage() {
         },
       });
       setPolicy(payload);
-      setReviewMessage("Policy updated.");
-    } catch (error: unknown) {
-      setReviewError(error instanceof Error ? error.message : "Policy save failed.");
+      setReviewMessage(t("reviews.policy_updated"));
+    } catch (_error: unknown) {
+      setReviewError(t("reviews.policy_save_failed"));
     } finally {
       setReviewLoading(null);
     }
@@ -167,42 +190,42 @@ export function ReviewsPage() {
         },
       });
       setCriteria((current) => [payload, ...current]);
-      setReviewMessage("AI criteria version created.");
+      setReviewMessage(t("reviews.criteria_created"));
       setCriteriaDraft((current) => ({
         ...current,
         title: "",
         criteriaJson: "{}",
         referenceMediaNames: "",
       }));
-    } catch (error: unknown) {
-      setReviewError(error instanceof Error ? error.message : "Criteria save failed.");
+    } catch (_error: unknown) {
+      setReviewError(t("reviews.criteria_save_failed"));
     } finally {
       setReviewLoading(null);
     }
   }
 
   return (
-    <Panel eyebrow="Reviews" title="Queue, policy, and AI criteria">
+    <Panel eyebrow={t("reviews.title")} title={t("reviews.workspace")}>
       {reviewError ? <p className="status status-danger">{reviewError}</p> : null}
       {reviewMessage ? <p className="status status-success">{reviewMessage}</p> : null}
       <div className="token-grid">
         <div className="token-swatch">
-          <span>Completed today</span>
+          <span>{t("reviews.completed_today")}</span>
           <strong>{dashboard?.summary.completed_today ?? 0}</strong>
         </div>
         <div className="token-swatch">
-          <span>Overdue</span>
+          <span>{t("reviews.overdue")}</span>
           <strong>{dashboard?.summary.overdue ?? 0}</strong>
         </div>
         <div className="token-swatch">
-          <span>Quality exceptions</span>
+          <span>{t("reviews.quality_exceptions")}</span>
           <strong>{dashboard?.summary.quality_exceptions ?? 0}</strong>
         </div>
       </div>
-      <form className="form-stack" onSubmit={savePolicy}>
+      {isOwner ? <form className="form-stack" onSubmit={savePolicy}>
         <div className="form-grid">
           <label>
-            <span>Score visibility</span>
+            <span>{t("reviews.score_visibility")}</span>
             <select
               value={policyDraft.employeeScoreVisibility}
               onChange={(event) =>
@@ -212,15 +235,17 @@ export function ReviewsPage() {
                 }))
               }
             >
-              <option value="hidden">Hidden</option>
-              <option value="summary">Summary</option>
-              <option value="detailed">Detailed</option>
+              <option value="hidden">{t("reviews.visibility.hidden")}</option>
+              <option value="summary">{t("reviews.visibility.summary")}</option>
+              <option value="detailed">{t("reviews.visibility.detailed")}</option>
             </select>
           </label>
           <label>
-            <span>Approved task weight cap</span>
+            <span>{t("reviews.approved_task_weight_cap")}</span>
             <input
               type="number"
+              className="bidi-ltr"
+              dir="ltr"
               min="1"
               value={policyDraft.approvedTaskWeightCap}
               onChange={(event) =>
@@ -243,7 +268,7 @@ export function ReviewsPage() {
               }))
             }
           />{" "}
-          Historical restatement
+          {t("reviews.historical_restatement")}
         </label>
         <label>
           <input
@@ -256,7 +281,7 @@ export function ReviewsPage() {
               }))
             }
           />{" "}
-          Monitor approval required
+          {t("reviews.monitor_approval_required")}
         </label>
         <label>
           <input
@@ -269,7 +294,7 @@ export function ReviewsPage() {
               }))
             }
           />{" "}
-          Restrict sensitive claims
+          {t("reviews.restrict_sensitive_claims")}
         </label>
         <label>
           <input
@@ -282,7 +307,7 @@ export function ReviewsPage() {
               }))
             }
           />{" "}
-          Extra evidence required
+          {t("reviews.extra_evidence_required")}
         </label>
         <label>
           <input
@@ -295,16 +320,16 @@ export function ReviewsPage() {
               }))
             }
           />{" "}
-          Owner alerts enabled
+          {t("reviews.owner_alerts_enabled")}
         </label>
         <button className="primary-button" type="submit" disabled={reviewLoading === "policy"}>
-          Save policy
+          {t("reviews.save_policy")}
         </button>
-      </form>
-      <form className="form-stack" onSubmit={saveCriteria}>
+      </form> : null}
+      {isOwner ? <form className="form-stack" onSubmit={saveCriteria}>
         <div className="form-grid">
           <label>
-            <span>Criteria title</span>
+            <span>{t("reviews.criteria_title")}</span>
             <input
               value={criteriaDraft.title}
               onChange={(event) =>
@@ -313,9 +338,11 @@ export function ReviewsPage() {
             />
           </label>
           <label>
-            <span>Threshold</span>
+            <span>{t("reviews.threshold")}</span>
             <input
               type="number"
+              className="bidi-ltr"
+              dir="ltr"
               min="1"
               max="100"
               value={criteriaDraft.autoPassRiskThreshold}
@@ -329,8 +356,10 @@ export function ReviewsPage() {
           </label>
         </div>
         <label>
-          <span>Criteria JSON</span>
+          <span>{t("reviews.criteria_json")}</span>
           <textarea
+            className="bidi-ltr"
+            dir="ltr"
             rows={4}
             value={criteriaDraft.criteriaJson}
             onChange={(event) =>
@@ -339,7 +368,7 @@ export function ReviewsPage() {
           />
         </label>
         <label>
-          <span>Reference media names</span>
+          <span>{t("reviews.reference_media_names")}</span>
           <input
             value={criteriaDraft.referenceMediaNames}
             onChange={(event) =>
@@ -358,7 +387,7 @@ export function ReviewsPage() {
               setCriteriaDraft((current) => ({ ...current, shadowMode: event.target.checked }))
             }
           />{" "}
-          Shadow mode
+          {t("reviews.shadow_mode")}
         </label>
         <label>
           <input
@@ -368,33 +397,30 @@ export function ReviewsPage() {
               setCriteriaDraft((current) => ({ ...current, autoPassEnabled: event.target.checked }))
             }
           />{" "}
-          Auto-pass enabled
+          {t("reviews.auto_pass_enabled")}
         </label>
         <button className="ghost-button" type="submit" disabled={reviewLoading === "criteria"}>
-          Create criteria version
+          {t("reviews.create_criteria_version")}
         </button>
-      </form>
-      <div className="notification-list">
+      </form> : null}
+      {isOwner ? <div className="notification-list">
         {criteria.map((item) => (
           <div key={item.id} className="notification-item">
             <strong>
               v{item.version_number} · {item.title}
             </strong>
             <p>
-              {item.shadow_mode ? "Shadow" : "Live"} · Auto-pass{" "}
-              {item.auto_pass_enabled ? "on" : "off"}
+              {item.shadow_mode ? t("reviews.mode_shadow") : t("reviews.mode_live")} · {t("reviews.auto_pass")} {item.auto_pass_enabled ? t("reviews.on") : t("reviews.off")}
             </p>
             <small>
-              Threshold {item.auto_pass_risk_threshold} ·{" "}
-              {item.active ? "active" : "inactive"}
+              {t("reviews.threshold")} {item.auto_pass_risk_threshold} · {item.active ? t("reviews.active") : t("reviews.inactive")}
             </small>
           </div>
         ))}
-      </div>
-      {shadowSummary ? (
+      </div> : null}
+      {isOwner && shadowSummary ? (
         <p className="muted">
-          Shadow agreement {shadowSummary.summary.agreement_rate}% over{" "}
-          {shadowSummary.summary.total_runs} runs.
+          {t("reviews.shadow_agreement", { rate: shadowSummary.summary.agreement_rate, count: shadowSummary.summary.total_runs })}
         </p>
       ) : null}
       <div className="notification-list">
@@ -402,7 +428,7 @@ export function ReviewsPage() {
           <div key={item.id} className="notification-item">
             <strong>{item.title}</strong>
             <p>
-              {item.kind} · {item.branch_name} · {item.status}
+              {t(`reviews.kind.${item.kind}`, { defaultValue: item.kind })} · {item.branch_name} · {t(`tasks.status.${item.status}`, { defaultValue: item.status })}
             </p>
             <small>{item.reason}</small>
             <div className="inline-actions">
@@ -414,7 +440,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "retry_same_task")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Retry
+                    {t("reviews.retry")}
                   </button>
                   <button
                     className="ghost-button"
@@ -422,7 +448,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "create_corrective_task")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Corrective
+                    {t("reviews.corrective")}
                   </button>
                   <button
                     className="ghost-button"
@@ -430,7 +456,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "mark_missed")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Mark missed
+                    {t("reviews.mark_missed")}
                   </button>
                   <button
                     className="ghost-button"
@@ -438,7 +464,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "cancel")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Cancel
+                    {t("reviews.cancel")}
                   </button>
                 </>
               ) : null}
@@ -450,7 +476,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "approve")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Approve
+                    {t("reviews.approve")}
                   </button>
                   <button
                     className="ghost-button"
@@ -458,7 +484,7 @@ export function ReviewsPage() {
                     onClick={() => void submitDecision(item, "approve_despite_alert")}
                     disabled={Boolean(reviewLoading)}
                   >
-                    Approve despite alert
+                    {t("reviews.approve_despite_alert")}
                   </button>
                 </>
               ) : null}
@@ -469,7 +495,7 @@ export function ReviewsPage() {
                   onClick={() => void submitDecision(item, "approve")}
                   disabled={Boolean(reviewLoading)}
                 >
-                  Resolve
+                  {t("reviews.resolve")}
                 </button>
               ) : null}
               <button
@@ -478,28 +504,30 @@ export function ReviewsPage() {
                 onClick={() => void submitDecision(item, "override_restriction")}
                 disabled={Boolean(reviewLoading)}
               >
-                Override restriction
+                {t("reviews.override_restriction")}
               </button>
             </div>
           </div>
         ))}
-        {queue.length === 0 ? <p className="muted">No review items.</p> : null}
+        {queue.length === 0 ? <p className="muted">{t("reviews.empty")}</p> : null}
       </div>
       <div className="notification-list">
         {(dashboard?.branches ?? []).map((branch) => (
           <div key={branch.branch_id} className="notification-item">
             <strong>{branch.branch_name}</strong>
             <p>
-              Completed {branch.completed_today} · Overdue {branch.overdue}
+              {t("reviews.branch_completed", { count: branch.completed_today })} · {t("reviews.branch_overdue", { count: branch.overdue })}
             </p>
-            <small>Quality exceptions {branch.quality_exceptions}</small>
+            <small>{t("reviews.branch_quality_exceptions", { count: branch.quality_exceptions })}</small>
           </div>
         ))}
       </div>
       {policy ? (
         <p className="muted">
-          Score visibility: {policy.employee_score_visibility} · Alerts:{" "}
-          {policy.owner_alerts_enabled ? "on" : "off"}
+          {t("reviews.policy_summary", {
+            visibility: t(`reviews.visibility.${policy.employee_score_visibility}`, { defaultValue: policy.employee_score_visibility }),
+            alerts: policy.owner_alerts_enabled ? t("reviews.on") : t("reviews.off"),
+          })}
         </p>
       ) : null}
     </Panel>

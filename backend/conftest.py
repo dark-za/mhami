@@ -14,8 +14,8 @@ Usage::
         ...
 
 The factories accept keyword overrides and use deterministic defaults that
-match the "happy path" used in existing tests (``login_id="..."``,
-``code="testco"``, ``status="active"``, ``trial_ends_at`` in 2030).
+match the "happy path" used in existing tests (``login_id="...\"``,
+``code="testco"``, ``status="active"``).
 
 For session-aware HTTP tests, see :func:`force_login_company` which combines
 :class:`Client` creation, ``force_login``, and the company session middleware
@@ -26,13 +26,18 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
-from datetime import datetime, time
+from datetime import time
 from typing import Any
 from uuid import uuid4
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.test")
+_test_settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+os.environ["DJANGO_SETTINGS_MODULE"] = (
+    _test_settings_module
+    if _test_settings_module in {"config.settings.test", "config.settings.test_postgres"}
+    else "config.settings.test"
+)
 
-import django
+import django  # noqa: E402
 
 django.setup()
 
@@ -101,8 +106,8 @@ def make_company(db, make_user) -> Callable[..., Company]:
     """Return a factory that creates a :class:`Company`.
 
     The factory auto-creates an owner user unless ``owner`` is provided. The
-    default ``trial_ends_at`` matches the 2030 sentinel used throughout the
-    existing tests so the company is "operational" without further changes.
+    default status ``ACTIVE`` ensures the company is operational without
+    further changes.
     """
 
     def _factory(
@@ -111,7 +116,6 @@ def make_company(db, make_user) -> Callable[..., Company]:
         status: str = str(CompanyStatus.ACTIVE),
         owner: User | None = None,
         industry: str = "other",
-        trial_ends_at: datetime | None = None,
         **kwargs: Any,
     ) -> Company:
         owner = owner or make_user(login_id=_next_user_login(prefix="owner"))
@@ -121,7 +125,6 @@ def make_company(db, make_user) -> Callable[..., Company]:
             industry=industry,
             owner=owner,
             status=status,
-            trial_ends_at=trial_ends_at or timezone.make_aware(datetime(2030, 1, 1, 0, 0)),
             **kwargs,
         )
 

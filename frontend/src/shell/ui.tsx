@@ -1,6 +1,7 @@
 /** Small UI primitives shared by every workspace panel. */
 
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 export function Badge({ tone, children }: { tone: string; children: string }) {
   return <span className={`badge badge-${tone}`}>{children}</span>;
@@ -53,8 +54,9 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
 }
 
 export function SkeletonBlock({ rows = 3 }: { rows?: number }) {
+  const { t } = useTranslation();
   return (
-    <div className="skeleton-stack" aria-label="Loading">
+    <div className="skeleton-stack" aria-label={t("async.loading")}>
       {Array.from({ length: rows }).map((_, index) => (
         <span key={index} className="skeleton-line" />
       ))}

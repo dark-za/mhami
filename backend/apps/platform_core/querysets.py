@@ -57,16 +57,15 @@ class TenantQuerySet(models.QuerySet):
         return self.filter(company_id=company_id, branch_id__in=branch_ids)
 
     def for_active_company(self, company: "Company") -> "TenantQuerySet":
-        """Restrict to a company whose status is in the operational set.
+        """Restrict to a company whose status is the operational set.
 
-        Operational statuses are :attr:`CompanyStatus.TRIAL` and
-        :attr:`CompanyStatus.ACTIVE`. Use this when the read path should hide
-        ``read_only`` and ``pending_deletion`` tenants.
+        Only :attr:`CompanyStatus.ACTIVE` is operational. ``SUSPENDED`` is a
+        local safety switch and hidden from active-company reads.
         """
         from apps.tenancy.models import CompanyStatus
 
         return self.for_company(company).filter(
-            company__status__in=(CompanyStatus.TRIAL, CompanyStatus.ACTIVE),
+            company__status=CompanyStatus.ACTIVE,
         )
 
 

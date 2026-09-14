@@ -2,10 +2,10 @@
 
 The connector is a small FastAPI service that runs inside the
 tenant's network. It accepts signed HTTP requests from the Mhami
-platform, forwards them to the tenant's private AI provider, and
-returns the result. The connector is the only component that has
-direct access to the tenant's private model; the shared SaaS
-runtime never reaches across the boundary.
+platform, forwards them to the organization's private AI provider, and
+returns the result. The connector is the only component that has direct
+access to the organization's private model; no shared Mhami service reaches
+across that boundary.
 
 Security model (chosen during the design review):
 

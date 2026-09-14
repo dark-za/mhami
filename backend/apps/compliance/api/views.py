@@ -105,7 +105,7 @@ class DSRRequestTransitionView(APIView):
     view instance and the request handler reads it from ``self``.
 
     * ``POST /api/v1/compliance/dsr/<id>/verify`` — identity verified
-    * ``POST /api/v1/compliance/dsr/<id>/start`` — work in progress
+    * ``POST /api/v1/compliance/dsr/<id>/start`` — processing started
     * ``POST /api/v1/compliance/dsr/<id>/complete`` — completed
     * ``POST /api/v1/compliance/dsr/<id>/reject`` — rejected with reason
 

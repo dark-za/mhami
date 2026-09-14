@@ -19,8 +19,8 @@ the inline copy in `../frontend/nginx.conf` in sync.
 - Port 80: ACME `/.well-known/acme-challenge/` webroot at `/var/www/certbot`,
   HTTP-to-HTTPS redirect for everything else, and `/api/` still proxied so
   non-browser clients are not hard-broken before the redirect.
-- Port 443: TLS terminated with certificates mounted at `/etc/nginx/certs`
-  (`fullchain.pem` / `privkey.pem`), SPA served via `try_files ... index.html`,
+- Port 443: TLS terminated with the named certificate mounted at
+  `/etc/nginx/certs/live/mhami` (`fullchain.pem` / `privkey.pem`), SPA served via `try_files ... index.html`,
   `/api/` proxied to `http://api:8000`.
 - Both `/api/` proxy blocks set `Host`, `X-Real-IP`, `X-Forwarded-For`, and
   `X-Forwarded-Proto $scheme`, matching Django's `SECURE_PROXY_SSL_HEADER` and
@@ -29,8 +29,9 @@ the inline copy in `../frontend/nginx.conf` in sync.
 ## Notes / validation limits
 
 Real TLS certificates cannot be generated or validated in this repository.
-Threat-modeling note: the 443 block requires `fullchain.pem`/`privkey.pem` at
-config-load time, so certificates MUST be provisioned (certbot/ACME volumes)
+Threat-modeling note: the 443 block requires the named
+`live/mhami/fullchain.pem`/`live/mhami/privkey.pem` files at config-load time,
+so certificates MUST be provisioned (certbot/ACME volumes)
 before the gateway is started. Syntax validation is done with throwaway
 self-signed certificates locally; real handshake/pinning behavior must be
 verified at the staging/deployment step.

@@ -20,6 +20,7 @@ from django.db.models import Model, Q
 from django.utils import timezone
 
 from apps.audit.models import AuditEvent
+from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem
 from apps.identity.models import User
 from apps.notifications.services import emit_for_outbox_event
@@ -99,6 +100,42 @@ def backup_restore_root() -> Path:
 
 def backup_policy_for_company(company: Company) -> BackupPolicy:
     policy, _created = BackupPolicy.objects.get_or_create(company=company)
+    return policy
+
+
+@transaction.atomic
+def update_backup_policy(company: Company, user: User, changes: dict[str, Any]) -> BackupPolicy:
+    """Persist owner backup settings and record the effective change.
+
+    Local backup artifacts are always encrypted. External upload remains an
+    optional delivery mechanism and is configured through environment secrets.
+    """
+    policy, _created = BackupPolicy.objects.select_for_update().get_or_create(company=company)
+    editable_fields = {
+        "destination_name",
+        "schedule_cron",
+        "rpo_hours",
+        "rto_hours",
+        "includes_private_media",
+        "includes_configuration",
+        "includes_tenant_state",
+    }
+    before = {field: getattr(policy, field) for field in editable_fields}
+    for field in editable_fields.intersection(changes):
+        setattr(policy, field, changes[field])
+    policy.encrypted = True
+    policy.updated_by = user
+    policy.save()
+    after = {field: getattr(policy, field) for field in editable_fields}
+    record_audit_event(
+        event_type="BACKUP_POLICY_UPDATED",
+        target_type="backup_policy",
+        target_id=str(policy.id),
+        actor_id=str(user.id),
+        metadata={"company_id": str(company.id)},
+        before=before,
+        after=after,
+    )
     return policy
 
 
@@ -373,28 +410,25 @@ def list_backup_runs(company: Company) -> Iterable[BackupRun]:
 
 
 def download_backup_artifact(company: Company, backup_run_id: str) -> Path:
+    """Return the canonical encrypted storage path for the backup artifact.
+
+    H-05: the on‑disk artefact stays encrypted at rest. Callers that need
+    the plaintext (e.g. HTTP download) must decrypt in‑memory. Restore
+    already handles ``.enc`` suffixes via ``_validated_archive``.
+    """
     backup_run = BackupRun.objects.get(id=backup_run_id, company=company)
     if backup_run.status not in {BackupStatus.COMPLETED, BackupStatus.RESTORED}:
         raise ValueError("Backup is not ready.")
     path = backup_storage_root() / backup_run.artifact_name
     if not path.exists():
         raise ValueError("Backup artifact is missing.")
-    # H-05: for H-06 we expose a decrypted copy on download. The
-    # on-disk artefact is still the Fernet-wrapped bytes; the helper
-    # below produces a sibling ``.decrypted`` file when needed.
-    if path.suffix == ".enc":
-        decrypted_path = path.with_suffix("")
-        if not decrypted_path.exists():
-            decrypted_bytes = _decrypt_artifact(path.read_bytes())
-            decrypted_path.write_bytes(decrypted_bytes)
-        return decrypted_path
     return path
 
 
 def _validated_archive(backup_run: BackupRun, artifact: Path) -> tuple[dict[str, Any], dict[str, bytes]]:
     data = artifact.read_bytes()
     # H-05: when reading a ``.enc`` artefact decrypt first. ``download_backup_artifact``
-    # already returns the decrypted file, but ``restore_backup_run`` may be invoked
+    # returns the encrypted storage path; ``restore_backup_run`` may be invoked
     # directly so the path is handled inline here as well.
     if artifact.suffix == ".enc":
         data = _decrypt_artifact(data)

@@ -39,13 +39,6 @@ def test_enum_overrides_produce_stable_names():
     assert schemas, "schema should contain components.schemas"
 
     # Stable names introduced via ENUM_NAME_OVERRIDES
-    assert "PilotCharterDecisionEnum" in schemas
-    assert schemas["PilotCharterDecisionEnum"]["enum"] == [
-        "authorize",
-        "decline",
-        "withdraw",
-    ]
-
     assert "ExitDecisionEnum" in schemas
     assert schemas["ExitDecisionEnum"]["enum"] == [
         "approved",
@@ -69,6 +62,24 @@ def test_enum_overrides_produce_stable_names():
         "offline",
     ]
 
+    assert schemas["AgentGrantStatusEnum"]["enum"] == [
+        "active",
+        "revoked",
+        "expired",
+    ]
+
+    assert schemas["TaskRequestKindEnum"]["enum"] == [
+        "cancellation",
+        "unable_to_complete",
+        "task_suggestion",
+        "transfer",
+    ]
+    assert schemas["TaskRequestStatusEnum"]["enum"] == [
+        "pending",
+        "approved",
+        "rejected",
+    ]
+
     # Hash-derived names must not reappear; DecisionTypeEnum is a legitimate
     # non-hash enum and is allowed.
     hash_names = {"Decision0b3Enum", "Decision4e8Enum", "Status40eEnum"}
@@ -86,9 +97,6 @@ def test_enum_overrides_produce_stable_names():
     assert schemas["RestoreRun"]["properties"]["status"]["$ref"].endswith(
         "BackupStatusEnum"
     )
-    assert schemas["PilotCharter"]["properties"]["decision"]["$ref"].endswith(
-        "PilotCharterDecisionEnum"
-    )
     assert schemas["ExitDecision"]["properties"]["decision"]["$ref"].endswith(
         "ExitDecisionEnum"
     )
@@ -98,6 +106,15 @@ def test_enum_overrides_produce_stable_names():
     assert schemas["ConnectorHeartbeat"]["properties"]["provider_status"][
         "$ref"
     ].endswith("ConnectorHealthStatusEnum")
+    assert schemas["AgentGrant"]["properties"]["status"]["$ref"].endswith(
+        "AgentGrantStatusEnum"
+    )
+    assert schemas["TaskRequest"]["properties"]["kind"]["$ref"].endswith(
+        "TaskRequestKindEnum"
+    )
+    assert schemas["TaskRequest"]["properties"]["status"]["$ref"].endswith(
+        "TaskRequestStatusEnum"
+    )
 
 
 def test_schema_has_no_enum_naming_warnings(monkeypatch):

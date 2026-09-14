@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import secrets
 from uuid import UUID
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -37,15 +39,17 @@ def create_agent_grant(
     client_fingerprint: str,
     scopes: list[str],
     expires_at,
-) -> AgentGrant:
+) -> tuple[AgentGrant, str]:
     ensure_owner_can_manage_agent_access(user_id=owner_id, company=company)
     ensure_grant_user_belongs_to_company(user_id=user_id, company=company)
     validate_agent_scopes(scopes)
+    grant_secret = secrets.token_urlsafe(48)
     grant = AgentGrant(
         company=company,
         user_id=user_id,
         client_name=client_name,
         client_fingerprint=client_fingerprint,
+        secret_hash=make_password(grant_secret),
         scopes=scopes,
         expires_at=expires_at,
     )
@@ -58,7 +62,7 @@ def create_agent_grant(
         target_id=str(grant.id),
         metadata={"scopes": scopes, "client_name": client_name},
     )
-    return grant
+    return grant, grant_secret
 
 
 def revoke_agent_grant(*, owner_id: object, grant: AgentGrant, reason: str = "") -> AgentGrant:
@@ -90,6 +94,8 @@ def record_agent_action(
     validate_agent_scopes([required_scope])
     if not grant.active:
         raise PermissionDenied("MCP agent grant is not active.")
+    if not is_active_company_user(grant.company, grant.user):
+        raise PermissionDenied("MCP grant user no longer belongs to the active company.")
     if required_scope not in grant.scopes and "admin:full" not in grant.scopes:
         raise PermissionDenied("MCP agent grant does not include the required scope.")
 

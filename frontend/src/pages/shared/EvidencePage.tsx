@@ -1,6 +1,7 @@
 /** EvidencePage — capture, submit, issue, and discussion flows for a task. */
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import type { Locale } from "../../design-system/tokens";
@@ -22,7 +23,13 @@ export interface EvidencePageProps {
   locale: Locale;
 }
 
+function formatDate(value: string, locale: string): string {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString(locale);
+}
+
 export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
+  const { i18n, t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [captureToken, setCaptureToken] = useState("");
@@ -64,8 +71,8 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
       setItems(payload.evidence ?? []);
       setIssues(payload.issues ?? []);
       setMessages(payload.messages ?? []);
-    })().catch((error: unknown) => {
-      setPanelError(error instanceof Error ? error.message : "Could not load evidence.");
+    })().catch((_error: unknown) => {
+      setPanelError(t("evidence.load_failed"));
     });
   }, [taskId]);
 
@@ -78,7 +85,7 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
   async function startCamera() {
     try {
       if (!globalThis.navigator?.mediaDevices?.getUserMedia) {
-        setPanelError("Camera is not available in this browser.");
+        setPanelError(t("evidence.camera_unavailable"));
         return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -92,8 +99,8 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
         await videoRef.current.play();
       }
       setCameraReady(true);
-    } catch (error: unknown) {
-      setPanelError(error instanceof Error ? error.message : "Camera start failed.");
+    } catch (_error: unknown) {
+      setPanelError(t("evidence.camera_failed"));
     }
   }
 
@@ -132,9 +139,9 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
       );
       setCaptureToken(payload.token);
       setChallengeText(payload.challenge_text ?? "");
-      setCaptureStatus("Capture session ready.");
-    } catch (error: unknown) {
-      setPanelError(error instanceof Error ? error.message : "Capture session failed.");
+      setCaptureStatus(t("evidence.session_ready"));
+    } catch (_error: unknown) {
+      setPanelError(t("evidence.session_failed"));
     }
   }
 
@@ -154,13 +161,13 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
         formData.set("file", new File([capturedBlob], "capture.png", { type: "image/png" }));
       }
       await api("/api/v1/evidence/submit", { method: "POST", body: formData });
-      setCaptureStatus("Evidence submitted.");
+      setCaptureStatus(t("evidence.submit_success"));
       const refreshed = await api<EvidenceTaskView>(`/api/v1/evidence/tasks/${taskId}`);
       setItems(refreshed.evidence ?? []);
       setIssues(refreshed.issues ?? []);
       setMessages(refreshed.messages ?? []);
-    } catch (error: unknown) {
-      setPanelError(error instanceof Error ? error.message : "Submission failed.");
+    } catch (_error: unknown) {
+      setPanelError(t("evidence.submit_failed"));
     }
   }
 
@@ -176,16 +183,17 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
       setItems(payload.evidence ?? []);
       setIssues(payload.issues ?? []);
       setMessages(payload.messages ?? []);
-    } catch (error: unknown) {
-      setPanelError(error instanceof Error ? error.message : "Issue report failed.");
+    } catch (_error: unknown) {
+      setPanelError(t("evidence.issue_failed"));
     }
   }
 
   async function addMessage() {
+    if (!issues[0]) {
+      setPanelError(t("evidence.issue_required"));
+      return;
+    }
     try {
-      if (!issues[0]) {
-        throw new Error("Create an issue report first.");
-      }
       await api(`/api/v1/evidence/issues/${issues[0].id}/messages`, {
         method: "POST",
         body: {
@@ -197,141 +205,144 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
       setDiscussionMessage("");
       const payload = await api<EvidenceTaskView>(`/api/v1/evidence/tasks/${taskId}`);
       setMessages(payload.messages ?? []);
-    } catch (error: unknown) {
-      setPanelError(error instanceof Error ? error.message : "Discussion message failed.");
+    } catch (_error: unknown) {
+      setPanelError(t("evidence.message_failed"));
     }
   }
 
   if (!taskId) {
-    return <p className="muted">Select a task to open the evidence workflow.</p>;
+    return (
+      <Panel eyebrow={t("evidence.title")} title={t("evidence.workspace")}>
+        <p className="muted">{t("evidence.select_task")}</p>
+      </Panel>
+    );
   }
 
+  function changeEvidenceType(nextType: string) {
+    setEvidenceType(nextType);
+    setCaptureToken("");
+    setChallengeText("");
+    setCaptureStatus(null);
+    setCapturedBlob(null);
+    setPreviewUrl("");
+  }
+
+  const isImageEvidence = evidenceType === "image";
+  const needsNote = evidenceType === "note";
+  const needsNumber = evidenceType === "number";
+  const needsConfirmation = evidenceType === "confirmation";
+  const evidenceReady =
+    Boolean(captureToken) &&
+    (!needsNote || noteText.trim().length > 0) &&
+    (!needsNumber || numberValue.trim().length > 0) &&
+    (!needsConfirmation || confirmationValue) &&
+    (!isImageEvidence || Boolean(capturedBlob));
+
   return (
-    <Panel eyebrow="Evidence" title="Capture, submit, and discuss">
+    <Panel eyebrow={t("evidence.title")} title={t("evidence.workspace")}>
       {panelError ? <p className="status status-danger">{panelError}</p> : null}
       {captureStatus ? <p className="status status-success">{captureStatus}</p> : null}
-      <div className="form-grid">
+      <div className="evidence-intro">
         <label>
-          <span>Evidence type</span>
-          <select value={evidenceType} onChange={(event) => setEvidenceType(event.target.value)}>
-            <option value="image">Image</option>
-            <option value="number">Number</option>
-            <option value="note">Note</option>
-            <option value="confirmation">Confirmation</option>
+          <span>{t("evidence.type_label")}</span>
+          <select value={evidenceType} onChange={(event) => changeEvidenceType(event.target.value)}>
+            <option value="image">{t("evidence.type.image")}</option>
+            <option value="number">{t("evidence.type.number")}</option>
+            <option value="note">{t("evidence.type.note")}</option>
+            <option value="confirmation">{t("evidence.type.confirmation")}</option>
           </select>
         </label>
         <div className="state-card">
-          <strong>Selected task</strong>
-          <p className="muted">Evidence will be attached to the task opened from the task list.</p>
+          <strong>{t("evidence.selected_task")}</strong>
+          <p className="muted">{t("evidence.selected_task_body")}</p>
         </div>
       </div>
-      <div className="inline-actions">
-        <button className="ghost-button" type="button" onClick={() => void startCamera()}>
-          Start camera
-        </button>
-        <button
-          className="ghost-button"
-          type="button"
-          onClick={() => void captureFrame()}
-          disabled={!cameraReady}
-        >
-          Capture frame
-        </button>
-        <button
-          className="ghost-button"
-          type="button"
-          onClick={() => void requestCaptureSession()}
-        >
-          New session
-        </button>
-      </div>
-      <video ref={videoRef} className="camera-preview" playsInline muted autoPlay />
-      {previewUrl ? (
-        <img className="camera-preview" src={previewUrl} alt="Captured evidence preview" />
-      ) : null}
-      <div className="form-grid">
-        <label>
-          <span>Note</span>
-          <input value={noteText} onChange={(event) => setNoteText(event.target.value)} />
-        </label>
-        <label>
-          <span>Number</span>
-          <input value={numberValue} onChange={(event) => setNumberValue(event.target.value)} />
-        </label>
-        <label>
-          <span>Challenge response</span>
-          <input
-            value={challengeResponse}
-            onChange={(event) => setChallengeResponse(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>Confirmation</span>
-          <input
-            type="checkbox"
-            checked={confirmationValue}
-            onChange={(event) => setConfirmationValue(event.target.checked)}
-          />
-        </label>
-      </div>
-      <label>
-        <span>Face detected</span>
-        <input
-          type="checkbox"
-          checked={faceDetected}
-          onChange={(event) => setFaceDetected(event.target.checked)}
-        />
-      </label>
-      {challengeText ? <p className="muted">Challenge: {challengeText}</p> : null}
-      <div className="inline-actions">
-        <button className="primary-button" type="button" onClick={() => void submitEvidence()}>
-          Submit evidence
-        </button>
-      </div>
+
+      <section className="evidence-capture" aria-labelledby="capture-heading">
+        <div className="section-heading"><div><p className="eyebrow">{t("evidence.step", { number: 1 })}</p><h3 id="capture-heading">{t("evidence.prepare_title")}</h3></div></div>
+        <p className="muted">{t("evidence.prepare_body")}</p>
+        <div className="inline-actions">
+          <button className="primary-button" type="button" onClick={() => void requestCaptureSession()}>
+            {captureToken ? t("evidence.refresh_session") : t("evidence.prepare_session")}
+          </button>
+        </div>
+
+        {isImageEvidence ? (
+          <div className="image-capture-area">
+            <div className="inline-actions">
+              <button className="ghost-button" type="button" onClick={() => void startCamera()}>{t("evidence.start_camera")}</button>
+              <button className="ghost-button" type="button" onClick={() => void captureFrame()} disabled={!cameraReady}>{t("evidence.capture_frame")}</button>
+            </div>
+            <video ref={videoRef} className="camera-preview" playsInline muted autoPlay />
+            {previewUrl ? <img className="camera-preview" src={previewUrl} alt={t("evidence.preview_alt")} /> : null}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="evidence-capture" aria-labelledby="details-heading">
+        <div className="section-heading"><div><p className="eyebrow">{t("evidence.step", { number: 2 })}</p><h3 id="details-heading">{t("evidence.details_title")}</h3></div></div>
+        <div className="form-grid">
+          {needsNote ? <label><span>{t("evidence.note_label")}</span><textarea required value={noteText} onChange={(event) => setNoteText(event.target.value)} /></label> : null}
+          {needsNumber ? <label><span>{t("evidence.number_label")}</span><input className="bidi-ltr" dir="ltr" inputMode="decimal" required value={numberValue} onChange={(event) => setNumberValue(event.target.value)} /></label> : null}
+          {needsConfirmation ? <label className="checkbox-field"><input type="checkbox" checked={confirmationValue} onChange={(event) => setConfirmationValue(event.target.checked)} /><span>{t("evidence.confirm_accuracy")}</span></label> : null}
+          {isImageEvidence ? (
+            <>
+              <label><span>{t("evidence.challenge_response")}</span><input value={challengeResponse} onChange={(event) => setChallengeResponse(event.target.value)} /></label>
+              <label className="checkbox-field"><input type="checkbox" checked={faceDetected} onChange={(event) => setFaceDetected(event.target.checked)} /><span>{t("evidence.face_detected")}</span></label>
+            </>
+          ) : null}
+        </div>
+        {challengeText ? <p className="muted">{t("evidence.challenge", { text: challengeText })}</p> : null}
+        <div className="inline-actions">
+          <button className="primary-button" type="button" onClick={() => void submitEvidence()} disabled={!evidenceReady}>
+            {t("evidence.submit_evidence")}
+          </button>
+        </div>
+      </section>
       <div className="notification-list">
         {items.map((item) => (
           <div key={item.id} className="notification-item">
-            <strong>{item.evidence_type}</strong>
-            <p>{item.note_text || "No note"}</p>
+            <strong>{t(`evidence.type.${item.evidence_type}`, { defaultValue: item.evidence_type })}</strong>
+            <p>{item.note_text || t("evidence.no_note")}</p>
             <small>
-              Risk {item.duplicate_risk_score} ·{" "}
-              {item.face_detected ? "face blurred" : "no face"}
+              {t("evidence.risk", { score: item.duplicate_risk_score })} ·{" "}
+              {item.face_detected ? t("evidence.face_detected") : t("evidence.face_not_detected")}
             </small>
           </div>
         ))}
       </div>
       <div className="form-stack">
         <label>
-          <span>Issue note</span>
+          <span>{t("evidence.issue_note")}</span>
           <input value={issueNote} onChange={(event) => setIssueNote(event.target.value)} />
         </label>
         <button className="ghost-button" type="button" onClick={() => void reportIssue()}>
-          Report issue
+          {t("evidence.report_issue")}
         </button>
       </div>
       <div className="form-stack">
         <label>
-          <span>Discussion message</span>
+          <span>{t("evidence.discussion_message")}</span>
           <input
             value={discussionMessage}
             onChange={(event) => setDiscussionMessage(event.target.value)}
           />
         </label>
         <button className="ghost-button" type="button" onClick={() => void addMessage()}>
-          Send reply
+          {t("evidence.send_reply")}
         </button>
       </div>
       <div className="notification-list">
         {issues.map((issue) => (
           <div key={issue.id} className="notification-item">
             <strong>{issue.note}</strong>
-            <small>{issue.created_at}</small>
+            <small>{formatDate(issue.created_at, i18n.language)}</small>
           </div>
         ))}
         {messages.map((message) => (
           <div key={message.id} className="notification-item">
             <strong>{message.message}</strong>
-            <small>{message.created_at}</small>
+            <small>{formatDate(message.created_at, i18n.language)}</small>
           </div>
         ))}
       </div>

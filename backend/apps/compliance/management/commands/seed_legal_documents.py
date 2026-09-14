@@ -4,17 +4,15 @@ Usage::
 
     python manage.py seed_legal_documents
 
-The command registers one row per document kind in the
+The command registers one row per operator-facing document kind in the
 :class:`apps.compliance.models.LegalDocument` table, pointing at the
 versioned files under ``docs/legal/``. It is idempotent — re-running
 it is a no-op because the (kind, version) pair is unique.
 
 The command is the platform-side companion to the versioned document
 directories under ``docs/legal/`` and to the per-directory
-``CHANGELOG.md`` files. It does not bypass the legal review gate: the
-``is_legal_review_complete`` field is set to ``False`` until the
-platform owner signs off, even though the documents are technically
-published for the platform to fetch.
+``CHANGELOG.md`` files. The self-hosted release publishes simplified
+operator notices; it does not publish a remote-assistance access policy.
 """
 
 from __future__ import annotations
@@ -33,19 +31,19 @@ SEED_DOCUMENTS: list[dict[str, object]] = [
         "kind": LegalDocumentKind.TERMS,
         "version": "v1.0",
         "content_path": "docs/legal/01_TERMS_OF_USE/v1.0.md",
-        "summary": "Terms of Use: registration, trial, lifecycle, AI provider selection, acceptance tracking.",
+        "summary": "Terms of Use: self-hosted installation, local owner responsibility, and account boundaries.",
     },
     {
         "kind": LegalDocumentKind.PRIVACY,
         "version": "v1.0",
         "content_path": "docs/legal/02_PRIVACY_NOTICE/v1.0.md",
-        "summary": "Privacy Notice: controller/processor roles, data categories, blur behaviour, retention.",
+        "summary": "Privacy Notice: local data ownership, role-based access, backups, and employee visibility.",
     },
     {
         "kind": LegalDocumentKind.DATA_PROCESSING,
         "version": "v1.0",
         "content_path": "docs/legal/03_DATA_PROCESSING_TERMS/v1.0.md",
-        "summary": "Data Processing Terms: controller/processor instructions, support, sub-processors, retention.",
+        "summary": "Data Processing Terms: operator-managed infrastructure and optional external providers.",
     },
     {
         "kind": LegalDocumentKind.AI_TRANSFER,
@@ -57,19 +55,13 @@ SEED_DOCUMENTS: list[dict[str, object]] = [
         "kind": LegalDocumentKind.EMPLOYEE_PRIVACY,
         "version": "v1.0",
         "content_path": "docs/legal/05_EMPLOYEE_PRIVACY/v1.0.md",
-        "summary": "Employee Privacy Acknowledgement: first-use acknowledgement, scope, retention.",
+        "summary": "Employee Privacy: task and evidence visibility inside the operator's installation.",
     },
     {
         "kind": LegalDocumentKind.RETENTION,
         "version": "v1.0",
         "content_path": "docs/legal/06_RETENTION_DELETION/v1.0.md",
-        "summary": "Retention and Deletion Policy: 90-day read-only window, hard delete, backup expiry.",
-    },
-    {
-        "kind": LegalDocumentKind.SUPPORT_ACCESS,
-        "version": "v1.0",
-        "content_path": "docs/legal/07_SUPPORT_ACCESS/v1.0.md",
-        "summary": "Support Access Authorization: per-individual grants, auditability, expiry, MFA.",
+        "summary": "Retention and Deletion: operator-defined retention and encrypted backup lifecycle.",
     },
 ]
 

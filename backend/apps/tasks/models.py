@@ -43,6 +43,19 @@ class TaskTransferStatus(models.TextChoices):
     REJECTED = "rejected", "Rejected"
 
 
+class TaskRequestKind(models.TextChoices):
+    CANCELLATION = "cancellation", "Cancellation"
+    UNABLE_TO_COMPLETE = "unable_to_complete", "Unable to complete"
+    TASK_SUGGESTION = "task_suggestion", "Task suggestion"
+    TRANSFER = "transfer", "Transfer"
+
+
+class TaskRequestStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+
+
 class TaskTemplate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="task_templates")
@@ -172,3 +185,46 @@ class TaskTransferRequest(models.Model):
     )
     decided_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TaskRequest(models.Model):
+    """An employee request that requires an auditable management decision."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="task_requests")
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="task_requests")
+    task_instance = models.ForeignKey(
+        TaskInstance,
+        on_delete=models.CASCADE,
+        related_name="requests",
+        null=True,
+        blank=True,
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="submitted_task_requests",
+    )
+    requested_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="received_task_requests",
+        null=True,
+        blank=True,
+    )
+    kind = models.CharField(max_length=32, choices=TaskRequestKind.choices)
+    reason = models.TextField()
+    status = models.CharField(max_length=32, choices=TaskRequestStatus.choices, default=TaskRequestStatus.PENDING)
+    decision_reason = models.TextField(blank=True)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="task_request_decisions",
+        null=True,
+        blank=True,
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()

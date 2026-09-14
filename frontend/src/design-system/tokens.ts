@@ -1,6 +1,6 @@
 export type Locale = "ar" | "en";
 export type CalendarPreference = "gregorian" | "hijri";
-export type Role = "platform_admin" | "owner" | "monitor" | "employee";
+export type Role = "owner" | "monitor" | "employee";
 
 export type NavModule =
   | "dashboard"
@@ -38,6 +38,7 @@ export type BootstrapSnapshot = {
     authenticated: boolean;
   };
   company: {
+    id: string;
     name: string;
     code: string;
     status: string;
@@ -54,21 +55,20 @@ export type BootstrapSnapshot = {
 };
 
 export const roleLabels: Record<Role, { ar: string; en: string }> = {
-  platform_admin: { ar: "مدير المنصة", en: "Platform Admin" },
   owner: { ar: "المالك", en: "Owner" },
-  monitor: { ar: "مراقب الجودة", en: "Quality Monitor" },
+  monitor: { ar: "المشرف", en: "Monitor" },
   employee: { ar: "موظف", en: "Employee" },
 };
 
 export const navItems: NavItem[] = [
-  { module: "dashboard", href: "/dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "operations", href: "/operations", labelAr: "العمليات", labelEn: "Operations", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "tasks", href: "/tasks", labelAr: "المهام", labelEn: "Tasks", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "evidence", href: "/evidence", labelAr: "الأدلة", labelEn: "Evidence", roles: ["platform_admin", "owner", "monitor", "employee"] },
-  { module: "people", href: "/people", labelAr: "الأفراد", labelEn: "People", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "reviews", href: "/reviews", labelAr: "المراجعات", labelEn: "Reviews", roles: ["platform_admin", "owner", "monitor"] },
-  { module: "admin", href: "/admin", labelAr: "الإدارة", labelEn: "Admin", roles: ["platform_admin", "owner"] },
-  { module: "agent_access", href: "/agent-access", labelAr: "وصول MCP", labelEn: "MCP Access", roles: ["platform_admin", "owner"] },
+  { module: "dashboard", href: "/dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", roles: ["owner", "monitor"] },
+  { module: "operations", href: "/operations", labelAr: "العمليات", labelEn: "Operations", roles: ["owner"] },
+  { module: "tasks", href: "/tasks", labelAr: "المهام", labelEn: "Tasks", roles: ["owner", "monitor", "employee"] },
+  { module: "evidence", href: "/evidence", labelAr: "الأدلة", labelEn: "Evidence", roles: ["owner", "monitor", "employee"] },
+  { module: "people", href: "/people", labelAr: "الأفراد", labelEn: "People", roles: ["owner", "monitor"] },
+  { module: "reviews", href: "/reviews", labelAr: "المراجعات", labelEn: "Reviews", roles: ["owner", "monitor"] },
+  { module: "admin", href: "/admin", labelAr: "الإدارة", labelEn: "Admin", roles: ["owner"] },
+  { module: "agent_access", href: "/agent-access", labelAr: "وصول MCP", labelEn: "MCP Access", roles: ["owner"] },
 ];
 
 export const notificationSeed: NotificationItem[] = [
@@ -88,14 +88,6 @@ export const notificationSeed: NotificationItem[] = [
     bodyEn: "A new weekly shift was added for the main branch.",
     tone: "neutral",
   },
-  {
-    id: "security",
-    titleAr: "تأكيد MFA مطلوب",
-    titleEn: "MFA confirmation required",
-    bodyAr: "تفعيل TOTP متاح الآن للمديرين والمالكين.",
-    bodyEn: "TOTP enrollment is available now for owners and admins.",
-    tone: "warning",
-  },
 ];
 
 // C-14: the static bootstrap snapshot is used only as a transient placeholder
@@ -106,16 +98,17 @@ export const notificationSeed: NotificationItem[] = [
 // mock the API response explicitly.
 export const bootstrapSnapshot: BootstrapSnapshot = {
   currentUser: {
-    id: "user-001",
-    displayName: "Amina Hassan",
-    loginId: "amina",
+    id: "",
+    displayName: "",
+    loginId: "",
     role: null,
     authenticated: false,
   },
   company: {
-    name: "Nadi Foods",
-    code: "nadi-foods",
-    status: "trial",
+    id: "",
+    name: "",
+    code: "",
+    status: "active",
     locale: "ar",
     timezone: "Asia/Riyadh",
     branding: {

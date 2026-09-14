@@ -28,8 +28,18 @@ class BranchesView(TenantAPIView):
 
     @extend_schema(responses=OpenApiResponse(description="List of company branches."))
     def get(self, request):
-        company = self.get_tenant().company
-        return Response({"branches": BranchSerializer(Branch.objects.filter(company=company), many=True).data})
+        context = self.get_tenant()
+        company = context.company
+        if context.role == CompanyRole.OWNER:
+            branches_qs = Branch.objects.filter(company=company)
+        else:
+            # Least-privilege: monitors/employees see only their accessible active branches.
+            # TenantContext.branch_ids is authoritative; bootstrap data is display-only.
+            if not context.branch_ids:
+                branches_qs = Branch.objects.none()
+            else:
+                branches_qs = Branch.objects.filter(company=company, active=True, id__in=context.branch_ids)
+        return Response({"branches": BranchSerializer(branches_qs, many=True).data})
 
     @extend_schema(request=BranchCreateSerializer, responses={201: BranchSerializer})
     @platform_service_call
@@ -88,7 +98,7 @@ class JobRolesView(TenantAPIView):
 
 
 class MembershipsView(TenantAPIView):
-    required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR)
+    required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses=OpenApiResponse(description="List of company memberships."))
     def get(self, request):

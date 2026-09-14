@@ -9,10 +9,21 @@ from django.utils import timezone
 
 from apps.audit.services import record_audit_event
 from apps.identity.models import User
-from apps.organizations.models import Branch, WeeklyShift
+from apps.organizations.models import Branch, CompanyRole, WeeklyShift
 from apps.tenancy.access import active_membership_q
 
-from .models import TaskInstance, TaskRecurrenceType, TaskSchedule, TaskTemplate, TaskTemplateVersion, TaskTransferRequest, TaskTransferStatus
+from .models import (
+    TaskInstance,
+    TaskRecurrenceType,
+    TaskRequest,
+    TaskRequestKind,
+    TaskRequestStatus,
+    TaskSchedule,
+    TaskTemplate,
+    TaskTemplateVersion,
+    TaskTransferRequest,
+    TaskTransferStatus,
+)
 
 
 TASK_STATUS_PENDING = "pending"
@@ -275,6 +286,77 @@ def request_transfer(instance_id: str, requested_by: User, requested_to: User, r
 
 
 @transaction.atomic
+def create_task_request(
+    *,
+    company,
+    branch: Branch,
+    task_instance: TaskInstance | None,
+    requested_by: User,
+    requested_to: User | None,
+    kind: str,
+    reason: str,
+) -> TaskRequest:
+    request = TaskRequest.objects.create(
+        company=company,
+        branch=branch,
+        task_instance=task_instance,
+        requested_by=requested_by,
+        requested_to=requested_to,
+        kind=kind,
+        reason=reason,
+    )
+    record_audit_event(
+        event_type="TASK_REQUEST_CREATED",
+        target_type="task_request",
+        target_id=str(request.id),
+        actor_id=str(requested_by.id),
+        branch_id=str(branch.id),
+        metadata={"kind": kind, "task_instance_id": str(task_instance.id) if task_instance else ""},
+    )
+    return request
+
+
+@transaction.atomic
+def resolve_task_request(
+    request_id: str,
+    *,
+    decided_by: User,
+    approved: bool,
+    decision_reason: str = "",
+) -> TaskRequest:
+    # Do not join nullable task/target relations while taking the row lock.
+    # PostgreSQL rejects ``FOR UPDATE`` on the nullable side of an outer join.
+    request = TaskRequest.objects.select_for_update().get(id=request_id)
+    if request.status != TaskRequestStatus.PENDING:
+        raise ValueError("Task request already resolved.")
+
+    request.status = TaskRequestStatus.APPROVED if approved else TaskRequestStatus.REJECTED
+    request.decision_reason = decision_reason
+    request.decided_by = decided_by
+    request.decided_at = timezone.now()
+    request.save(update_fields=["status", "decision_reason", "decided_by", "decided_at", "updated_at"])
+
+    if approved and request.task_instance is not None:
+        if request.kind == TaskRequestKind.CANCELLATION:
+            cancel_task(str(request.task_instance_id), decided_by, decision_reason or request.reason)
+        elif request.kind == TaskRequestKind.TRANSFER and request.requested_to is not None:
+            transfer = request_transfer(
+                str(request.task_instance_id), request.requested_by, request.requested_to, request.reason
+            )
+            resolve_transfer(str(transfer.id), decided_by, approved=True)
+
+    record_audit_event(
+        event_type="TASK_REQUEST_RESOLVED",
+        target_type="task_request",
+        target_id=str(request.id),
+        actor_id=str(decided_by.id),
+        branch_id=str(request.branch_id),
+        metadata={"approved": approved, "kind": request.kind},
+    )
+    return request
+
+
+@transaction.atomic
 def resolve_transfer(transfer_id: str, decided_by: User, approved: bool) -> TaskTransferRequest:
     transfer = (
         TaskTransferRequest.objects.select_for_update()
@@ -289,12 +371,15 @@ def resolve_transfer(transfer_id: str, decided_by: User, approved: bool) -> Task
     # Defence in depth: the view already filters by company, but the
     # service layer must also reject decisions from outside the company
     # so future callers cannot bypass the view filter.
-    decided_is_member = company.owner_id == decided_by.id or company.memberships.filter(
+    decision_membership = company.memberships.filter(
         active=True,
         user=decided_by,
-    ).filter(active_membership_q()).exists()
-    if not decided_is_member and decided_by.id != transfer.requested_to_id:
-        raise ValueError("Only company members can resolve this transfer.")
+    ).filter(active_membership_q()).first()
+    decided_is_management = company.owner_id == decided_by.id or (
+        decision_membership is not None and decision_membership.role in {CompanyRole.OWNER, CompanyRole.MONITOR}
+    )
+    if not decided_is_management:
+        raise ValueError("Only company management can resolve this transfer.")
     transfer.status = TaskTransferStatus.APPROVED if approved else TaskTransferStatus.REJECTED
     transfer.decided_by = decided_by
     transfer.decided_at = timezone.now()
