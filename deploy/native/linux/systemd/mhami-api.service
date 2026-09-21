@@ -1,0 +1,22 @@
+[Unit]
+Description=Mhami Django API
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=mhami
+Group=mhami
+WorkingDirectory=/opt/mhami/backend
+EnvironmentFile=/etc/mhami/mhami.env
+ExecStart=/opt/mhami/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/mhami /var/log/mhami
+UMask=027
+
+[Install]
+WantedBy=multi-user.target

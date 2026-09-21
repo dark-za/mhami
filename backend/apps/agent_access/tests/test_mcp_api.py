@@ -236,7 +236,10 @@ def test_mcp_employee_only_reads_own_tasks(
         **_signed_headers(grant, body),
     )
     assert response.status_code == 200
-    assert response.json()["result"]["result"]["tasks"] == []
+    res_data = response.json()["result"]["result"]
+    assert res_data["tasks"] == []
+    assert res_data["total"] == 0
+    assert res_data["has_more"] is False
 
 
 @pytest.mark.django_db

@@ -6,7 +6,13 @@ from functools import wraps
 from typing import Any, TypeVar
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import (
+    APIException,
+    AuthenticationFailed,
+    NotAuthenticated,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -62,7 +68,23 @@ def platform_exception_handler(exc: Exception, context: dict[str, object]) -> Re
         return None
     code = "CORE-ERROR-001"
     message = "This action cannot be performed."
-    if isinstance(exc, APIException):
+
+    # Return 401 instead of 403 for unauthenticated access
+    if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
+        code = "NOT_AUTHENTICATED"
+        message = str(exc.detail) if hasattr(exc, "detail") else "Authentication credentials were not provided."
+        response.status_code = 401
+    elif isinstance(exc, (PermissionDenied, PlatformPermissionException)):
+        request = context.get("request") if isinstance(context, dict) else None
+        user = getattr(request, "user", None)
+        if user is None or not getattr(user, "is_authenticated", False):
+            code = "NOT_AUTHENTICATED"
+            message = "Authentication credentials were not provided."
+            response.status_code = 401
+        else:
+            code = getattr(exc, "default_code", "CORE-FORBIDDEN-001").upper()
+            message = str(exc.detail) if hasattr(exc, "detail") else "You do not have permission to perform this action."
+    elif isinstance(exc, APIException):
         code = getattr(exc, "default_code", code).upper() if getattr(exc, "default_code", None) else code
         message = str(exc.detail)
     if isinstance(exc, ValidationError):

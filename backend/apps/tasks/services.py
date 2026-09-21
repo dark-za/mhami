@@ -36,7 +36,7 @@ TASK_STATUS_OVERDUE = "overdue"
 
 TASK_TRANSITIONS: dict[str, set[str]] = {
     TASK_STATUS_PENDING: {TASK_STATUS_PENDING, TASK_STATUS_CLAIMED, TASK_STATUS_IN_PROGRESS, TASK_STATUS_CANCELLED, TASK_STATUS_OVERDUE},
-    TASK_STATUS_CLAIMED: {TASK_STATUS_PENDING, TASK_STATUS_IN_PROGRESS, TASK_STATUS_CANCELLED, TASK_STATUS_OVERDUE},
+    TASK_STATUS_CLAIMED: {TASK_STATUS_PENDING, TASK_STATUS_IN_PROGRESS, TASK_STATUS_COMPLETED, TASK_STATUS_CANCELLED, TASK_STATUS_OVERDUE},
     TASK_STATUS_IN_PROGRESS: {TASK_STATUS_PENDING, TASK_STATUS_COMPLETED, TASK_STATUS_CANCELLED, TASK_STATUS_OVERDUE},
     TASK_STATUS_OVERDUE: {TASK_STATUS_PENDING, TASK_STATUS_CLAIMED, TASK_STATUS_IN_PROGRESS, TASK_STATUS_CANCELLED},
     TASK_STATUS_COMPLETED: set(),
@@ -123,11 +123,28 @@ def schedule_due_tasks(moment: datetime | None = None) -> list[TaskInstance]:
 
 
 @transaction.atomic
-def mark_overdue_tasks(moment: datetime | None = None) -> list[TaskInstance]:
+def mark_overdue_tasks(
+    moment: datetime | None = None,
+    grace_period_minutes: int | None = None,
+) -> list[TaskInstance]:
+    """Transition pending, claimed, and in-progress tasks past their due date to OVERDUE.
+
+    Operational note on timing:
+    Celery Beat dispatches this periodic task quarter-hourly (crontab minute="*/15").
+    Consequently, tasks become marked as overdue within 0 to 15 minutes after their
+    due_at cutoff. An optional ``grace_period_minutes`` (or configuration setting
+    TASK_OVERDUE_GRACE_PERIOD_MINUTES) provides an operational buffer before marking.
+    """
     now = moment or timezone.now()
+    if grace_period_minutes is None:
+        from django.conf import settings
+
+        grace_period_minutes = int(getattr(settings, "TASK_OVERDUE_GRACE_PERIOD_MINUTES", 0) or 0)
+
+    effective_cutoff = now - timedelta(minutes=max(0, grace_period_minutes))
     overdue_instances = list(
         TaskInstance.objects.select_for_update().filter(
-            due_at__lt=now,
+            due_at__lt=effective_cutoff,
             status__in=[TASK_STATUS_PENDING, TASK_STATUS_CLAIMED, TASK_STATUS_IN_PROGRESS],
         )
     )

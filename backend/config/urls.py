@@ -39,3 +39,55 @@ urlpatterns = [
     path("api/schema/", ProtectedSpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", ProtectedSpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]
+
+
+def custom_404(request, exception=None):
+    from django.http import JsonResponse
+    from apps.platform_core.request_id import get_request_id
+
+    return JsonResponse(
+        {
+            "error": {
+                "code": "NOT_FOUND",
+                "message": "The requested resource was not found.",
+                "request_id": get_request_id(),
+            }
+        },
+        status=404,
+    )
+
+
+def custom_500(request):
+    from django.http import JsonResponse
+    from apps.platform_core.request_id import get_request_id
+
+    return JsonResponse(
+        {
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected server error occurred.",
+                "request_id": get_request_id(),
+            }
+        },
+        status=500,
+    )
+
+
+def custom_csrf_failure(request, reason=""):
+    from django.http import JsonResponse
+    from apps.platform_core.request_id import get_request_id
+
+    return JsonResponse(
+        {
+            "error": {
+                "code": "CSRF_FAILURE",
+                "message": f"CSRF verification failed: {reason}" if reason else "CSRF verification failed.",
+                "request_id": get_request_id(),
+            }
+        },
+        status=403,
+    )
+
+
+handler404 = "config.urls.custom_404"
+handler500 = "config.urls.custom_500"

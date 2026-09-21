@@ -49,10 +49,9 @@ from apps.organizations.models import CompanyRole
 
 
 class ProcessingActivityListView(APIView):
-    """Public, read-only list of published ROPA rows."""
+    """Authenticated, read-only list of published ROPA rows."""
 
-    authentication_classes: list = []
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(responses={200: ProcessingActivitySerializer(many=True)})
     def get(self, request):

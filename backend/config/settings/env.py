@@ -82,6 +82,8 @@ class PlatformSettings(BaseSettings):
     backup_restore_db_password: str = ""
     backup_restore_db_host: str = "127.0.0.1"
     backup_restore_db_port: int = 5432
+    media_root: str = ""
+    static_root: str = ""
 
     # Runtime
     gunicorn_workers: int = 3

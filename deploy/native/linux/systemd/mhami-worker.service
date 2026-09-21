@@ -1,0 +1,22 @@
+[Unit]
+Description=Mhami Celery Worker
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=mhami
+Group=mhami
+WorkingDirectory=/opt/mhami/backend
+EnvironmentFile=/etc/mhami/mhami.env
+ExecStart=/opt/mhami/venv/bin/celery -A config.celery worker --loglevel=INFO --concurrency=2 --queues=default,media,ai
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/mhami /var/log/mhami
+UMask=027
+
+[Install]
+WantedBy=multi-user.target

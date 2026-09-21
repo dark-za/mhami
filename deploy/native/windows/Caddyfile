@@ -1,0 +1,14 @@
+mhami.example.com {
+    root * "C:/ProgramData/Mhami/frontend"
+    encode gzip
+    request_body {
+        max_size 12MB
+    }
+
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    try_files {path} /index.html
+    file_server
+}

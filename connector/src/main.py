@@ -40,6 +40,7 @@ logging.basicConfig(level=os.environ.get("CONNECTOR_LOG_LEVEL", "INFO"))
 app = FastAPI(title="Mhami Connector", version="0.1.0")
 
 _secret: str | None = None
+_outbound_token: str | None = None
 _replay_guard = ReplayGuard(freshness_seconds=int(os.environ.get("CONNECTOR_FRESHNESS_SECONDS", "300")))
 _outbound_timeout = float(os.environ.get("CONNECTOR_OUTBOUND_TIMEOUT", "30"))
 
@@ -49,6 +50,28 @@ def get_secret() -> str:
     if _secret is None:
         _secret = load_secret()
     return _secret
+
+
+def get_outbound_token() -> str:
+    """Return the token used to authenticate outbound requests to the AI provider.
+
+    Security note: this MUST be a separate secret from ``CONNECTOR_API_KEY``.
+    ``CONNECTOR_API_KEY`` is the shared HMAC signing key for *inbound* requests
+    from the Mhami platform; sending it outbound would expose the signing secret
+    to the AI provider (a third party). ``TENANT_AI_TOKEN`` is issued by the
+    tenant's AI provider and has no relation to the inbound HMAC key.
+    """
+    global _outbound_token
+    if _outbound_token is None:
+        token = os.environ.get("TENANT_AI_TOKEN", "")
+        if not token:
+            raise RuntimeError(
+                "TENANT_AI_TOKEN is required for outbound AI provider authentication. "
+                "Set this to the token issued by the tenant's AI provider — "
+                "it must be different from CONNECTOR_API_KEY."
+            )
+        _outbound_token = token
+    return _outbound_token
 
 
 def _outbound_url(path: str) -> str:
@@ -94,6 +117,7 @@ def health() -> dict[str, Any]:
 def ready() -> dict[str, Any]:
     try:
         get_secret()
+        get_outbound_token()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {"status": "ready"}
@@ -113,7 +137,7 @@ async def analyze(request: Request) -> Response:
             upstream = await client.post(
                 _outbound_url("/v1/analyze"),
                 json=payload,
-                headers={"X-Internal-Token": get_secret()},
+                headers={"X-Internal-Token": get_outbound_token()},
             )
     except httpx.HTTPError as exc:
         logger.warning("Upstream error: %s", exc.__class__.__name__)

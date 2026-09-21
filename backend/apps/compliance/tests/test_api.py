@@ -20,7 +20,7 @@ from apps.organizations.models import CompanyMembership, CompanyRole
 pytestmark = pytest.mark.django_db
 
 
-def test_ropa_endpoint_lists_published_activities():
+def test_ropa_endpoint_lists_published_activities(make_user):
     client = Client()
     publish_processing_activity(
         name="evidence_capture",
@@ -33,6 +33,13 @@ def test_ropa_endpoint_lists_published_activities():
         retention_days=180,
         security_measures="Private media storage.",
     )
+    # Unauthenticated request must be rejected
+    unauth_response = client.get("/api/v1/compliance/ropa")
+    assert unauth_response.status_code in (401, 403)
+
+    # Authenticated request succeeds
+    user = make_user()
+    client.force_login(user)
     response = client.get("/api/v1/compliance/ropa")
     assert response.status_code == 200
     payload = response.json()

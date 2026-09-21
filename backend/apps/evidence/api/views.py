@@ -209,11 +209,25 @@ class IssueMessagesView(TenantAPIView):
 
 
 class MediaHealthView(TenantAPIView):
-    # Public health endpoint; explicitly override the inherited auth/role
-    # checks so it can be hit by the monitoring stack.
+    """Media subsystem health endpoint.
+
+    Protected to prevent unauthenticated information disclosure about internal
+    queue and storage topology. Requires an authenticated user or a valid
+    metrics token.
+    """
     permission_classes = []
     required_roles = ()
 
     @extend_schema(responses=OpenApiResponse(description="Media subsystem health."))
     def get(self, request):
+        from django.conf import settings
+
+        metrics_token = getattr(settings, "METRICS_TOKEN", "")
+        token_header = request.headers.get("X-Metrics-Token", "")
+        is_token_valid = bool(metrics_token and token_header and token_header == metrics_token)
+        is_user_authenticated = bool(getattr(request, "user", None) and request.user.is_authenticated)
+
+        if not (is_token_valid or is_user_authenticated):
+            raise PlatformPermissionException("Authentication or valid metrics token required.")
+
         return Response({"status": "ok", "queue": "media", "storage": "private"})

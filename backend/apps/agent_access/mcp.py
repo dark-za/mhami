@@ -88,7 +88,20 @@ def _tasks_list(grant: AgentGrant, arguments: Mapping[str, object]) -> dict[str,
     limit = arguments.get("limit", 50)
     if not isinstance(limit, int) or limit < 1 or limit > 100:
         raise ParseError("limit must be an integer from 1 to 100.")
-    return {"tasks": TaskInstanceSerializer(queryset[:limit], many=True).data}
+    offset = arguments.get("offset", 0)
+    if not isinstance(offset, int) or offset < 0:
+        raise ParseError("offset must be a non-negative integer.")
+
+    total = queryset.count()
+    tasks_page = queryset[offset : offset + limit]
+    has_more = (offset + limit) < total
+    return {
+        "tasks": TaskInstanceSerializer(tasks_page, many=True).data,
+        "total": total,
+        "has_more": has_more,
+        "offset": offset,
+        "limit": limit,
+    }
 
 
 def _tasks_transfer_request(
@@ -155,6 +168,7 @@ TOOLS: dict[str, McpTool] = {
             "properties": {
                 "status": {"type": "string"},
                 "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                "offset": {"type": "integer", "minimum": 0},
             },
         },
         handler=_tasks_list,

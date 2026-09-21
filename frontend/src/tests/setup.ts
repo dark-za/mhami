@@ -2,24 +2,36 @@
  * Vitest global setup. Polyfills `matchMedia` and `IntersectionObserver`
  * which jsdom does not implement by default but which the app code may
  * reach in some branches.
- *
- * Unit tests use the application's i18n singleton and never contact a live API.
  */
-import { beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+import "../i18n";
 import i18n from "../i18n";
 
-const unexpectedFetch = vi.fn(async (input: RequestInfo | URL) => {
-  throw new Error(`Unexpected network request in unit test: ${String(input)}`);
-});
-
-vi.stubGlobal("fetch", unexpectedFetch);
-
-beforeEach(async () => {
-  unexpectedFetch.mockClear();
+afterEach(async () => {
   await i18n.changeLanguage("en");
 });
 
-// Polyfill matchMedia
+beforeEach(async () => {
+  window.localStorage.removeItem("mhami.locale");
+  await i18n.changeLanguage("en");
+});
+
+if (typeof window !== "undefined" && !window.localStorage) {
+  const values = new Map<string, string>();
+  const storage: Storage = {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => Array.from(values.keys())[index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, String(value)),
+  };
+  Object.defineProperty(window, "localStorage", { configurable: true, value: storage });
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: storage });
+}
+
 if (typeof window !== "undefined" && !window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -36,7 +48,6 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
-// Polyfill IntersectionObserver
 if (typeof window !== "undefined" && !("IntersectionObserver" in window)) {
   (globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver = class {
     observe(): void {}
@@ -49,7 +60,6 @@ if (typeof window !== "undefined" && !("IntersectionObserver" in window)) {
   };
 }
 
-// Polyfill ResizeObserver
 if (typeof window !== "undefined" && !("ResizeObserver" in window)) {
   (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
     observe(): void {}

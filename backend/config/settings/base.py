@@ -142,6 +142,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # to obtain the cookie.
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+CSRF_FAILURE_VIEW = "config.urls.custom_csrf_failure"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -152,9 +153,9 @@ USE_TZ = True
 # Files / media / backups
 # ---------------------------------------------------------------------------
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = Path(settings.static_root) if settings.static_root else (BASE_DIR / "staticfiles")
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(settings.media_root) if settings.media_root else (BASE_DIR / "media")
 BACKUP_STORAGE_ROOT = Path(settings.backup_storage_root) if settings.backup_storage_root else (MEDIA_ROOT / "backups")
 BACKUP_RESTORE_ROOT = Path(settings.backup_restore_root) if settings.backup_restore_root else (MEDIA_ROOT / "backup-restores")
 DATABASES["backup_restore"] = {
@@ -182,6 +183,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK: dict[str, object] = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.platform_core.errors.platform_exception_handler",
+    # F-07: Fail-Safe default — any view that does not explicitly declare
+    # ``permission_classes`` will require authentication rather than
+    # default to AllowAny. Views intentionally open to the public
+    # (LoginView, RegisterView, McpEndpointView) override this explicitly.
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
 CACHES = {

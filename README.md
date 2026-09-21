@@ -152,6 +152,34 @@ production. See [Secret Management](docs/SECRET_MANAGEMENT.md), the
 [deployment runbook](docs/runbooks/deployment.md), the [restore runbook](docs/runbooks/restore.md),
 and [Public Release Plan](docs/PUBLIC_RELEASE_PLAN.md).
 
+## Native installation (Linux and Windows)
+
+Mhami is being prepared for direct installation in addition to Docker:
+
+- Linux uses Python virtualenv, PostgreSQL, Redis, `systemd`, and NGINX.
+- Windows uses Python virtualenv, PostgreSQL and Redis Windows services, and
+  Windows service wrappers for the API, Celery worker, beat, and optional
+  connector.
+- WSL2 is supported as a compatibility path, not as a replacement for the
+  native Windows path.
+
+The native runtime keeps PostgreSQL and Redis as separate services. The
+application API must bind to loopback unless a trusted gateway is configured.
+Use `python manage.py doctor --strict` after configuring the environment and
+before enabling the background services. The native installer and service
+registration are under `deploy/native/`; the Windows GUI installer is not yet
+declared production-ready until clean-install, upgrade, reboot-recovery, and
+uninstall tests pass on supported operating systems.
+
+Native operational commands include:
+
+```bash
+python manage.py status
+python manage.py upgrade
+python manage.py init_admin --login-id admin
+python manage.py create_backup --company-code acme --login-id owner
+```
+
 ## Public Release Status
 
 Mhami is open source under MIT and can be run on a local server or a provider

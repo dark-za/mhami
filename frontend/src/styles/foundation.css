@@ -458,9 +458,16 @@ input[type="checkbox"] {
 .primary-button,
 .ghost-button {
   border-radius: 8px;
-  padding: 11px 14px;
+  padding: 10px 16px;
+  min-height: 44px;
   border: 1px solid transparent;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: all 180ms ease;
 }
 
 .primary-button {
@@ -470,6 +477,8 @@ input[type="checkbox"] {
 
 .primary-button:hover {
   background: #064a42;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(29, 37, 33, 0.08), 0 2px 4px -2px rgba(29, 37, 33, 0.04);
 }
 
 .ghost-button {
@@ -478,10 +487,108 @@ input[type="checkbox"] {
   color: #1d2521;
 }
 
+.ghost-button:hover {
+  background: var(--surface-pressed);
+  transform: translateY(-1px);
+}
+
 .primary-button:disabled,
 .ghost-button:disabled {
   opacity: 0.68;
-  cursor: progress;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Danger button --- */
+.danger-button {
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border: 1px solid #fecaca;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.danger-button:hover {
+  background: #fecdd3;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.danger-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Checkbox label (touch target 44px) --- */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d2521;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* --- Field hint --- */
+.field-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: -2px;
+  line-height: 1.4;
+}
+
+/* --- Button spinner --- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* --- Shadow tokens --- */
+:root {
+  --shadow-sm: 0 1px 2px rgba(29, 37, 33, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(29, 37, 33, 0.08), 0 2px 4px -2px rgba(29, 37, 33, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(29, 37, 33, 0.08), 0 4px 6px -4px rgba(29, 37, 33, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(29, 37, 33, 0.1), 0 8px 10px -6px rgba(29, 37, 33, 0.04);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .status {
