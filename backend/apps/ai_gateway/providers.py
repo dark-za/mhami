@@ -112,6 +112,14 @@ class FakeProvider:
             "auto_pass_eligible": bool(criteria.get("auto_pass_enabled", False)),
         }
 
+    def ping(self) -> dict[str, Any]:
+        return {
+            "status": "ok",
+            "provider": self.slug,
+            "latency_ms": 1,
+            "message": "FakeProvider is operational (deterministic mode).",
+        }
+
 
 class OpenAIProvider:
     """OpenAI-compatible Chat Completions provider.
@@ -138,6 +146,42 @@ class OpenAIProvider:
         self.api_key = api_key
         self.model_name = model_name
         self.timeout_seconds = max(1, int(timeout_seconds))
+
+    def ping(self) -> dict[str, Any]:
+        import time
+        import httpx
+
+        start = time.perf_counter()
+        try:
+            with httpx.Client(timeout=min(self.timeout_seconds, 10)) as client:
+                response = client.post(
+                    f"{self.endpoint_url}/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model_name,
+                        "messages": [
+                            {"role": "user", "content": "ping"}
+                        ],
+                        "max_tokens": 5,
+                    },
+                )
+        except httpx.HTTPError as exc:
+            logger.warning("AI provider ping failed: %s", exc.__class__.__name__)
+            raise ValueError(f"AI provider connection failed: {exc.__class__.__name__}") from exc
+        latency = int((time.perf_counter() - start) * 1000)
+        if response.status_code != 200:
+            logger.warning("AI provider ping returned %s", response.status_code)
+            raise ValueError(f"AI provider returned HTTP {response.status_code}")
+        return {
+            "status": "ok",
+            "provider": self.slug,
+            "latency_ms": latency,
+            "model": self.model_name,
+            "message": "Successfully connected to LLM provider.",
+        }
 
     def analyze(self, *, evidence_summary: dict[str, Any], criteria: dict[str, Any]) -> dict[str, Any]:
         import httpx

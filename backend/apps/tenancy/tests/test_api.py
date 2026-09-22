@@ -377,7 +377,7 @@ def test_terminated_session_rejects_another_client_and_bootstrap_is_anonymous(te
     else:
         assert first.post("/api/v1/auth/logout").status_code == 204
     denied = other_tab.get("/api/v1/auth/me")
-    assert denied.status_code == 403
+    assert denied.status_code == 401
     assert denied.json()["error"]["code"] == "NOT_AUTHENTICATED"
     bootstrap = other_tab.get("/api/v1/bootstrap").json()
     assert bootstrap["current_user"]["is_authenticated"] is False

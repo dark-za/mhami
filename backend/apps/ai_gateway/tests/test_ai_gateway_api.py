@@ -198,3 +198,23 @@ def test_connector_shadow_summary_is_owner_only(
 
     summary = client.get("/api/v1/ai/shadow")
     assert summary.status_code == 403
+
+
+def test_provider_ping_fake_succeeds(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+    make_capture_session, make_evidence_item, force_login_company,
+):
+    owner, _monitor, company, _evidence = _context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        make_capture_session, make_evidence_item,
+    )
+    client = force_login_company(owner, company)
+    response = client.post("/api/v1/ai/provider/ping", data={}, content_type="application/json")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "ok"
+    assert payload["provider"] == "fake"
+    assert "latency_ms" in payload
+

@@ -272,6 +272,22 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
             <div className="inline-actions">
               <button className="ghost-button" type="button" onClick={() => void startCamera()}>{t("evidence.start_camera")}</button>
               <button className="ghost-button" type="button" onClick={() => void captureFrame()} disabled={!cameraReady}>{t("evidence.capture_frame")}</button>
+              <label className="ghost-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", margin: 0 }}>
+                <span>{t("evidence.upload_image")}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      setCapturedBlob(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+              </label>
             </div>
             <video ref={videoRef} className="camera-preview" playsInline muted autoPlay />
             {previewUrl ? <img className="camera-preview" src={previewUrl} alt={t("evidence.preview_alt")} /> : null}
@@ -311,16 +327,28 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
           </div>
         ))}
       </div>
-      <div className="form-stack">
+      <form
+        className="form-stack"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void reportIssue();
+        }}
+      >
         <label>
           <span>{t("evidence.issue_note")}</span>
           <input value={issueNote} onChange={(event) => setIssueNote(event.target.value)} />
         </label>
-        <button className="ghost-button" type="button" onClick={() => void reportIssue()}>
+        <button className="ghost-button" type="submit">
           {t("evidence.report_issue")}
         </button>
-      </div>
-      <div className="form-stack">
+      </form>
+      <form
+        className="form-stack"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void addMessage();
+        }}
+      >
         <label>
           <span>{t("evidence.discussion_message")}</span>
           <input
@@ -328,10 +356,10 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
             onChange={(event) => setDiscussionMessage(event.target.value)}
           />
         </label>
-        <button className="ghost-button" type="button" onClick={() => void addMessage()}>
+        <button className="ghost-button" type="submit">
           {t("evidence.send_reply")}
         </button>
-      </div>
+      </form>
       <div className="notification-list">
         {issues.map((issue) => (
           <div key={issue.id} className="notification-item">

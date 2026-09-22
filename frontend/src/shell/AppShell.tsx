@@ -78,6 +78,7 @@ export function AppShell(props: AppShellProps) {
   const location = useLocation();
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -121,10 +122,51 @@ export function AppShell(props: AppShellProps) {
           <button className="icon-button" type="button" aria-label={t("shell.toggle_calendar")} title={calendarLabel} onClick={() => setCalendar(calendar === "gregorian" ? "hijri" : "gregorian")}>
             <CalendarDays size={18} aria-hidden="true" />
           </button>
-          <button className="icon-button" type="button" aria-label={notificationsLabel} title={notificationsLabel}>
-            <Bell size={18} aria-hidden="true" />
-            {unreadCount > 0 ? <span className="notification-count">{unreadCount}</span> : null}
-          </button>
+          <div style={{ position: "relative" }}>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label={notificationsLabel}
+              title={notificationsLabel}
+              onClick={() => setShowNotifications((prev) => !prev)}
+            >
+              <Bell size={18} aria-hidden="true" />
+              {unreadCount > 0 ? <span className="notification-count">{unreadCount}</span> : null}
+            </button>
+            {showNotifications ? (
+              <div className="notifications-popover" role="dialog" aria-label={notificationsLabel}>
+                <div className="notifications-popover-header">
+                  <span>{notificationsLabel}</span>
+                  {unreadCount > 0 ? <Badge tone="info">{unreadCount}</Badge> : null}
+                </div>
+                {notifications && notifications.length > 0 ? (
+                  <ul className="notifications-popover-list">
+                    {notifications.map((notif) => (
+                      <li
+                        key={notif.id}
+                        className={`notification-popover-item${!notif.read_at ? " unread" : ""}`}
+                      >
+                        <span className="notification-popover-title">{notif.title}</span>
+                        <span className="notification-popover-body">{notif.body}</span>
+                        {notif.created_at ? (
+                          <span className="notification-popover-time">
+                            {new Date(notif.created_at).toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="empty-quiet" style={{ margin: "12px 0", textAlign: "center", fontSize: "12px" }}>
+                    {t("shell.no_notifications", { defaultValue: locale === "ar" ? "لا توجد إشعارات جديدة" : "No new notifications" })}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
           <button className="logout-button" type="button" onClick={() => void handleLogout()} disabled={loggingOut}>
             <LogOut size={17} aria-hidden="true" />
             <span>{loggingOut ? t("shell.signing_out") : logoutLabel}</span>

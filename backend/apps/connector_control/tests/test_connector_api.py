@@ -101,7 +101,7 @@ def test_connector_heartbeat_cannot_cross_tenant_enrollments(make_user, make_com
         content_type="application/json",
         HTTP_X_CONNECTOR_SECRET="secret-a",
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
     second_enrollment.refresh_from_db()
     assert second_enrollment.health_status == ConnectorHealthStatus.OFFLINE
     assert second_enrollment.last_seen_at is None

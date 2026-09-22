@@ -102,6 +102,49 @@ as a Linux container even when its host is Windows or macOS.
    registration endpoint and no second organization can be provisioned by the
    application.
 
+## 5-Minute Company Quickstart (دليل تشغيل الشركات في 5 دقائق)
+
+Mhami is designed for immediate operational readiness as soon as your company pulls the code:
+
+### 1. Launch the Stack
+```bash
+cp .env.example .env
+docker compose -f compose.yml -f compose.dev.yml up -d
+```
+
+### 2. Complete Initial Organization Setup
+- Visit `http://localhost:5173/setup` in your browser.
+- Enter your company name, owner display name, login credentials, and the `INITIAL_SETUP_TOKEN` from `.env`.
+- Once completed, the setup portal locks down permanently and you are redirected to the workspace.
+
+### 3. Bootstrap Operational Defaults (Optional & Recommended)
+To pre-seed realistic branches, job roles, daily operational tasks, and schedules in one command:
+```bash
+docker compose -f compose.yml -f compose.dev.yml exec api python manage.py seed_company_defaults
+```
+This provisions:
+- **Branches**: Main HQ (الفرع الرئيسي - الرياض) and Regional Branch (فرع جدة).
+- **Roles**: Operations Supervisor (مشرف عمليات), Quality Specialist (أخصائي جودة), Field Operator (موظف ميداني).
+- **Task Templates**: Daily Operations & Safety Check, Daily Inventory Handover (with schedules and evidence requirements).
+- **AI Shadow Criteria**: Pre-configured risk threshold and shadow review criteria.
+
+### 4. Create Staff & Branch Memberships
+- Navigate to **الأفراد (People)** in the navigation sidebar.
+- Create employee and monitor accounts.
+- Assign users to branches with their designated job roles.
+
+### 5. Mobile Evidence Capture & Daily Work
+- Employees log in from mobile browsers or install Mhami as a PWA (Home Screen).
+- In **المهام (Tasks)**, employees claim, start, and complete scheduled tasks.
+- In **الأدلة (Evidence)**, employees capture live camera photos, upload backup images, confirm checklists, or record metrics.
+
+### 6. Connect AI / LLM & Shadow Review
+- Navigate to **الإدارة -> الذكاء الاصطناعي (AI Control)**.
+- Choose your provider:
+  - **Local/Self-Hosted**: Connect to local Ollama or vLLM (`http://host.docker.internal:11434/v1` or local endpoint).
+  - **OpenAI / Compatible**: Provide endpoint and set `AI_PROVIDER_API_KEY` in environment.
+- Click **اختبار الاتصال (Test Connection)** to verify live connectivity and latency before enabling shadow review.
+
 ## Local Quality Checks
 
 Backend:

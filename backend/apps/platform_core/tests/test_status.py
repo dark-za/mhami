@@ -21,4 +21,4 @@ def test_system_status_endpoint_reports_metrics(make_user):
 
 def test_system_status_rejects_public_access():
     response = Client().get("/api/v1/status")
-    assert response.status_code == 403
+    assert response.status_code == 401

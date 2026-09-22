@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import type { Role } from "../../design-system/tokens";
-import { Panel } from "../../shell/ui";
+import { Panel, SkeletonBlock } from "../../shell/ui";
 import type {
   AICriterionSummary,
   AIShadowSummary,
@@ -56,6 +56,7 @@ export function ReviewsPage({ activeRole }: ReviewsPageProps) {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewMessage, setReviewMessage] = useState<string | null>(null);
   const [reviewLoading, setReviewLoading] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [criteria, setCriteria] = useState<AICriterionSummary[]>([]);
   const [shadowSummary, setShadowSummary] = useState<AIShadowSummary | null>(null);
   const [criteriaDraft, setCriteriaDraft] = useState(CRITERIA_DRAFT_DEFAULT);
@@ -112,6 +113,7 @@ export function ReviewsPage({ activeRole }: ReviewsPageProps) {
       .finally(() => {
         if (active) {
           setReviewLoading(null);
+          setInitialLoading(false);
         }
       });
     return () => {
@@ -202,6 +204,14 @@ export function ReviewsPage({ activeRole }: ReviewsPageProps) {
     } finally {
       setReviewLoading(null);
     }
+  }
+
+  if (initialLoading) {
+    return (
+      <Panel eyebrow={t("reviews.title")} title={t("reviews.workspace")}>
+        <SkeletonBlock rows={5} />
+      </Panel>
+    );
   }
 
   return (

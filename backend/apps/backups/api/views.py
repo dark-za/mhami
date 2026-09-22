@@ -124,22 +124,31 @@ class BackupDownloadView(TenantAPIView):
     required_roles = (CompanyRole.OWNER,)
 
     @extend_schema(responses={200: OpenApiResponse(description="Backup archive download.")})
+    @platform_service_call
     def get(self, request, backup_run_id):
         company = self.get_tenant().company
+        try:
+            backup_run = BackupRun.objects.get(id=backup_run_id, company=company)
+        except BackupRun.DoesNotExist:
+            raise PlatformAPIException("Backup run not found.")
         path = download_backup_artifact(company, backup_run_id)
-        if path is None:
+        if path is None or not path.exists():
             raise PlatformAPIException("Backup archive is unavailable.")
+        raw_bytes = path.read_bytes()
+        from ..services import _decrypt_artifact, _sha256
+        if backup_run.artifact_sha256 and _sha256(raw_bytes) != backup_run.artifact_sha256:
+            raise PlatformAPIException("Backup artifact integrity verification failed.")
         # Decrypt in-memory for encrypted artifacts to avoid persisting
         # plaintext on disk. The on-disk artefact stays encrypted.
         if path.suffix == ".enc":
-            from ..services import _decrypt_artifact
             try:
-                decrypted_bytes = _decrypt_artifact(path.read_bytes())
+                decrypted_bytes = _decrypt_artifact(raw_bytes)
             except Exception as exc:
                 raise PlatformAPIException("Backup artifact is corrupted or tampered.") from exc
             buffer = io.BytesIO(decrypted_bytes)
             filename = path.stem  # remove .enc suffix
         else:
-            buffer = open(path, "rb")
+            buffer = io.BytesIO(raw_bytes)
             filename = path.name
         return FileResponse(buffer, as_attachment=True, filename=filename)
+

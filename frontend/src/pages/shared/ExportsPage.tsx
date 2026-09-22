@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
-import { Panel } from "../../shell/ui";
+import { Panel, SkeletonBlock } from "../../shell/ui";
 import type { ExportPolicy, ExportRequestItem } from "../../domain";
 
 interface RequestsResponse {
@@ -33,6 +33,7 @@ export function ExportsPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [policyDraft, setPolicyDraft] = useState(POLICY_DRAFT_DEFAULT);
   const [requestDraft, setRequestDraft] = useState(REQUEST_DRAFT_DEFAULT);
 
@@ -43,20 +44,26 @@ export function ExportsPage() {
     ]);
     setPolicy(policyPayload);
     setPolicyDraft({
-      futureNotificationBoundaries: policyPayload.future_notification_boundaries.join(","),
-      externalStorageBoundaries: policyPayload.external_storage_boundaries.join(","),
-      providerReviewChecklist: policyPayload.provider_review_checklist.join(","),
+      futureNotificationBoundaries: (policyPayload.future_notification_boundaries ?? []).join(", "),
+      externalStorageBoundaries: (policyPayload.external_storage_boundaries ?? []).join(", "),
+      providerReviewChecklist: (policyPayload.provider_review_checklist ?? []).join(", "),
     });
     setRequests(requestsPayload.requests ?? []);
   }
 
   useEffect(() => {
     let active = true;
-    void refresh().catch((_error: unknown) => {
-      if (active) {
-        setExportError(t("operations.load_failed"));
-      }
-    });
+    void refresh()
+      .catch((_error: unknown) => {
+        if (active) {
+          setExportError(t("operations.load_failed"));
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setInitialLoading(false);
+        }
+      });
     return () => {
       active = false;
     };
@@ -119,6 +126,14 @@ export function ExportsPage() {
     } finally {
       setExportLoading(null);
     }
+  }
+
+  if (initialLoading) {
+    return (
+      <Panel eyebrow={t("operations.exports")} title={t("operations.exports_workspace")}>
+        <SkeletonBlock rows={5} />
+      </Panel>
+    );
   }
 
   return (
@@ -239,14 +254,16 @@ export function ExportsPage() {
               <bdi>{t(`operations.export_status.${request.status}`, { defaultValue: request.status })}</bdi> · {t("operations.expires")} <bdi>{request.expires_at}</bdi>
             </p>
             <small><bdi>{request.categories.join(", ") || t("operations.all_categories")}</bdi></small>
-            <div className="inline-actions">
-              <a
-                className="ghost-button"
-                href={`/api/v1/exports/download/${request.download_token}`}
-              >
-                {t("operations.download")}
-              </a>
-            </div>
+            {request.status === "completed" && request.download_token ? (
+              <div className="inline-actions">
+                <a
+                  className="ghost-button"
+                  href={`/api/v1/exports/download/${request.download_token}`}
+                >
+                  {t("operations.download")}
+                </a>
+              </div>
+            ) : null}
           </div>
         ))}
         {requests.length === 0 ? <p className="muted">{t("operations.no_exports")}</p> : null}

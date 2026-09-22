@@ -271,6 +271,75 @@ textarea:focus {
   font-weight: 700;
 }
 
+.notifications-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  width: 320px;
+  max-width: 90vw;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notifications-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--surface-border);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.notifications-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-popover-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 12px;
+}
+
+.notification-popover-item.unread {
+  border-inline-start: 3px solid #0b695e;
+  background: #f0fdf9;
+}
+
+.notification-popover-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notification-popover-body {
+  color: var(--text-muted);
+}
+
+.notification-popover-time {
+  font-size: 10.5px;
+  color: var(--text-quiet);
+  align-self: flex-end;
+}
+
 .workspace-layout {
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);

@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
-import { Panel } from "../../shell/ui";
+import { Panel, SkeletonBlock } from "../../shell/ui";
 import type { AIProviderConfig, ConnectorEnrollment } from "../../domain";
 
 interface ConnectorResponse {
@@ -34,6 +34,7 @@ export function AIControlPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [providerDraft, setProviderDraft] = useState(PROVIDER_DRAFT_DEFAULT);
   const [connectorDraft, setConnectorDraft] = useState(CONNECTOR_DRAFT_DEFAULT);
 
@@ -57,15 +58,47 @@ export function AIControlPage() {
 
   useEffect(() => {
     let active = true;
-    void refresh().catch((_error: unknown) => {
-      if (active) {
-        setAiError(t("ai_control.load_failed"));
-      }
-    });
+    void refresh()
+      .catch((_error: unknown) => {
+        if (active) {
+          setAiError(t("ai_control.load_failed"));
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setInitialLoading(false);
+        }
+      });
     return () => {
       active = false;
     };
   }, []);
+
+  async function pingProvider() {
+    setAiLoading("ping");
+    setAiError(null);
+    setAiMessage(null);
+    try {
+      const res = await api<{ status: string; latency_ms: number; message: string; provider: string }>(
+        "/api/v1/ai/provider/ping",
+        {
+          method: "POST",
+          body: {
+            provider_name: providerDraft.providerName,
+            endpoint_url: providerDraft.endpointUrl,
+            model_name: providerDraft.modelName,
+            enabled: providerDraft.enabled,
+          },
+        },
+      );
+      setAiMessage(`${res.message} (${res.latency_ms}ms)`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : t("ai_control.ping_failed");
+      setAiError(msg);
+    } finally {
+      setAiLoading(null);
+    }
+  }
 
   async function saveProvider(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,6 +162,14 @@ export function AIControlPage() {
     } finally {
       setAiLoading(null);
     }
+  }
+
+  if (initialLoading) {
+    return (
+      <Panel eyebrow={t("ai_control.eyebrow")} title={t("ai_control.title")}>
+        <SkeletonBlock rows={5} />
+      </Panel>
+    );
   }
 
   return (
@@ -219,9 +260,19 @@ export function AIControlPage() {
           />{" "}
           {t("ai_control.enabled")}
         </label>
-        <button className="primary-button" type="submit" disabled={aiLoading === "provider"}>
-          {t("ai_control.save_provider")}
-        </button>
+        <div className="inline-actions">
+          <button className="primary-button" type="submit" disabled={aiLoading === "provider"}>
+            {t("ai_control.save_provider")}
+          </button>
+          <button
+            className="ghost-button"
+            type="button"
+            disabled={Boolean(aiLoading)}
+            onClick={() => void pingProvider()}
+          >
+            {aiLoading === "ping" ? t("common.loading") : t("ai_control.test_connection")}
+          </button>
+        </div>
       </form>
       <form className="form-stack" onSubmit={saveConnector}>
         <div className="form-grid">

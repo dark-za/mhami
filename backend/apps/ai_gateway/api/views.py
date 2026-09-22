@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
 from apps.organizations.models import CompanyRole
-from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException
+from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException, platform_service_call
 from apps.platform_core.mixins import TenantAPIView
 from apps.tenancy.access import has_company_role, validate_company_reference, validate_company_reference_or_none
 
@@ -47,6 +47,37 @@ class ProviderConfigView(TenantAPIView):
         serializer.is_valid(raise_exception=True)
         config = upsert_provider_config(company, request.user, serializer.validated_data)
         return Response(AIProviderConfigSerializer(config).data)
+
+
+class ProviderPingView(TenantAPIView):
+    required_roles = (CompanyRole.OWNER,)
+
+    @extend_schema(responses={200: OpenApiResponse(description="AI provider connectivity check result.")})
+    @platform_service_call
+    def post(self, request):
+        company = self.get_tenant().company
+        _owner_or_400(company, request.user)
+        config = provider_config_for_company(company)
+        data = request.data or {}
+        if data.get("provider_name") or data.get("endpoint_url") or data.get("model_name"):
+            from ..models import AIProviderConfig
+            test_config = AIProviderConfig(
+                company=company,
+                provider_name=data.get("provider_name", config.provider_name),
+                endpoint_url=data.get("endpoint_url", config.endpoint_url),
+                model_name=data.get("model_name", config.model_name),
+                enabled=data.get("enabled", config.enabled),
+            )
+        else:
+            test_config = config
+
+        from ..providers import build_provider
+        try:
+            provider = build_provider(test_config)
+            result = provider.ping()
+        except ValueError as exc:
+            raise PlatformAPIException(str(exc)) from exc
+        return Response(result)
 
 
 class CriteriaView(TenantAPIView):
