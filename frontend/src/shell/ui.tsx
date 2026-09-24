@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-export function Badge({ tone, children }: { tone: string; children: string }) {
+export function Badge({ tone, children }: { tone: string; children: ReactNode }) {
   return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 

@@ -17,6 +17,7 @@ def compose_config(override):
         "AUDIT_HMAC_SECRET": "compose-validation-only-not-for-deployment",
         "DJANGO_ALLOWED_HOSTS": "example.invalid",
         "POSTGRES_PASSWORD": "compose-validation-only-not-for-deployment",
+        "REDIS_PASSWORD": "compose-validation-only-not-for-deployment",
         "METRICS_TOKEN": "compose-validation-only-not-for-deployment",
         "BACKUP_ENCRYPTION_KEY": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
     })

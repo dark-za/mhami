@@ -4,7 +4,7 @@ Standard response for production incidents. Applies to media storage failure, AI
 
 ## Common flow
 
-1. **Detect**: alert rule fires (see `infra/monitoring/alert-rules.yml`) or a user reports an issue.
+1. **Detect**: alert rule fires (see `infra/monitoring/prometheus/alerts/`) or a user reports an issue.
 2. **Triage**: confirm severity and organization impact; assign an owner.
 3. **Mitigate**: apply the relevant containment steps; do not bypass audit.
 4. **Restore**: return service and data to a known-good state (see `restore.md`).

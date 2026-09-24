@@ -1,4 +1,10 @@
-# INFRA-04: PostgreSQL alerts.
+# INFRA-04: PostgreSQL and Redis availability alerts.
+#
+# ``pg_*`` rules require a PostgreSQL exporter scraped as ``job="platform-postgres"``
+# (optional; not bundled by compose.monitoring.yml). They stay silent until
+# that exporter is deployed. Blackbox TCP probes and the API's own
+# ``platform_database_up`` / ``platform_redis_up`` metrics cover core
+# availability without an exporter.
 
 groups:
   - name: platform-database
@@ -12,6 +18,16 @@ groups:
         annotations:
           summary: Platform PostgreSQL is unreachable
           description: "Postgres on {{ $labels.target }} has not accepted a TCP connection for 2 minutes."
+
+      - alert: PlatformDatabaseHealthDegraded
+        expr: platform_database_up{job="platform-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: db
+        annotations:
+          summary: Platform database health check failed
+          description: The API cannot establish a database connection.
 
       - alert: PlatformPostgresConnectionsHigh
         expr: |
@@ -44,3 +60,25 @@ groups:
         annotations:
           summary: Long-running Postgres transaction detected
           description: "A transaction has been open for more than 10 minutes."
+
+  - name: platform-redis
+    rules:
+      - alert: PlatformRedisDown
+        expr: probe_success{job="platform", target="tcp://redis:6379"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: Platform Redis is unreachable
+          description: "Redis ({{ $labels.target }}) has not accepted a TCP connection for 2 minutes."
+
+      - alert: PlatformRedisHealthDegraded
+        expr: platform_redis_up{job="platform-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: Platform Redis health check failed
+          description: The API cannot reach the Redis broker.

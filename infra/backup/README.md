@@ -3,9 +3,9 @@
 Backup and recovery guidance for the platform.
 
 The authoritative backup/restore procedures live under
-`../docs/BACKUP_RESTORE.md` and `../docs/runbooks/restore.md` (application
-rollback vs. migration recovery is distinguished in `../docs/runbooks/rollback.md`
-and `../docs/runbooks/deployment.md`).
+`../../docs/runbooks/restore.md` (application rollback vs. migration recovery
+is distinguished in `../../docs/runbooks/rollback.md` and
+`../../docs/runbooks/deployment.md`).
 
 Backup/restore status is observable via the API system-status endpoint
 (`GET /api/v1/status`, `metrics.backups.*`).

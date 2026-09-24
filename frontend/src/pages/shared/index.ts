@@ -1,5 +1,6 @@
 /** Re-export workspace pages. */
 
+export { AgentAccessPage } from "./AgentAccessPage";
 export { AIControlPage } from "./AIControlPage";
 export { EvidencePage } from "./EvidencePage";
 export { ExportsPage } from "./ExportsPage";

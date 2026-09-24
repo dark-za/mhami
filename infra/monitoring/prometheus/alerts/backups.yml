@@ -1,27 +1,29 @@
-# INFRA-04: Backup freshness + external upload alerts.
+# INFRA-04: Backup freshness + media capacity alerts.
 #
-# The platform's own metric ``platform_backup_last_success_timestamp_seconds``
-# is emitted by ``/api/v1/metrics``; the external-upload equivalent is
-# recorded under ``platform_backup_external_last_success_timestamp_seconds``
-# so a remote-side outage cannot mask a local-side outage.
+# All rules use metrics emitted by the platform's own ``/api/v1/metrics``
+# endpoint (``platform_backup_*``, ``platform_media_*``).
 
 groups:
   - name: platform-backups
     rules:
       - alert: PlatformBackupStale
         expr: |
-          time() - platform_backup_last_success_timestamp_seconds{job="platform-api"} > 93600
+          platform_backup_last_success_timestamp_seconds{job="platform-api"} == 0
+          or (
+            time() - platform_backup_last_success_timestamp_seconds{job="platform-api"} > 93600
+          )
         for: 15m
         labels:
           severity: critical
           service: backups
         annotations:
           summary: Local backup is outside the RPO window
-          description: "No local backup has succeeded within 26 hours."
+          description: "No local backup has succeeded within 26 hours (or no backup has ever succeeded)."
 
       - alert: PlatformBackupFailure
         expr: |
-          platform_backup_last_failure_timestamp_seconds{job="platform-api"}
+          platform_backup_last_failure_timestamp_seconds{job="platform-api"} > 0
+          and platform_backup_last_failure_timestamp_seconds{job="platform-api"}
             > platform_backup_last_success_timestamp_seconds{job="platform-api"}
         for: 15m
         labels:
@@ -31,25 +33,19 @@ groups:
           summary: Latest backup attempt failed
           description: "The most recent backup attempt is newer than the last success."
 
-      - alert: PlatformBackupExternalStale
+  - name: platform-media
+    rules:
+      - alert: PlatformMediaDiskSpaceLow
         expr: |
-          time() - platform_backup_external_last_success_timestamp_seconds{job="platform-api"} > 129600
-        for: 30m
+          platform_media_disk_size_bytes{job="platform-api"} > 0
+          and (
+            platform_media_disk_free_bytes{job="platform-api"}
+            / platform_media_disk_size_bytes{job="platform-api"}
+          ) < 0.15
+        for: 10m
         labels:
           severity: warning
-          service: backups
+          service: media
         annotations:
-          summary: External backup mirror is outside the RPO window
-          description: "No external upload has succeeded within 36 hours."
-
-      - alert: PlatformBackupExternalFailure
-        expr: |
-          platform_backup_external_last_failure_timestamp_seconds{job="platform-api"}
-            > platform_backup_external_last_success_timestamp_seconds{job="platform-api"}
-        for: 30m
-        labels:
-          severity: warning
-          service: backups
-        annotations:
-          summary: Latest external backup upload failed
-          description: "The most recent external upload attempt is newer than the last success."
+          summary: Media disk space is low
+          description: Less than 15% of the media volume is available.

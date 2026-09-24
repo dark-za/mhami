@@ -19,13 +19,24 @@ latest successful and failed backup attempts. Scrape it as `job="platform-api"`
 with the `X-Metrics-Token` header. Keep that token in the production secret
 store and do not publish the endpoint through the public edge.
 
-## alert-rules.yml
+## Alert rules
 
-Prometheus/Alertmanager rules. The rules use Blackbox-exporter HTTP/TCP probes
-for API, PostgreSQL, and Redis, plus the API metrics endpoint for worker
-availability, queue backlog, media-disk capacity, and backup freshness/failure.
-The backup freshness alert allows a two-hour operational grace period over the
-24-hour RPO.
+Prometheus/Alertmanager rules live under `prometheus/alerts/` and are loaded
+by `prometheus/prometheus.yml` (via `compose.monitoring.yml`). They use
+Blackbox-exporter HTTP/TCP probes for API, PostgreSQL, and Redis, plus the API
+metrics endpoint for worker availability, queue backlog, media-disk capacity,
+and backup freshness/failure. The backup freshness alert allows a two-hour
+operational grace period over the 24-hour RPO.
+
+Bring the stack up with:
+
+```bash
+docker compose -f compose.yml -f compose.prod.yml \
+  -f infra/monitoring/compose.monitoring.yml --profile monitoring up -d
+```
+
+Place the metrics token at `infra/monitoring/prometheus/metrics_token` before
+starting Prometheus.
 
 ## Validation limits
 

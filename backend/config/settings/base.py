@@ -276,6 +276,7 @@ PLATFORM_MODULES = [
     "exports",
     "backups",
     "notifications",
+    "compliance",
 ]
 
 

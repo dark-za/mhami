@@ -43,8 +43,9 @@ x-backend-defaults: &backend_defaults
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
     POSTGRES_HOST: ${POSTGRES_HOST:-db}
     POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-    REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-    CACHE_URL: ${CACHE_URL:-redis://redis:6379/2}
+    REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD:-}@redis:6379/0}
+    CACHE_URL: ${CACHE_URL:-redis://:${REDIS_PASSWORD:-}@redis:6379/2}
+    CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://:${REDIS_PASSWORD:-}@redis:6379/1}
 
 services:
   db:
@@ -79,11 +80,13 @@ services:
     pids_limit: 100
     mem_limit: 512m
     restart: unless-stopped
-    command: ["redis-server", "--save", "", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    command: ["sh", "-c", "exec redis-server --save '' --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
       interval: 5s
       timeout: 3s
       retries: 20

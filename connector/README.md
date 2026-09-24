@@ -15,7 +15,7 @@ The connector is a small FastAPI service that runs inside a self-hosted organiza
 ```bash
 cp connector/config/example.env connector/config/local.env
 docker build -t mhami-connector ./connector
-docker run --env-file connector/config/local.env -p 8088:8088 mhami-connector
+docker run --env-file connector/config/local.env -p 8080:8080 mhami-connector
 ```
 
 ## Test Suite
