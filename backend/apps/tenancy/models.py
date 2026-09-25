@@ -88,4 +88,22 @@ class LegalAcceptance(models.Model):
         installed yet (e.g. fresh migration) by relying on a tolerant
         import.
         """
+        if self._state.adding and not (self.metadata or {}).get("historical_import"):
+            try:
+                from apps.compliance.acceptance import LEGAL_TYPE_TO_KIND
+                from apps.compliance.models import LegalDocumentKind
+                from apps.compliance.services import current_legal_document
+            except ImportError:
+                # Compliance app unavailable (fresh migration): skip.
+                pass
+            else:
+                kind_value = LEGAL_TYPE_TO_KIND.get(self.document_type)
+                if kind_value is not None:
+                    document = current_legal_document(LegalDocumentKind(kind_value))
+                    if document is not None and document.version != self.document_version:
+                        raise ValueError(
+                            f"Cannot accept version {self.document_version!r} for document "
+                            f"type {self.document_type!r}; the currently published version "
+                            f"is {document.version!r}."
+                        )
         super().save(*args, **kwargs)

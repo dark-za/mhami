@@ -98,33 +98,28 @@ def _csv_bytes(rows: list[dict[str, Any]]) -> bytes:
 
 
 def _pdf_bytes(title: str, lines: list[str]) -> bytes:
-    text = [f"BT /F1 12 Tf 50 760 Td ({title}) Tj"]
-    y = 740
+    """Render a one-page PDF, shaping Arabic text so glyphs connect correctly."""
+    from arabic_reshaper import reshape
+    from bidi.algorithm import get_display
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfgen import canvas
+
+    font_path = Path(__file__).resolve().parent / "assets" / "fonts" / "Amiri-Regular.ttf"
+    pdfmetrics.registerFont(TTFont("Amiri", str(font_path)))
+
+    buffer = io.BytesIO()
+    doc = canvas.Canvas(buffer, pagesize=A4)
+    doc.setFont("Amiri", 14)
+    doc.drawString(50, 790, get_display(reshape(title)))
+    doc.setFont("Amiri", 11)
+    y = 770
     for line in lines:
-        safe = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-        text.append(f"1 0 0 1 50 {y} Tm ({safe}) Tj")
+        doc.drawString(50, y, get_display(reshape(line)))
         y -= 16
-    text.append("ET")
-    stream = "\n".join(text).encode("latin-1", errors="ignore")
-    objects = []
-    objects.append(b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj")
-    objects.append(b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj")
-    objects.append(b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj")
-    objects.append(b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj")
-    objects.append(f"5 0 obj << /Length {len(stream)} >> stream\n".encode("ascii") + stream + b"\nendstream endobj")
-    offsets = [0]
-    body = b""
-    for obj in objects:
-        offsets.append(len(body))
-        body += obj + b"\n"
-    xref_offset = len(b"%PDF-1.4\n" + body)
-    xref = [b"xref\n0 6\n0000000000 65535 f "]
-    current = len(b"%PDF-1.4\n")
-    for obj in objects:
-        xref.append(f"{current:010d} 00000 n ".encode("ascii"))
-        current += len(obj) + 1
-    trailer = b"trailer << /Size 6 /Root 1 0 R >>\nstartxref\n" + str(xref_offset).encode("ascii") + b"\n%%EOF"
-    return b"%PDF-1.4\n" + body + b"".join(line + b"\n" for line in xref) + trailer
+    doc.save()
+    return buffer.getvalue()
 
 
 def _artifact_bytes(

@@ -163,6 +163,13 @@ class TaskInstance(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["schedule", "scheduled_for"], name="tasks_instance_schedule_unique"),
         ]
+        # Composite indexes for the periodic scheduler/overdue scans and
+        # the dashboard/queue filters (company|branch, status, due_at).
+        indexes = [
+            models.Index(fields=["company", "status", "due_at"], name="tasks_inst_co_stat_due_idx"),
+            models.Index(fields=["schedule", "status"], name="tasks_inst_sched_stat_idx"),
+            models.Index(fields=["branch", "status", "due_at"], name="tasks_inst_br_stat_due_idx"),
+        ]
 
 
 class TaskTransferRequest(models.Model):

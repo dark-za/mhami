@@ -188,6 +188,11 @@ REST_FRAMEWORK: dict[str, object] = {
     # default to AllowAny. Views intentionally open to the public
     # (LoginView, RegisterView, McpEndpointView) override this explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    # Unbounded list responses are capped at 50 rows per page. Endpoints
+    # with keyed envelopes paginate through apps.platform_core.pagination
+    # while keeping their response shape.
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
 }
 
 CACHES = {

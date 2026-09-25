@@ -273,3 +273,66 @@ def test_quarantine_and_partial_derivative_are_removed_on_processing_failure(
     assert not list((tmp_path / "evidence" / "quarantine").iterdir())
     private_dir = tmp_path / "evidence" / "private"
     assert not private_dir.exists() or not list(private_dir.iterdir())
+
+
+def test_challenge_wrong_answer_is_rejected_and_correct_answer_accepted(
+    tmp_path, settings,
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+):
+    owner, _company, _branch, instance = _base_context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        branch_code="challenge",
+    )
+    settings.MEDIA_ROOT = tmp_path
+    session = evidence_services.create_capture_session(instance, owner, "image")
+    session.challenge_text = "Say the task code aloud."
+    session.challenge_answer = "42"
+    session.save(update_fields=["challenge_text", "challenge_answer", "updated_at"])
+
+    with pytest.raises(ValueError, match="Challenge response required"):
+        evidence_services.submit_evidence(
+            session_token=session.token,
+            user=owner,
+            upload=_image_upload(name="photo.png"),
+            challenge_response="41",
+        )
+
+    item = evidence_services.submit_evidence(
+        session_token=session.token,
+        user=owner,
+        upload=_image_upload(name="photo.png"),
+        challenge_response="42",
+    )
+    assert item.sequence_number == 1
+
+
+def test_sequence_numbers_are_unique_per_task_instance(
+    tmp_path, settings,
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+):
+    """Concurrent-safe sequencing: sequential submits increment the counter."""
+    owner, _company, _branch, instance = _base_context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        branch_code="seq",
+    )
+    settings.MEDIA_ROOT = tmp_path
+
+    first_session = evidence_services.create_capture_session(instance, owner, "image")
+    first = evidence_services.submit_evidence(
+        session_token=first_session.token,
+        user=owner,
+        upload=_image_upload(color="red", name="one.png"),
+    )
+    second_session = evidence_services.create_capture_session(instance, owner, "image")
+    second = evidence_services.submit_evidence(
+        session_token=second_session.token,
+        user=owner,
+        upload=_image_upload(color="blue", name="two.png"),
+    )
+    assert first.sequence_number == 1
+    assert second.sequence_number == 2
+    assert first.task_instance_id == second.task_instance_id

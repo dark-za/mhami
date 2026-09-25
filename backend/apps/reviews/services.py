@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.audit.services import record_audit_event
@@ -108,19 +109,39 @@ def dashboard_summary(company: Company, user: User, period: str = "day") -> dict
             active=True,
         ).filter(active_membership_q()).values_list("user_id", flat=True)
         memberships = memberships.filter(user_id__in=scoped_user_ids)
+    # Single aggregated query per relation instead of 6 queries per
+    # branch (N+1): one grouped pass over tasks, one over evidence.
+    branch_task_metrics = {
+        row["branch_id"]: row
+        for row in tasks.values("branch_id").annotate(
+            completed_today=Count("id", filter=Q(completed_at__gte=start_of_day)),
+            completed_in_period=Count("id", filter=Q(completed_at__gte=start)),
+            pending=Count("id", filter=Q(status=TaskStatus.PENDING)),
+            overdue=Count("id", filter=Q(status=TaskStatus.OVERDUE)),
+            cancelled=Count("id", filter=Q(status=TaskStatus.CANCELLED)),
+        )
+    }
+    branch_exception_counts = {
+        row["branch_id"]: row["total"]
+        for row in EvidenceItem.objects.filter(
+            branch_id__in=branch_ids, status=EvidenceStatus.NEEDS_REVIEW
+        )
+        .values("branch_id")
+        .annotate(total=Count("id"))
+    }
     branch_summaries = []
     for branch in branches:
-        branch_tasks = tasks.filter(branch=branch)
+        metrics = branch_task_metrics.get(branch.id, {})
         branch_summaries.append(
             {
                 "branch_id": str(branch.id),
                 "branch_name": branch.name,
-                "completed_today": branch_tasks.filter(completed_at__gte=start_of_day).count(),
-                "completed_in_period": branch_tasks.filter(completed_at__gte=start).count(),
-                "pending": branch_tasks.filter(status=TaskStatus.PENDING).count(),
-                "overdue": branch_tasks.filter(status=TaskStatus.OVERDUE).count(),
-                "cancelled": branch_tasks.filter(status=TaskStatus.CANCELLED).count(),
-                "quality_exceptions": EvidenceItem.objects.filter(branch=branch, status=EvidenceStatus.NEEDS_REVIEW).count(),
+                "completed_today": metrics.get("completed_today", 0),
+                "completed_in_period": metrics.get("completed_in_period", 0),
+                "pending": metrics.get("pending", 0),
+                "overdue": metrics.get("overdue", 0),
+                "cancelled": metrics.get("cancelled", 0),
+                "quality_exceptions": branch_exception_counts.get(branch.id, 0),
             }
         )
     completed_today = tasks.filter(completed_at__gte=start_of_day).count()

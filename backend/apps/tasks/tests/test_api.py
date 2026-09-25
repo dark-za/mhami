@@ -309,8 +309,12 @@ def test_task_instances_are_limited_to_the_active_branch(
 
     response = client.get("/api/v1/tasks/instances")
     assert response.status_code == 200
-    instances = response.json()["instances"]
+    body = response.json()
+    instances = body["instances"]
     assert len(instances) == 1
+    assert body["page"] == 1
+    assert body["pages"] == 1
+    assert body["total"] == 1
     assert instances[0]["branch"] == str(branch_one.id)
     assert instances[0]["name"] == "clean-a emp"
     assert instances[0]["branch_name"] == "Main"

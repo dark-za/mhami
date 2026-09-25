@@ -218,3 +218,47 @@ def test_provider_ping_fake_succeeds(
     assert payload["provider"] == "fake"
     assert "latency_ms" in payload
 
+
+def test_provider_ping_rejects_non_allowlisted_endpoint(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+    make_capture_session, make_evidence_item, force_login_company,
+):
+    """The view layer refuses non-allowlisted endpoint_url overrides (SSRF)."""
+    owner, _monitor, company, _evidence = _context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        make_capture_session, make_evidence_item,
+    )
+    client = force_login_company(owner, company)
+    response = client.post(
+        "/api/v1/ai/provider/ping",
+        data={"endpoint_url": "http://169.254.169.254/latest/meta-data/"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert "allowed list" in response.json()["error"]["message"]
+
+
+def test_provider_ping_allows_allowlisted_endpoint(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+    make_capture_session, make_evidence_item, force_login_company,
+    settings,
+):
+    """An allowlisted endpoint_url override passes the view-layer check."""
+    owner, _monitor, company, _evidence = _context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        make_capture_session, make_evidence_item,
+    )
+    settings.AI_PROVIDER_ALLOWED_ENDPOINTS = ["api.openai.com"]
+    client = force_login_company(owner, company)
+    response = client.post(
+        "/api/v1/ai/provider/ping",
+        data={"endpoint_url": "https://api.openai.com/v1"},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+

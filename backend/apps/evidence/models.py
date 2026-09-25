@@ -108,7 +108,6 @@ class EvidenceItem(models.Model):
     face_detector_confidence = models.PositiveSmallIntegerField(default=0)
     face_detector_raw_score = models.JSONField(default=dict)
     privacy_metadata = models.JSONField(default=dict)
-    challenge_response = models.CharField(max_length=255, blank=True)
     metadata = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

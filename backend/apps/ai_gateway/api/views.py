@@ -59,6 +59,19 @@ class ProviderPingView(TenantAPIView):
         _owner_or_400(company, request.user)
         config = provider_config_for_company(company)
         data = request.data or {}
+        custom_endpoint = data.get("endpoint_url")
+        if custom_endpoint:
+            # Defense in depth: the provider layer already refuses
+            # non-allowlisted endpoints (H-03), but the check is repeated
+            # here so a rejected URL never reaches provider construction
+            # or any code path added later.
+            from django.conf import settings as django_settings
+
+            from ..providers import _is_allowed_endpoint
+
+            allowlist = list(getattr(django_settings, "AI_PROVIDER_ALLOWED_ENDPOINTS", []) or [])
+            if not _is_allowed_endpoint(custom_endpoint, allowlist):
+                raise PlatformAPIException("AI provider endpoint is not in the allowed list.")
         if data.get("provider_name") or data.get("endpoint_url") or data.get("model_name"):
             from ..models import AIProviderConfig
             test_config = AIProviderConfig(

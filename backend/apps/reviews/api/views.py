@@ -8,6 +8,7 @@ from apps.audit.services import record_audit_event
 from apps.evidence.models import EvidenceItem, TaskIssueReport
 from apps.platform_core.errors import platform_service_call, PlatformAPIException
 from apps.platform_core.mixins import TenantAPIView
+from apps.platform_core.pagination import paginate_sequence
 from apps.tasks.models import TaskInstance
 from apps.tenancy.access import validate_company_reference_or_none
 
@@ -37,7 +38,9 @@ class ReviewQueueView(TenantAPIView):
     @platform_service_call
     def get(self, request):
         company = self.get_tenant().company
-        return Response({"items": review_queue(company, request.user)})
+        items = review_queue(company, request.user)
+        page_items, page_stats = paginate_sequence(items, request)
+        return Response({"items": page_items, **page_stats})
 
 
 class ReviewPolicyView(TenantAPIView):

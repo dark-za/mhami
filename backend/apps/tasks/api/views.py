@@ -11,6 +11,7 @@ from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_seriali
 from apps.organizations.models import Branch, CompanyMembership, CompanyRole, UserBranchMembership
 from apps.platform_core.errors import platform_service_call, PlatformAPIException, PlatformPermissionException
 from apps.platform_core.mixins import TenantAPIView
+from apps.platform_core.pagination import paginate_sequence
 from apps.tenancy.access import active_membership_q, require_company_user, validate_company_reference
 from apps.tenancy.services import ensure_company_operational
 
@@ -320,19 +321,23 @@ class TaskInstancesView(TenantAPIView):
         context = self.get_tenant()
         if context.role == CompanyRole.EMPLOYEE:
             if not context.branch_ids:
-                instances = TaskInstance.objects.none().select_related("template", "branch", "assigned_user")
-                return Response({"instances": TaskInstanceSerializer(instances, many=True).data})
-            queryset = TaskInstance.objects.filter(
-                company=context.company,
-                branch_id__in=context.branch_ids,
-                assigned_user=request.user,
-            )
+                queryset = TaskInstance.objects.none()
+            else:
+                queryset = TaskInstance.objects.filter(
+                    company=context.company,
+                    branch_id__in=context.branch_ids,
+                    assigned_user=request.user,
+                )
         else:
             queryset = TaskInstance.objects.for_company_and_branches(
                 context.company, context.branch_ids,
             )
-        instances = queryset.select_related("template", "branch", "assigned_user")
-        return Response({"instances": TaskInstanceSerializer(instances, many=True).data})
+        instances = queryset.select_related("template", "branch", "assigned_user").order_by("created_at", "id")
+        page_items, page_stats = paginate_sequence(instances, request)
+        return Response({
+            "instances": TaskInstanceSerializer(page_items, many=True).data,
+            **page_stats,
+        })
 
 
 class TaskClaimView(TenantAPIView):

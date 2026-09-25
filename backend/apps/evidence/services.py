@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import io
 import secrets
 import warnings
@@ -233,19 +234,37 @@ def _validate_upload(upload: UploadedFile) -> tuple[bytes, str]:
     return data, mime_type
 
 
+RECENT_DUPLICATE_CHECK_LIMIT = 200
+
+
 def _duplicate_score(branch: Branch, derivative_hash_value: str) -> int:
     if not derivative_hash_value:
         return 0
-    current = imagehash.hex_to_hash(derivative_hash_value)
+    try:
+        current = imagehash.hex_to_hash(derivative_hash_value)
+    except Exception:
+        return 0
+    # Only the most recent hashes are compared (bounded window) and only
+    # the hash column is fetched, so the whole branch history is never
+    # materialised in memory.
+    recent_hashes = (
+        EvidenceItem.objects.filter(branch=branch, derivative_hash__isnull=False)
+        .exclude(derivative_hash="")
+        .order_by("-created_at")
+        .values_list("derivative_hash", flat=True)[:RECENT_DUPLICATE_CHECK_LIMIT]
+    )
     best = 0
-    for existing in EvidenceItem.objects.filter(branch=branch, derivative_hash__isnull=False).exclude(derivative_hash=""):
+    for hash_str in recent_hashes:
         try:
-            other = imagehash.hex_to_hash(existing.derivative_hash)
+            other = imagehash.hex_to_hash(hash_str)
         except Exception:
             continue
         distance = current - other
         score = max(0, 100 - distance * 12)
-        best = max(best, score)
+        if score > best:
+            best = score
+        if best >= 100:
+            break
     return best
 
 
@@ -276,8 +295,17 @@ def submit_evidence(
         raise ValueError("Capture session expired.")
     if session.created_by_id != user.id:
         raise ValueError("Capture session cannot be reused by another user.")
-    if session.challenge_text and challenge_response.strip() != session.challenge_answer.strip():
-        raise ValueError("Challenge response required.")
+    if session.challenge_text:
+        # Constant-time comparison so a timing oracle cannot be used to
+        # guess the expected challenge answer byte by byte.
+        supplied = (challenge_response or "").strip().encode()
+        expected = (session.challenge_answer or "").strip().encode()
+        if not hmac.compare_digest(supplied, expected):
+            raise ValueError("Challenge response required.")
+    # Lock the task instance for the remainder of the transaction so two
+    # concurrent submissions for the same task cannot compute the same
+    # sequence number and trip the unique constraint.
+    task_instance = TaskInstance.objects.select_for_update().get(pk=session.task_instance_id)
 
     evidence_type = session.evidence_type
     quarantine_name = ""
@@ -336,11 +364,11 @@ def submit_evidence(
         item = EvidenceItem.objects.create(
             company=session.company,
             branch=session.branch,
-            task_instance=session.task_instance,
+            task_instance=task_instance,
             capture_session=session,
             submitted_by=user,
             evidence_type=evidence_type,
-            sequence_number=_next_sequence(session.task_instance),
+            sequence_number=_next_sequence(task_instance),
             note_text=note_text,
             number_value=number_value,
             confirmation_value=confirmation_value,

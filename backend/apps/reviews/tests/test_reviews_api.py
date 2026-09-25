@@ -70,6 +70,9 @@ def test_review_queue_is_branch_scoped(
     assert response.status_code == 200
     assert len(response.json()["items"]) == 1
     assert all(item["branch_id"] == str(branch_one.id) for item in response.json()["items"])
+    assert response.json()["page"] == 1
+    assert response.json()["pages"] == 1
+    assert response.json()["total"] == 1
 
 
 def test_review_policy_round_trip_and_decision_history(
