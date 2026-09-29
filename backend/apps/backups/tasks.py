@@ -22,8 +22,10 @@ from .services import backup_storage_root, complete_backup_run, create_backup_ru
 logger = logging.getLogger(__name__)
 
 
-@shared_task(name="apps.backups.run_backup_run")
+@shared_task(name="apps.backups.run_backup_run", bind=True, max_retries=3, default_retry_delay=60)
 def run_backup_run(
+    self,
+
     backup_run_id: str,
     include_private_media: bool = True,
     include_configuration: bool = True,
@@ -41,7 +43,7 @@ def run_backup_run(
         backup_run.status = BackupStatus.FAILED
         backup_run.error_message = str(exc)
         backup_run.save(update_fields=["status", "error_message"])
-        raise
+        raise self.retry(exc=exc)
     # INFRA-03: mirror the local artefact to the external storage
     # destination. Failures are recorded on the run so an operator can
     # triage, but they do not invalidate the on-disk copy.
@@ -50,8 +52,8 @@ def run_backup_run(
     return str(backup_run.id)
 
 
-@shared_task(name="apps.backups.run_external_upload")
-def run_external_upload(backup_run_id: str) -> str:
+@shared_task(name="apps.backups.run_external_upload", bind=True, max_retries=3, default_retry_delay=60)
+def run_external_upload(self, backup_run_id: str) -> str:
     """INFRA-03: upload a completed backup to ``BACKUP_EXTERNAL_URI``.
 
     The task reads the encrypted Fernet artefact, re-wraps it under
@@ -83,15 +85,15 @@ def run_external_upload(backup_run_id: str) -> str:
     except ExternalStorageConfigurationError as exc:
         backup_run.error_message = f"External storage misconfigured: {exc}"
         backup_run.save(update_fields=["error_message"])
-        raise
+        raise self.retry(exc=exc)
     except ExternalStorageUnavailable as exc:
         backup_run.error_message = f"External storage unavailable: {exc}"
         backup_run.save(update_fields=["error_message"])
-        raise
+        raise self.retry(exc=exc)
     except ExternalStorageIntegrityError as exc:
         backup_run.error_message = f"External storage integrity failure: {exc}"
         backup_run.save(update_fields=["error_message"])
-        raise
+        raise self.retry(exc=exc)
     else:
         manifest = dict(backup_run.manifest or {})
         manifest["external_upload"] = {
@@ -114,8 +116,8 @@ def run_external_upload(backup_run_id: str) -> str:
     return str(backup_run.id)
 
 
-@shared_task(name="apps.backups.create_daily_backups")
-def create_daily_backups() -> int:
+@shared_task(name="apps.backups.create_daily_backups", bind=True, max_retries=3, default_retry_delay=60)
+def create_daily_backups(self, ) -> int:
     created = 0
     for company in Company.objects.exclude(owner__isnull=True).select_related("owner"):
         create_backup_run(company, company.owner)

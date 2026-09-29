@@ -9,12 +9,12 @@ services:
 
   redis:
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:6380:6379"
 
   api:
     command: ["sh", "-c", "python manage.py migrate --noinput && exec python manage.py runserver 0.0.0.0:8000"]
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8001:8000"
     # Dev only: relax the read-only filesystem so runserver can write
     # bytecode / migration state, and allow the bind-mount to be writable.
     read_only: false
@@ -23,7 +23,8 @@ services:
     environment:
       DJANGO_DEBUG: "true"
       DJANGO_SETTINGS_MODULE: config.settings.dev
-      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api,192.168.8.3
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://192.168.8.3:5173
 
   worker:
     read_only: false
@@ -51,7 +52,7 @@ services:
       HOME: /tmp
       XDG_CACHE_HOME: /tmp/.cache
     ports:
-      - "127.0.0.1:5173:5173"
+      - "5173:5173"
     read_only: false
     volumes:
       - ./frontend:/app/frontend

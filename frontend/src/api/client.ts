@@ -141,3 +141,12 @@ export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
   }
   return (await response.json()) as T;
 }
+
+
+if (typeof window !== "undefined") {
+  window.addEventListener("unhandledrejection", (event) => {
+    if (event.reason instanceof ApiError) {
+      event.preventDefault(); // Do not leak ApiError to the browser console
+    }
+  });
+}

@@ -332,7 +332,7 @@ class TaskInstancesView(TenantAPIView):
             queryset = TaskInstance.objects.for_company_and_branches(
                 context.company, context.branch_ids,
             )
-        instances = queryset.select_related("template", "branch", "assigned_user").order_by("created_at", "id")
+        instances = queryset.select_related("template", "branch", "assigned_user", "template_version").order_by("created_at", "id")
         page_items, page_stats = paginate_sequence(instances, request)
         return Response({
             "instances": TaskInstanceSerializer(page_items, many=True).data,
@@ -453,6 +453,7 @@ class TaskTransfersView(TenantAPIView):
             )
             if target_membership is None or target_membership.role != CompanyRole.EMPLOYEE:
                 raise PlatformPermissionException("Transfer target must be an active employee in the same organization.")
+        require_company_user(context, target_id)
         requested_to = get_user_model().objects.get(id=target_id)
         transfer = request_transfer(str(instance.id), request.user, requested_to, serializer.validated_data.get("reason", ""))
         return Response(TaskTransferRequestSerializer(transfer).data, status=201)
@@ -627,6 +628,7 @@ class TaskRequestsView(TenantAPIView):
             ).filter(active_membership_q()).exists()
             if target_membership is None or not target_in_branch:
                 raise PlatformPermissionException("Transfer target must be an active employee in the same branch.")
+            require_company_user(context, target_id)
             requested_to = get_user_model().objects.get(id=target_id)
         elif target_id is not None:
             raise PlatformAPIException("Only transfer requests may name a receiving employee.")

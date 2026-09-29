@@ -336,3 +336,34 @@ def test_sequence_numbers_are_unique_per_task_instance(
     assert first.sequence_number == 1
     assert second.sequence_number == 2
     assert first.task_instance_id == second.task_instance_id
+
+def test_reject_executable_uploads(
+    make_user, make_company, make_membership, make_branch,
+    make_template, make_template_version, make_schedule,
+):
+    """Ensure PHP/HTML files are rejected even if renamed."""
+    owner, _company, _branch, instance = _base_context(
+        make_user, make_company, make_membership, make_branch,
+        make_template, make_template_version, make_schedule,
+        branch_code="executable",
+    )
+    session = evidence_services.create_capture_session(instance, owner, "image")
+
+    php_content = b"<?php echo 'hello'; ?>"
+    f = SimpleUploadedFile("test.php", php_content, content_type="application/x-httpd-php")
+    with pytest.raises(ValueError):
+        evidence_services.submit_evidence(
+            session_token=session.token,
+            user=owner,
+            upload=f,
+        )
+
+    session2 = evidence_services.create_capture_session(instance, owner, "image")
+    html_content = b"<html><body>test</body></html>"
+    f2 = SimpleUploadedFile("test.png", html_content, content_type="image/png")
+    with pytest.raises(ValueError):
+        evidence_services.submit_evidence(
+            session_token=session2.token,
+            user=owner,
+            upload=f2,
+        )

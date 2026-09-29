@@ -160,7 +160,7 @@ export function AppShell(props: AppShellProps) {
                     ))}
                   </ul>
                 ) : (
-                  <p className="empty-quiet" style={{ margin: "12px 0", textAlign: "center", fontSize: "12px" }}>
+                  <p className="empty-quiet">
                     {t("shell.no_notifications", { defaultValue: locale === "ar" ? "لا توجد إشعارات جديدة" : "No new notifications" })}
                   </p>
                 )}

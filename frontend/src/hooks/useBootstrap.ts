@@ -62,13 +62,14 @@ export function useBootstrap() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     let active = true;
     let recheckPending = false;
 
-    const load = () => {
+    const load = (signal?: AbortSignal) => {
       const requestRevision = ++revision.current;
       const isCurrent = () => active && requestRevision === revision.current;
-      return fetchBootstrap()
+      return fetchBootstrap(signal)
         .then((response) => {
           if (!isCurrent()) return;
           commitState(mergeBootstrap(response));
@@ -84,7 +85,7 @@ export function useBootstrap() {
         });
     };
 
-    void load();
+    void load(controller.signal);
 
     const hydrateFromEvent = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail : null;
@@ -95,7 +96,7 @@ export function useBootstrap() {
         setLoading(false);
       } else {
         setLoading(true);
-        void load();
+        void load(controller.signal);
       }
     };
     const recheckSession = (hideWorkspace: boolean) => {
@@ -122,6 +123,7 @@ export function useBootstrap() {
 
     return () => {
       active = false;
+      controller.abort();
       window.removeEventListener("mhami.bootstrap.refreshed", hydrateFromEvent);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SESSION_RECHECK_EVENT, onSessionRejected);

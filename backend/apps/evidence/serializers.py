@@ -22,6 +22,10 @@ class CaptureSessionSerializer(serializers.ModelSerializer):
             "expires_at",
             "used_at",
         ]
+        read_only_fields = [
+            "id", "company", "branch", "task_instance", "template_version",
+            "created_by", "token", "status", "expires_at", "used_at"
+        ]
 
 
 class CaptureSessionCreateSerializer(serializers.Serializer):

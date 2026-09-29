@@ -46,6 +46,8 @@ class ExportRequestListView(TenantAPIView):
 
 class ExportRequestView(TenantAPIView):
     required_roles = (CompanyRole.OWNER,)
+    from rest_framework.throttling import UserRateThrottle
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(request=ExportRequestCreateSerializer, responses={201: ExportRequestSerializer})
     @platform_service_call

@@ -17,13 +17,13 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ login_id: "", password: "" });
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await api("/api/v1/auth/login", { method: "POST", body: form });
       broadcastSessionChange();
@@ -35,7 +35,7 @@ export function LoginPage() {
       // details would help account enumeration and breaks the active locale.
       setError(t("auth.login_failed"));
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -87,8 +87,8 @@ export function LoginPage() {
             </span>
           </div>
           {error ? <p className="error" role="alert">{error}</p> : null}
-          <button className="primary-button login-submit" type="submit" disabled={loading}>
-            {loading ? t("common.loading") : t("common.login")}
+          <button className="primary-button login-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? t("common.loading") : t("common.login")}
           </button>
         </form>
         <p className="login-security-note"><ShieldCheck size={16} aria-hidden="true" /> {t("auth.login_security")}</p>

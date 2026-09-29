@@ -7,6 +7,8 @@ from apps.organizations.models import CompanyRole
 from apps.platform_core.errors import PlatformAPIException
 from apps.platform_core.mixins import TenantAPIView
 
+from apps.tenancy.access import validate_company_reference
+
 from ..models import Notification
 from ..serializers import NotificationMarkReadSerializer, NotificationSerializer
 from ..services import mark_notification_read, mark_notifications_read
@@ -33,10 +35,7 @@ class NotificationReadView(TenantAPIView):
     @extend_schema(request=None, responses={200: NotificationSerializer}, operation_id="notifications_mark_read")
     def post(self, request, notification_id):
         company = self.get_tenant().company
-        try:
-            notification = Notification.objects.get(id=notification_id, company=company, user=request.user)
-        except Notification.DoesNotExist as exc:
-            raise PlatformAPIException("Notification not found.") from exc
+        notification = validate_company_reference(company, Notification, notification_id, extra_filters={"user": request.user})
         return Response(NotificationSerializer(mark_notification_read(notification, actor=request.user)).data)
 
 

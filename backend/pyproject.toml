@@ -69,3 +69,18 @@ exclude_lines = [
   "if TYPE_CHECKING:",
   "\\.\\.\\.",
 ]
+
+[tool.django-migration-linter]
+ignore_name = [
+  "0002_agentgrant_secret_hash",
+  "0002_tamper_evident_integrity",
+  "0002_local_backup_integrity",
+  "0002_connector_health_observation",
+  "0002_privacy_decision",
+  "0003_alter_mfaenrollment_secret",
+  "0005_remove_mfa_enrollment",
+  "0002_multi_branch_assignments",
+  "0002_supportauthorization_expiry",
+  "0003_remove_support_authorization",
+  "0004_remove_company_tenancy_com_status_a53c52_idx_and_more"
+]

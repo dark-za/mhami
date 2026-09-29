@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from collections.abc import Callable, Mapping
 from functools import wraps
 from typing import Any, TypeVar
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.db.utils import IntegrityError
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
@@ -64,9 +67,26 @@ def format_error_payload(code: str, message: str) -> dict[str, Mapping[str, str]
 
 def platform_exception_handler(exc: Exception, context: dict[str, object]) -> Response | None:
     response = drf_exception_handler(exc, context)
+    
+    if isinstance(exc, IntegrityError):
+        logger.error("Database integrity error", exc_info=exc, extra={"request_id": get_request_id()})
+        return Response(
+            format_error_payload("PLATFORM-409", "Data integrity conflict."),
+            status=409
+        )
+        
     if response is None:
-        return None
+        logger.error("Unhandled API exception", exc_info=exc, extra={"request_id": get_request_id()})
+        message = "Internal Server Error"
+        if getattr(settings, 'DEBUG', False):
+            message = str(exc) + "\n" + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        return Response(
+            format_error_payload("PLATFORM-001", message),
+            status=500
+        )
+
     code = "CORE-ERROR-001"
+
     message = "This action cannot be performed."
 
     # Return 401 instead of 403 for unauthenticated access

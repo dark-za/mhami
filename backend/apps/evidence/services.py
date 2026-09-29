@@ -81,16 +81,12 @@ def _sha256(data: bytes) -> str:
 
 
 def _detect_mime(data: bytes, file_name: str) -> str:
-    if magic_module is not None:
-        try:
-            return magic_module.from_buffer(data, mime=True)
-        except Exception:
-            pass
-    suffix = Path(file_name).suffix.lower()
-    return {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}.get(
-        suffix,
-        "application/octet-stream",
-    )
+    if magic_module is None:
+        raise RuntimeError("python-magic is required for secure file upload validation.")
+    try:
+        return magic_module.from_buffer(data, mime=True)
+    except Exception as exc:
+        raise ValueError("Failed to detect MIME type.") from exc
 
 
 def _branch_accessible_branch_ids(company: Company, user: User) -> set[str]:
@@ -274,6 +270,47 @@ def _next_sequence(task_instance: TaskInstance) -> int:
 
 
 @transaction.atomic
+def _process_image_upload(upload, face_detected):
+    raw_data, mime_type = _validate_upload(upload)
+    media_size = len(raw_data)
+    raw_hash = _sha256(raw_data)
+    quarantine_name = _quarantine_name(upload.name)
+    quarantine_path = _subdir("quarantine") / quarantine_name
+    private_path = None
+    try:
+        quarantine_path.write_bytes(raw_data)
+        image = _open_image(raw_data)
+        media_width, media_height = image.size
+        server_face_detection = _server_detect_face(image)
+        server_face_detected = bool(server_face_detection.get("detected"))
+        normalized = _normalize_image(image, server_face_detected)
+        private_name = _private_name()
+        private_path = _subdir("private") / private_name
+        normalized.save(private_path, format="WEBP", quality=90)
+        derivative_hash_value = str(imagehash.phash(normalized))
+        blurred_name = private_name
+        if server_face_detected:
+            privacy_decision = "approved_blurred"
+        else:
+            privacy_decision = "rejected_no_face" if face_detected else "retained_unblurred"
+        return {
+            "raw_data": raw_data, "mime_type": mime_type, "media_size": media_size,
+            "raw_hash": raw_hash, "quarantine_name": quarantine_name,
+            "quarantine_path": quarantine_path, "media_width": media_width,
+            "media_height": media_height, "server_face_detection": server_face_detection,
+            "private_name": private_name, "private_path": private_path,
+            "derivative_hash_value": derivative_hash_value, "blurred_name": blurred_name,
+            "privacy_decision": privacy_decision
+        }
+    except Exception:
+        if quarantine_path and quarantine_path.exists():
+            quarantine_path.unlink(missing_ok=True)
+        if private_path and private_path.exists():
+            private_path.unlink(missing_ok=True)
+        raise
+
+
+@transaction.atomic
 def submit_evidence(
     *,
     session_token: str,
@@ -296,65 +333,31 @@ def submit_evidence(
     if session.created_by_id != user.id:
         raise ValueError("Capture session cannot be reused by another user.")
     if session.challenge_text:
-        # Constant-time comparison so a timing oracle cannot be used to
-        # guess the expected challenge answer byte by byte.
         supplied = (challenge_response or "").strip().encode()
         expected = (session.challenge_answer or "").strip().encode()
         if not hmac.compare_digest(supplied, expected):
             raise ValueError("Challenge response required.")
-    # Lock the task instance for the remainder of the transaction so two
-    # concurrent submissions for the same task cannot compute the same
-    # sequence number and trip the unique constraint.
+    
     task_instance = TaskInstance.objects.select_for_update().get(pk=session.task_instance_id)
 
     evidence_type = session.evidence_type
-    quarantine_name = ""
-    private_name = ""
-    blurred_name = ""
-    raw_hash = ""
-    derivative_hash_value = ""
-    mime_type = ""
-    media_size = 0
-    media_width = None
-    media_height = None
-
-    quarantine_path: Path | None = None
-    private_path: Path | None = None
+    img_res = {}
+    quarantine_path = None
+    private_path = None
     processing_succeeded = False
-    server_face_detection: dict[str, object] = {"detected": False, "confidence": 0}
-    privacy_decision = "pending_review"
+    
     try:
         if evidence_type == EvidenceType.IMAGE:
             if upload is None:
                 raise ValueError("Image evidence requires a file upload.")
-            raw_data, mime_type = _validate_upload(upload)
-            media_size = len(raw_data)
-            raw_hash = _sha256(raw_data)
-            quarantine_name = _quarantine_name(upload.name)
-            quarantine_path = _subdir("quarantine") / quarantine_name
-            quarantine_path.write_bytes(raw_data)
-            image = _open_image(raw_data)
-            media_width, media_height = image.size
-            # C-13: server-side face detection. The client flag is
-            # recorded but never trusted to authorise the unblurred
-            # image. The detector result drives both the blur and the
-            # ``privacy_decision`` field.
-            server_face_detection = _server_detect_face(image)
-            server_face_detected = bool(server_face_detection.get("detected"))
-            normalized = _normalize_image(image, server_face_detected)
-            private_name = _private_name()
-            private_path = _subdir("private") / private_name
-            normalized.save(private_path, format="WEBP", quality=90)
-            derivative_hash_value = str(imagehash.phash(normalized))
-            blurred_name = private_name
-            if server_face_detected:
-                privacy_decision = "approved_blurred"
-            else:
-                privacy_decision = "rejected_no_face" if face_detected else "retained_unblurred"
+            img_res = _process_image_upload(upload, face_detected)
+            quarantine_path = img_res["quarantine_path"]
+            private_path = img_res["private_path"]
             quarantine_path.unlink(missing_ok=True)
         elif upload is not None:
             raise ValueError("Non-image evidence cannot include file uploads.")
 
+        server_face_detection = img_res.get("server_face_detection", {})
         confidence_value = server_face_detection.get("confidence", 0)
         face_detector_confidence = (
             int(confidence_value)
@@ -372,18 +375,18 @@ def submit_evidence(
             note_text=note_text,
             number_value=number_value,
             confirmation_value=confirmation_value,
-            quarantine_name=quarantine_name,
-            private_media_name=private_name,
-            blurred_media_name=blurred_name,
-            media_mime_type=mime_type,
-            media_size_bytes=media_size,
-            media_width=media_width,
-            media_height=media_height,
-            raw_hash=raw_hash,
-            derivative_hash=derivative_hash_value,
-            duplicate_risk_score=_duplicate_score(session.branch, derivative_hash_value),
+            quarantine_name=img_res.get("quarantine_name", ""),
+            private_media_name=img_res.get("private_name", ""),
+            blurred_media_name=img_res.get("blurred_name", ""),
+            media_mime_type=img_res.get("mime_type", ""),
+            media_size_bytes=img_res.get("media_size", 0),
+            media_width=img_res.get("media_width", None),
+            media_height=img_res.get("media_height", None),
+            raw_hash=img_res.get("raw_hash", ""),
+            derivative_hash=img_res.get("derivative_hash_value", ""),
+            duplicate_risk_score=_duplicate_score(session.branch, img_res.get("derivative_hash_value", "")),
             face_detected=face_detected,
-            privacy_decision=privacy_decision,
+            privacy_decision=img_res.get("privacy_decision", "pending_review"),
             face_detector_version=FACE_DETECTOR_VERSION,
             face_detector_confidence=face_detector_confidence,
             face_detector_raw_score=server_face_detection,
@@ -411,8 +414,8 @@ def submit_evidence(
             if private_path is not None:
                 private_path.unlink(missing_ok=True)
 
-
 @transaction.atomic
+
 def create_issue_report(task_instance: TaskInstance, user: User, note: str, upload: UploadedFile | None = None) -> TaskIssueReport:
     photo_name = ""
     photo_path: Path | None = None

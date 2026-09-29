@@ -11,6 +11,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
     "registration_ip": "1000/minute",
     "login_ip": "1000/minute",
     "login_account": "1000/minute",
+    "user": "1000/minute",
 }
 DATABASES = {
     "default": {

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import type { Role } from "../../design-system/tokens";
-import { Panel, SkeletonBlock } from "../../shell/ui";
+import { EmptyState, Panel, SkeletonBlock } from "../../shell/ui";
 import type {
   AICriterionSummary,
   AIShadowSummary,
@@ -216,7 +216,12 @@ export function ReviewsPage({ activeRole }: ReviewsPageProps) {
 
   return (
     <Panel eyebrow={t("reviews.title")} title={t("reviews.workspace")}>
-      {reviewError ? <p className="status status-danger">{reviewError}</p> : null}
+      {reviewError ? (
+        <div className="status status-danger" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <p style={{ margin: 0 }}>{reviewError}</p>
+          <button type="button" className="ghost-button" onClick={() => { setReviewError(null); void refresh(); }}>{t("common.retry", { defaultValue: "Retry" })}</button>
+        </div>
+      ) : null}
       {reviewMessage ? <p className="status status-success">{reviewMessage}</p> : null}
       <div className="token-grid">
         <div className="token-swatch">
@@ -434,6 +439,9 @@ export function ReviewsPage({ activeRole }: ReviewsPageProps) {
         </p>
       ) : null}
       <div className="notification-list">
+        {queue.length === 0 ? (
+          <EmptyState title={t("reviews.no_reviews", { defaultValue: "No reviews pending" })} body={t("reviews.no_reviews_body", { defaultValue: "You have caught up on all pending reviews." })} />
+        ) : null}
         {queue.map((item) => (
           <div key={item.id} className="notification-item">
             <strong>{item.title}</strong>

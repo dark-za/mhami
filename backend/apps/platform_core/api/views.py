@@ -5,7 +5,7 @@ from typing import Any
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
@@ -76,37 +76,40 @@ class BootstrapView(APIView):
         return Response(bootstrap_payload(request.user))
 
 
+class IsPlatformAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser))
+
 class ExitDecisionView(APIView):
     """C-06: sign a phase exit decision. Restricted to platform administrators."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPlatformAdmin]
     # The decorator enables CSRF cookie issuance so browser clients can
     # attach the token to the POST without a separate bootstrap hop.
     @extend_schema(request=ExitDecisionCreateSerializer, responses={201: ExitDecisionSerializer})
     @method_decorator(ensure_csrf_cookie)
     def post(self, request, phase: str):
-        if not (request.user.is_staff or request.user.is_superuser):
-            return Response(
-                {"error": {"code": "CORE-FORBIDDEN-001", "message": "Only platform administrators can sign exit decisions."}},
-                status=403,
-            )
         serializer = ExitDecisionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         metadata = dict(serializer.validated_data.get("metadata") or {})
-        supersedes = None
         supersedes_id = serializer.validated_data.get("supersedes")
-        if supersedes_id:
-            supersedes = ExitDecision.objects.filter(id=supersedes_id, phase=phase).first()
-        decision = ExitDecision.objects.create(
-            phase=phase,
-            decision=serializer.validated_data["decision"],
-            rationale=serializer.validated_data["rationale"],
-            signed_by=request.user,
-            supersedes=supersedes,
-            metadata=metadata,
-        )
-        decision.signature_hmac = decision.compute_signature()
-        decision.save(update_fields=["signature_hmac"])
+        
+        from django.db import transaction
+        with transaction.atomic():
+            supersedes = None
+            if supersedes_id:
+                supersedes = ExitDecision.objects.filter(id=supersedes_id, phase=phase).first()
+            decision = ExitDecision.objects.create(
+                phase=phase,
+                decision=serializer.validated_data["decision"],
+                rationale=serializer.validated_data["rationale"],
+                signed_by=request.user,
+                supersedes=supersedes,
+                metadata=metadata,
+            )
+            decision.signature_hmac = decision.compute_signature()
+            decision.save(update_fields=["signature_hmac"])
+            
         record_audit_event(
             event_type="EXIT_DECISION_SIGNED",
             target_type="exit_decision",

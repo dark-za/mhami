@@ -28,6 +28,11 @@ def policy_for_company(company: Company) -> ReviewPolicySetting:
 
 
 def review_queue(company: Company, user: User) -> list[dict[str, object]]:
+    """
+    Retrieve the review queue items across tasks, evidence, and issues.
+    
+    Ordering: Items are ordered by `created_at` in descending order (newest first).
+    """
     branch_ids = accessible_branch_ids(company, user)
     now = timezone.now()
     task_items = TaskInstance.objects.filter(company=company, branch_id__in=branch_ids).filter(
@@ -53,7 +58,7 @@ def review_queue(company: Company, user: User) -> list[dict[str, object]]:
                 "task_instance_id": str(task.id),
             }
         )
-    for evidence in evidence_items.select_related("branch", "task_instance", "submitted_by"):
+    for evidence in evidence_items.select_related("branch", "task_instance", "task_instance__template", "submitted_by"):
         items.append(
             {
                 "kind": "evidence",
@@ -67,7 +72,7 @@ def review_queue(company: Company, user: User) -> list[dict[str, object]]:
                 "evidence_item_id": str(evidence.id),
             }
         )
-    for issue in issues.select_related("branch", "task_instance", "submitted_by"):
+    for issue in issues.select_related("branch", "task_instance", "task_instance__template", "submitted_by"):
         items.append(
             {
                 "kind": "issue",

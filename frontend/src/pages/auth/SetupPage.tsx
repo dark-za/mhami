@@ -31,7 +31,7 @@ export function SetupPage() {
     setup_token: "",
   });
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const update = <K extends keyof SetupForm>(field: K, value: SetupForm[K]) => {
@@ -41,7 +41,7 @@ export function SetupPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await api("/api/v1/setup/initialize", { method: "POST", body: form });
       broadcastSessionChange();
@@ -53,7 +53,7 @@ export function SetupPage() {
       // initial-setup attempt; keep that security boundary in the UI too.
       setError(t("auth.setup_failed"));
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -95,8 +95,8 @@ export function SetupPage() {
             <input name="setup_token" type="password" dir="ltr" autoComplete="off" required minLength={16} value={form.setup_token} onChange={(event) => update("setup_token", event.target.value)} />
           </label>
           {error ? <p className="error" role="alert">{error}</p> : null}
-          <button className="primary-button login-submit" type="submit" disabled={loading}>
-            {loading ? t("common.loading") : t("auth.setup_submit")}
+          <button className="primary-button login-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? t("common.loading") : t("auth.setup_submit")}
           </button>
         </form>
         <p className="auth-link"><Link to="/login">{t("auth.login_link")}</Link></p>

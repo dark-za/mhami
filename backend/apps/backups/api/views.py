@@ -58,13 +58,14 @@ class BackupRunListView(TenantAPIView):
 
     @extend_schema(responses=OpenApiResponse(description="List of backup runs for the active company."))
     def get(self, request):
+        from apps.platform_core.pagination import paginate_sequence
         company = self.get_tenant().company
+        runs = BackupRun.objects.filter(company=company).select_related("requested_by").order_by("-created_at")
+        page_items, page_stats = paginate_sequence(runs, request)
         return Response(
             {
-                "runs": BackupRunSerializer(
-                    BackupRun.objects.filter(company=company).order_by("-created_at"),
-                    many=True,
-                ).data,
+                "runs": BackupRunSerializer(page_items, many=True).data,
+                **page_stats,
             }
         )
 
@@ -72,6 +73,8 @@ class BackupRunListView(TenantAPIView):
 class BackupRunView(TenantAPIView):
     # H-07: OWNER-only for backup creation; MONITOR is read-only.
     required_roles = (CompanyRole.OWNER,)
+    from rest_framework.throttling import UserRateThrottle
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(request=BackupCreateSerializer, responses={201: BackupRunSerializer})
     @platform_service_call
@@ -94,6 +97,8 @@ class BackupRunView(TenantAPIView):
 class BackupRestoreView(TenantAPIView):
     # H-07: restore is a destructive action and remains OWNER-only.
     required_roles = (CompanyRole.OWNER,)
+    from rest_framework.throttling import UserRateThrottle
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(request=RestoreCreateSerializer, responses=RestoreRunSerializer)
     @platform_service_call
@@ -127,10 +132,7 @@ class BackupDownloadView(TenantAPIView):
     @platform_service_call
     def get(self, request, backup_run_id):
         company = self.get_tenant().company
-        try:
-            backup_run = BackupRun.objects.get(id=backup_run_id, company=company)
-        except BackupRun.DoesNotExist:
-            raise PlatformAPIException("Backup run not found.")
+        backup_run = validate_company_reference(company, BackupRun, backup_run_id)
         path = download_backup_artifact(company, backup_run_id)
         if path is None or not path.exists():
             raise PlatformAPIException("Backup archive is unavailable.")

@@ -66,6 +66,19 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
             "active",
             "last_generated_at",
         ]
+        read_only_fields = [
+            "id", "company", "branch", "template", "last_generated_at"
+        ]
+
+    def validate(self, attrs):
+        from .models import TaskRecurrenceType
+        recurrence_type = attrs.get('recurrence_type', getattr(self.instance, 'recurrence_type', None))
+        scheduled_time = attrs.get('scheduled_time', getattr(self.instance, 'scheduled_time', None))
+        
+        if recurrence_type in [TaskRecurrenceType.DAILY_FIXED, TaskRecurrenceType.WEEKLY_FIXED]:
+            if not scheduled_time:
+                raise serializers.ValidationError({"scheduled_time": "Time is required for this recurrence type."})
+        return attrs
 
 
 class TaskInstanceSerializer(serializers.ModelSerializer):

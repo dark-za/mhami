@@ -37,6 +37,10 @@ class ReplayGuard:
     implementation is in-process, which is fine for a single-tenant
     container; multi-replica deployments must share a Redis or
     database-backed store.
+    
+    # TODO: This in-memory store is a single-process limitation. 
+    # If the connector scales to multiple processes/containers, ReplayGuard
+    # must be backed by a centralized store like Redis.
     """
 
     freshness_seconds: int = DEFAULT_FRESHNESS_SECONDS

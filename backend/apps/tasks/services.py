@@ -278,13 +278,20 @@ def request_transfer(instance_id: str, requested_by: User, requested_to: User, r
     if instance.company.owner_id == requested_by.id:
         requester_company_ids.add(instance.company_id)
     if instance.company_id not in requester_company_ids:
-        raise ValueError("Task instance is outside the requester's company.")
-    if requested_to.id != instance.assigned_user_id and not instance.company.memberships.filter(
-        active=True, user=requested_to
-    ).filter(
-        active_membership_q()
-    ).exists() and instance.company.owner_id != requested_to.id:
+        raise ValueError("Requester is outside the task instance's company.")
+
+    target_memberships = instance.company.memberships.filter(active=True, user=requested_to).filter(active_membership_q())
+    if requested_to.id != instance.assigned_user_id and not target_memberships.exists() and instance.company.owner_id != requested_to.id:
         raise ValueError("Transfer target is outside the task instance's company.")
+
+    from apps.organizations.models import UserBranchMembership
+
+    target_branch_memberships = UserBranchMembership.objects.filter(
+        active=True, user=requested_to, company=instance.company
+    ).filter(active_membership_q())
+    if target_branch_memberships.exists() and not target_branch_memberships.filter(branch=instance.branch).exists():
+        raise ValueError("Transfer target is not in the task instance's branch.")
+
     transfer = TaskTransferRequest.objects.create(
         task_instance=instance,
         requested_by=requested_by,

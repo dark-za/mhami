@@ -43,6 +43,8 @@ class CaptureSessionView(TenantAPIView):
     # instance; open to all tenant roles. The per-task scoping happens in
     # the body of the handler.
     required_roles = (CompanyRole.OWNER, CompanyRole.MONITOR, CompanyRole.EMPLOYEE)
+    from rest_framework.throttling import UserRateThrottle
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(request=CaptureSessionCreateSerializer, responses={201: CaptureSessionSerializer})
     @platform_service_call
@@ -112,10 +114,10 @@ class EvidenceTaskView(TenantAPIView):
         # C-07: branch scope check. A user with branch-level access can
         # only see workflows for branches in their active scope.
         _require_task_access(context, task, request.user)
-        evidence = EvidenceItem.objects.for_company(company).filter(task_instance=task).order_by("sequence_number")
-        issues = TaskIssueReport.objects.for_company(company).filter(task_instance=task).order_by("created_at")
-        messages = TaskDiscussionMessage.objects.for_company(company).filter(task_instance=task).order_by("created_at")
-        sessions = CaptureSession.objects.for_company(company).filter(task_instance=task).order_by("created_at")
+        evidence = EvidenceItem.objects.for_company(company).filter(task_instance=task).select_related("capture_session", "submitted_by").order_by("sequence_number")
+        issues = TaskIssueReport.objects.for_company(company).filter(task_instance=task).select_related("submitted_by").order_by("created_at")
+        messages = TaskDiscussionMessage.objects.for_company(company).filter(task_instance=task).select_related("author", "issue_report").order_by("created_at")
+        sessions = CaptureSession.objects.for_company(company).filter(task_instance=task).select_related("created_by", "template_version").order_by("created_at")
         return Response(
             {
                 "task_instance_id": str(task.id),

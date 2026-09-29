@@ -20,8 +20,8 @@ export function createFallbackState(snapshot: BootstrapSnapshot): BootstrapState
   };
 }
 
-export async function fetchBootstrap(): Promise<BootstrapApiResponse> {
+export async function fetchBootstrap(signal?: AbortSignal): Promise<BootstrapApiResponse> {
   // This GET itself issues the CSRF cookie; a preliminary bootstrap request
   // would duplicate the same read on every fresh browser session.
-  return api<BootstrapApiResponse>("/api/v1/bootstrap");
+  return api<BootstrapApiResponse>("/api/v1/bootstrap", { signal });
 }

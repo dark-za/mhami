@@ -84,3 +84,13 @@ class RestoreCreateSerializer(serializers.Serializer):
     backup_run_id = serializers.UUIDField()
     target_name = serializers.RegexField(regex=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
     confirmation = serializers.CharField(max_length=128)
+
+    def validate_backup_run_id(self, value):
+        from .models import BackupRun
+        request = self.context.get('request')
+        if not request:
+            return value
+        if not BackupRun.objects.filter(id=value, company_id=request.user.company_id).exists():
+            raise serializers.ValidationError("BackupRun not found or access denied.")
+        return value
+

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -24,7 +24,11 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    login_id = models.CharField(max_length=150, unique=True)
+    login_id = models.CharField(
+        max_length=150, 
+        unique=True,
+        validators=[RegexValidator(regex=r'^[a-zA-Z0-9_.-]+$', message='login_id may only contain alphanumeric characters, _, -, and .')]
+    )
     display_name = models.CharField(max_length=150, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

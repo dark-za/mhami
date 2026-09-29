@@ -162,6 +162,8 @@ class TaskInstance(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["schedule", "scheduled_for"], name="tasks_instance_schedule_unique"),
+            models.CheckConstraint(condition=models.Q(completed_at__gte=models.F('started_at')), name="tasks_instance_completed_after_started"),
+            models.CheckConstraint(condition=models.Q(due_at__gte=models.F('scheduled_for')), name="tasks_instance_due_after_scheduled"),
         ]
         # Composite indexes for the periodic scheduler/overdue scans and
         # the dashboard/queue filters (company|branch, status, due_at).

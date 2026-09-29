@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "apps.backups.apps.BackupsConfig",
     "apps.notifications.apps.NotificationsConfig",
     "apps.compliance.apps.ComplianceConfig",
+    "django_migration_linter",
 ]
 
 MIDDLEWARE = [
@@ -106,6 +107,9 @@ DATABASES = {
         "PASSWORD": settings.postgres_password,
         "HOST": settings.postgres_host,
         "PORT": str(settings.postgres_port),
+        "OPTIONS": {
+            "pool": True,
+        },
     }
 }
 
@@ -199,6 +203,9 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": settings.cache_url,
+        "OPTIONS": {
+            "pool_class": "redis.ConnectionPool",
+        }
     }
 }
 
@@ -206,6 +213,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "registration_ip": "5/hour",
     "login_ip": "60/minute",
     "login_account": "5/minute",
+    "user": "100/minute",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -230,10 +238,16 @@ API_DOCS_REQUIRE_STAFF = False
 CELERY_BROKER_URL = settings.redis_url
 CELERY_RESULT_BACKEND = settings.celery_result_backend
 CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_TASK_ROUTES = {
     "apps.backups.run_backup_run": {"queue": "media"},
     "apps.exports.run_export_request": {"queue": "media"},
+    "apps.tasks.mark_overdue": {"queue": "high_priority"},
+    "apps.notifications.process_outbox_events": {"queue": "high_priority"},
 }
+CELERY_TASK_TIME_LIMIT = 3600
+CELERY_TASK_SOFT_TIME_LIMIT = 3300
 
 CELERY_BEAT_SCHEDULE = {
     "create-daily-backups": {

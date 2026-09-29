@@ -327,7 +327,12 @@ export function TasksPage({
 
   return (
     <Panel eyebrow={t("tasks.lifecycle")} title={t("tasks.workspace")} variant="action">
-      {taskError ? <p className="status status-danger">{taskError}</p> : null}
+      {taskError ? (
+        <div className="status status-danger" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <p style={{ margin: 0 }}>{taskError}</p>
+          <button type="button" className="ghost-button" onClick={() => { setTaskError(null); void refreshTasks(); }}>{t("common.retry", { defaultValue: "Retry" })}</button>
+        </div>
+      ) : null}
       {taskActionMessage ? <p className="status status-success">{taskActionMessage}</p> : null}
 
       {tasksLoading ? <SkeletonBlock rows={4} /> : null}

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "../../api/client";
 import type { Locale } from "../../design-system/tokens";
-import { Panel } from "../../shell/ui";
+import { EmptyState, Panel } from "../../shell/ui";
 import type {
   EvidenceIssueSummary,
   EvidenceMessageSummary,
@@ -240,7 +240,26 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
 
   return (
     <Panel eyebrow={t("evidence.title")} title={t("evidence.workspace")}>
-      {panelError ? <p className="status status-danger">{panelError}</p> : null}
+      {panelError ? (
+        <div className="status status-danger" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <p style={{ margin: 0 }}>{panelError}</p>
+          <button type="button" className="ghost-button" onClick={() => {
+            setPanelError(null);
+            if (taskId) {
+              void (async () => {
+                try {
+                  const payload = await api<EvidenceTaskView>(`/api/v1/evidence/tasks/${taskId}`);
+                  setItems(payload.evidence ?? []);
+                  setIssues(payload.issues ?? []);
+                  setMessages(payload.messages ?? []);
+                } catch (_error: unknown) {
+                  setPanelError(t("evidence.load_failed"));
+                }
+              })();
+            }
+          }}>{t("common.retry", { defaultValue: "Retry" })}</button>
+        </div>
+      ) : null}
       {captureStatus ? <p className="status status-success">{captureStatus}</p> : null}
       <div className="evidence-intro">
         <label>
@@ -316,6 +335,9 @@ export function EvidencePage({ taskId, locale: _locale }: EvidencePageProps) {
         </div>
       </section>
       <div className="notification-list">
+        {items.length === 0 ? (
+          <EmptyState title={t("evidence.no_evidence", { defaultValue: "No evidence found" })} body={t("evidence.no_evidence_body", { defaultValue: "No evidence has been submitted yet." })} />
+        ) : null}
         {items.map((item) => (
           <div key={item.id} className="notification-item">
             <strong>{t(`evidence.type.${item.evidence_type}`, { defaultValue: item.evidence_type })}</strong>

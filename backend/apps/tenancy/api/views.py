@@ -17,7 +17,7 @@ from apps.organizations.models import Branch, CompanyMembership, CompanyRole, Jo
 from apps.platform_core.errors import PlatformAPIException, PlatformPermissionException, platform_service_call
 from apps.platform_core.mixins import TenantAPIView
 
-from ..access import active_membership_q, require_company_user
+from ..access import active_membership_q, require_company_user, validate_company_reference
 from ..auth_backends import LocalInstallationBackend
 from ..models import Company, LegalAcceptance
 from ..serializers import (
@@ -113,6 +113,7 @@ class LoginView(APIView):
         if not company.is_operational():
             raise PlatformAPIException("Invalid credentials.")
         login(request, user, backend="apps.tenancy.auth_backends.LocalInstallationBackend")
+        request.session.cycle_key()
         request.session["company_id"] = str(company.id)
         record_audit_event(
             event_type="USER_LOGIN",
@@ -316,8 +317,8 @@ class BranchMembershipView(TenantAPIView):
         branch_id = serializer.validated_data["branch_id"]
         require_company_user(context, user_id)
         user = User.objects.get(id=user_id)
-        branch = Branch.objects.get(id=branch_id, company=company)
-        job_role = JobRole.objects.get(id=serializer.validated_data["job_role_id"], company=company)
+        branch = validate_company_reference(company, Branch, branch_id)
+        job_role = validate_company_reference(company, JobRole, serializer.validated_data["job_role_id"])
         if context.role == CompanyRole.MONITOR:
             target_membership = (
                 CompanyMembership.objects.filter(company=company, user_id=user_id, active=True)
